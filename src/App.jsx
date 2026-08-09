@@ -51,7 +51,11 @@ const UI_TEXT = {
     vocabExampleLabel: "Ví dụ", vocabHeader: "Ôn từ vựng", vocabSubtitle: "303 thẻ: thuật ngữ PMI-ACP/Agile, từ vựng/cụm từ tiếng Anh khó hoặc hay gặp trong đề thi (kể cả ngoài 1.470 câu hiện có), và cấu trúc câu quen thuộc — lật thẻ để xem nghĩa, ví dụ và tự đánh giá mức độ nhớ.",
     vocabFlip: "Lật thẻ", vocabKnow: "Đã thuộc", vocabDontKnow: "Chưa thuộc", vocabProgress: "Thẻ {n}/{total}", vocabRestart: "Ôn lại từ đầu",
     vocabDone: "Đã ôn hết bộ thẻ!", vocabDoneSummary: "Đã thuộc {known}/{total} — {unknown} thẻ sẽ ưu tiên xuất hiện lại ở vòng sau.",
-    vocabFilterAll: "Tất cả", vocabFilterUnknown: "Chưa thuộc", vocabShuffled: "đã xáo trộn",
+    vocabModeFlashcard: "Flashcard", vocabModeChoice: "Trắc nghiệm", vocabModeType: "Gõ từ",
+    vocabScopeDue: "Đến hạn ({n})", vocabScopeAll: "Tất cả", vocabNext: "Tiếp theo",
+    vocabAllCaughtUp: "Không còn thẻ nào đến hạn ôn!", vocabAllCaughtUpBody: "Bạn đã ôn hết các thẻ đến hạn hôm nay. Có thể ôn thêm toàn bộ bộ thẻ, hoặc quay lại sau khi có thẻ mới đến hạn.",
+    vocabTypePlaceholder: "Gõ từ tiếng Anh...", vocabCheck: "Kiểm tra", vocabCorrect: "Chính xác!", vocabIncorrect: "Chưa đúng",
+    vocabYourAnswer: "Bạn đã gõ", vocabCorrectAnswer: "Đáp án đúng",
     viPostHeader: "DỊCH ĐÁP ÁN & GIẢI THÍCH",
     flagTooltip: "Đánh dấu để xem lại",
     paletteLegend: "Chưa xem · Đã xem · Đã trả lời · Đánh dấu",
@@ -140,7 +144,11 @@ const UI_TEXT = {
     vocabExampleLabel: "Example", vocabHeader: "Vocabulary drill", vocabSubtitle: "303 cards: PMI-ACP/Agile terms, English vocabulary likely to show up in exam scenarios (even beyond these 1,470 questions), and recurring exam sentence patterns — flip each card to see the meaning, an example, and rate how well you know it.",
     vocabFlip: "Flip card", vocabKnow: "I know this", vocabDontKnow: "Still learning", vocabProgress: "Card {n}/{total}", vocabRestart: "Restart deck",
     vocabDone: "You've gone through the whole deck!", vocabDoneSummary: "{known}/{total} known — {unknown} cards will resurface first next round.",
-    vocabFilterAll: "All", vocabFilterUnknown: "Still learning", vocabShuffled: "shuffled",
+    vocabModeFlashcard: "Flashcard", vocabModeChoice: "Multiple choice", vocabModeType: "Type the word",
+    vocabScopeDue: "Due ({n})", vocabScopeAll: "All", vocabNext: "Next",
+    vocabAllCaughtUp: "No cards due right now!", vocabAllCaughtUpBody: "You've reviewed everything due today. You can drill the full deck anyway, or come back once more cards are due.",
+    vocabTypePlaceholder: "Type the English word...", vocabCheck: "Check", vocabCorrect: "Correct!", vocabIncorrect: "Not quite",
+    vocabYourAnswer: "You typed", vocabCorrectAnswer: "Correct answer",
     viPostHeader: "ANSWER & EXPLANATION TRANSLATION",
     flagTooltip: "Flag for review",
     paletteLegend: "Not visited · Visited · Answered · Flagged",
@@ -2884,8 +2892,41 @@ function GlossaryScreen() {
   );
 }
 
-/* ===================== Vocabulary flashcard drill ===================== */
+/* ===================== Vocabulary spaced-repetition drill ===================== */
+/* Leitner-style SRS: mỗi thẻ có 1 "box" (1-6). Trả lời đúng -> lên box tiếp theo, khoảng cách  */
+/* ôn lại giãn ra; trả lời sai -> rớt về box 1, ôn lại ngay. Thẻ "đến hạn" (due) là thẻ chưa ôn  */
+/* lần nào hoặc đã qua ngày hẹn ôn lại — đây là những thẻ được ưu tiên đưa vào phiên học.        */
 const VOCAB_KNOWN_KEY = "pmi_acp_vocab_known";
+const VOCAB_SRS_KEY = "pmi_acp_vocab_srs";
+const SRS_INTERVAL_DAYS = [0, 1, 3, 7, 16, 35];
+const SRS_MAX_BOX = SRS_INTERVAL_DAYS.length;
+
+function loadSrsMap() {
+  try {
+    const raw = localStorage.getItem(VOCAB_SRS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { /* rơi xuống migrate bên dưới */ }
+  try {
+    const oldKnown = JSON.parse(localStorage.getItem(VOCAB_KNOWN_KEY) || "[]");
+    const migrated = {};
+    const dueAt = new Date(Date.now() + SRS_INTERVAL_DAYS[2] * 86400000).toISOString();
+    for (const id of oldKnown) migrated[id] = { box: 3, dueAt, reviewCount: 1 };
+    return migrated;
+  } catch (e) {
+    return {};
+  }
+}
+function isSrsDue(record, now) {
+  if (!record || !record.dueAt) return true;
+  return new Date(record.dueAt).getTime() <= now;
+}
+function nextSrsRecord(record, correct, now) {
+  const prevBox = record?.box || 0;
+  const box = correct ? Math.min(prevBox + 1, SRS_MAX_BOX) : 1;
+  const days = SRS_INTERVAL_DAYS[box - 1];
+  const dueAt = days === 0 ? null : new Date(now + days * 86400000).toISOString();
+  return { box, dueAt, reviewCount: (record?.reviewCount || 0) + 1, lastResult: correct ? "known" : "unknown" };
+}
 function shuffleArray(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -2894,48 +2935,193 @@ function shuffleArray(arr) {
   }
   return a;
 }
+function termHeadword(tm) {
+  return (tm.sourceTerms && tm.sourceTerms[0]) || tm.termVi;
+}
+function normalizeAnswer(s) {
+  return s.trim().toLowerCase().replace(/[.,!?'"()]/g, "").replace(/\s+/g, " ");
+}
+function isAnswerCorrect(tm, raw) {
+  const norm = normalizeAnswer(raw);
+  if (!norm) return false;
+  const candidates = [tm.termVi, ...(tm.sourceTerms || [])].filter(Boolean).map(normalizeAnswer);
+  return candidates.includes(norm);
+}
+function VocabFlashcardCard({ tm, onGrade }) {
+  const { t } = useAppCtx();
+  const [flipped, setFlipped] = useState(false);
+  return (
+    <>
+      <Card
+        className="text-center py-10 px-6 cursor-pointer select-none"
+        onClick={() => setFlipped((f) => !f)}
+        style={{ minHeight: 200, display: "flex", flexDirection: "column", justifyContent: "center" }}
+      >
+        {!flipped ? (
+          <>
+            <p className="pmi-eyebrow mb-3">{tm.category}</p>
+            <p className="pmi-display font-bold text-2xl">{termHeadword(tm)}</p>
+          </>
+        ) : (
+          <div className="space-y-2 text-left">
+            <p className="pmi-display font-semibold text-base text-center mb-2">{termHeadword(tm)}</p>
+            <p className="text-sm" style={{ color: "var(--ink)" }}>{tm.definitionVi}</p>
+            {tm.exampleEn && (
+              <p className="text-xs italic" style={{ color: "var(--ink-soft)" }}>
+                <span className="pmi-mono not-italic text-[10px] mr-1" style={{ color: "var(--sky)" }}>{t("vocabExampleLabel")}</span>
+                “{tm.exampleEn}”
+              </p>
+            )}
+          </div>
+        )}
+      </Card>
+      {!flipped ? (
+        <Button onClick={() => setFlipped(true)} className="w-full">{t("vocabFlip")}</Button>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="secondary" onClick={() => onGrade(false)}>{t("vocabDontKnow")}</Button>
+          <Button variant="primary" onClick={() => onGrade(true)}>{t("vocabKnow")}</Button>
+        </div>
+      )}
+    </>
+  );
+}
+function VocabChoiceCard({ tm, onGrade }) {
+  const { t } = useAppCtx();
+  const [selected, setSelected] = useState(null);
+  const options = useMemo(() => {
+    const distractors = shuffleArray(VI_TERM_LIST.filter((x) => x.id !== tm.id && x.definitionVi !== tm.definitionVi)).slice(0, 3).map((x) => x.definitionVi);
+    return shuffleArray([tm.definitionVi, ...distractors]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tm.id]);
+  const answered = selected !== null;
+  const correct = answered && selected === tm.definitionVi;
+
+  return (
+    <>
+      <Card className="py-8 px-6 text-center" style={{ minHeight: 120 }}>
+        <p className="pmi-eyebrow mb-3">{tm.category}</p>
+        <p className="pmi-display font-bold text-2xl">{termHeadword(tm)}</p>
+      </Card>
+      <div className="space-y-2">
+        {options.map((opt, i) => {
+          let style = { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink)" };
+          if (answered) {
+            if (opt === tm.definitionVi) style = { background: "var(--sage-tint)", border: "1px solid var(--sage)", color: "var(--sage)" };
+            else if (opt === selected) style = { background: "var(--flag-tint)", border: "1px solid var(--flag)", color: "var(--flag)" };
+            else style = { background: "var(--paper)", border: "1px solid var(--line)", color: "var(--ink-soft)" };
+          }
+          return (
+            <button
+              key={i}
+              onClick={() => !answered && setSelected(opt)}
+              className="pmi-focusable w-full text-left px-3 py-2.5 rounded-lg text-sm"
+              style={style}
+            >
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+      {answered && <Button onClick={() => onGrade(correct)} className="w-full">{t("vocabNext")}</Button>}
+    </>
+  );
+}
+function VocabTypeCard({ tm, onGrade }) {
+  const { t } = useAppCtx();
+  const [value, setValue] = useState("");
+  const [checked, setChecked] = useState(false);
+  const correct = checked && isAnswerCorrect(tm, value);
+
+  function submit() {
+    if (!value.trim() || checked) return;
+    setChecked(true);
+  }
+
+  return (
+    <>
+      <Card className="py-6 px-6 text-left" style={{ minHeight: 120 }}>
+        <p className="pmi-eyebrow mb-2">{tm.category}</p>
+        <p className="text-sm" style={{ color: "var(--ink)" }}>{tm.definitionVi}</p>
+        {tm.exampleEn && (
+          <p className="text-xs italic mt-2" style={{ color: "var(--ink-soft)" }}>
+            <span className="pmi-mono not-italic text-[10px] mr-1" style={{ color: "var(--sky)" }}>{t("vocabExampleLabel")}</span>
+            “{tm.exampleEn}”
+          </p>
+        )}
+      </Card>
+      {!checked ? (
+        <>
+          <input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
+            placeholder={t("vocabTypePlaceholder")}
+            className="pmi-input w-full px-3 py-2.5 text-sm"
+            autoFocus
+          />
+          <Button onClick={submit} disabled={!value.trim()} className="w-full">{t("vocabCheck")}</Button>
+        </>
+      ) : (
+        <>
+          <div className="text-sm px-1 space-y-1">
+            <p style={{ color: correct ? "var(--sage)" : "var(--flag)" }}>
+              {correct ? t("vocabCorrect") : `${t("vocabIncorrect")} — ${t("vocabYourAnswer")}: "${value}"`}
+            </p>
+            <p style={{ color: "var(--ink-mid)" }}>{t("vocabCorrectAnswer")}: <strong style={{ color: "var(--ink)" }}>{termHeadword(tm)}</strong></p>
+          </div>
+          <Button onClick={() => onGrade(correct)} className="w-full">{t("vocabNext")}</Button>
+        </>
+      )}
+    </>
+  );
+}
 function VocabScreen() {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
-  const [knownIds, setKnownIds] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem(VOCAB_KNOWN_KEY) || "[]")); } catch (e) { return new Set(); }
+  const [srsMap, setSrsMap] = useState(() => loadSrsMap());
+  const [mode, setMode] = useState("flashcard");
+  const [scope, setScope] = useState("due");
+  const [deck, setDeck] = useState(() => {
+    const now = Date.now();
+    return shuffleArray(VI_TERM_LIST.filter((tm) => isSrsDue(srsMap[tm.id], now)));
   });
-  const [filter, setFilter] = useState("all");
-  const [deck, setDeck] = useState(() => shuffleArray(VI_TERM_LIST));
   const [index, setIndex] = useState(0);
-  const [flipped, setFlipped] = useState(false);
-  const [sessionStats, setSessionStats] = useState({ known: 0, unknown: 0 });
+  const [sessionStats, setSessionStats] = useState({ correct: 0, incorrect: 0 });
 
-  function buildDeck(nextFilter) {
-    const pool = nextFilter === "unknown" ? VI_TERM_LIST.filter((tm) => !knownIds.has(tm.id)) : VI_TERM_LIST;
-    return shuffleArray(pool.length ? pool : VI_TERM_LIST);
-  }
+  const dueCount = useMemo(() => {
+    const now = Date.now();
+    return VI_TERM_LIST.filter((tm) => isSrsDue(srsMap[tm.id], now)).length;
+  }, [srsMap]);
 
-  function restart(nextFilter = filter) {
-    setFilter(nextFilter);
-    setDeck(buildDeck(nextFilter));
+  function restart(nextMode = mode, nextScope = scope) {
+    setMode(nextMode);
+    setScope(nextScope);
+    const now = Date.now();
+    const pool = nextScope === "due" ? VI_TERM_LIST.filter((tm) => isSrsDue(srsMap[tm.id], now)) : VI_TERM_LIST;
+    setDeck(shuffleArray(pool));
     setIndex(0);
-    setFlipped(false);
-    setSessionStats({ known: 0, unknown: 0 });
+    setSessionStats({ correct: 0, incorrect: 0 });
   }
 
-  function persistKnown(next) {
-    setKnownIds(next);
-    localStorage.setItem(VOCAB_KNOWN_KEY, JSON.stringify([...next]));
-  }
-
-  function mark(isKnown) {
+  function grade(correct) {
     const tm = deck[index];
-    const next = new Set(knownIds);
-    if (isKnown) next.add(tm.id); else next.delete(tm.id);
-    persistKnown(next);
-    setSessionStats((s) => ({ known: s.known + (isKnown ? 1 : 0), unknown: s.unknown + (isKnown ? 0 : 1) }));
-    setFlipped(false);
+    const now = Date.now();
+    const rec = nextSrsRecord(srsMap[tm.id], correct, now);
+    const nextMap = { ...srsMap, [tm.id]: rec };
+    setSrsMap(nextMap);
+    localStorage.setItem(VOCAB_SRS_KEY, JSON.stringify(nextMap));
+    setSessionStats((s) => ({ correct: s.correct + (correct ? 1 : 0), incorrect: s.incorrect + (correct ? 0 : 1) }));
     setIndex((i) => i + 1);
   }
 
   const current = deck[index];
   const finished = index >= deck.length;
+  const MODES = [
+    { key: "flashcard", label: t("vocabModeFlashcard") },
+    { key: "choice", label: t("vocabModeChoice") },
+    { key: "type", label: t("vocabModeType") },
+  ];
 
   return (
     <div className="pt-1 pb-4 space-y-4">
@@ -2944,13 +3130,26 @@ function VocabScreen() {
         <p className="text-xs" style={{ color: "var(--ink-mid)" }}>{t("vocabSubtitle")}</p>
       </div>
 
+      <div className="flex gap-1.5 flex-wrap">
+        {MODES.map((m) => (
+          <button
+            key={m.key}
+            onClick={() => restart(m.key, scope)}
+            className="pmi-mono text-xs px-3 py-1.5 rounded-full font-medium"
+            style={mode === m.key ? { background: "var(--accent)", color: "var(--accent-fg)" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
       <div className="flex gap-1.5">
-        {[{ key: "all", label: t("vocabFilterAll") }, { key: "unknown", label: t("vocabFilterUnknown") }].map((f) => (
+        {[{ key: "due", label: t("vocabScopeDue", { n: dueCount }) }, { key: "all", label: t("vocabScopeAll") }].map((f) => (
           <button
             key={f.key}
-            onClick={() => restart(f.key)}
-            className="pmi-mono text-xs px-3 py-1.5 rounded-full font-medium"
-            style={filter === f.key ? { background: "var(--accent)", color: "var(--accent-fg)" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
+            onClick={() => restart(mode, f.key)}
+            className="pmi-mono text-[11px] px-2.5 py-1 rounded-full font-medium"
+            style={scope === f.key ? { background: "var(--line)", color: "var(--ink)" } : { color: "var(--ink-soft)" }}
           >
             {f.label}
           </button>
@@ -2962,50 +3161,25 @@ function VocabScreen() {
       )}
 
       {deck.length === 0 ? (
-        <p className="text-sm" style={{ color: "var(--ink-soft)" }}>{t("glossaryNoResults")}</p>
+        <Card className="text-center py-8">
+          <p className="pmi-display font-semibold text-base mb-2">{t("vocabAllCaughtUp")}</p>
+          <p className="text-sm mb-4" style={{ color: "var(--ink-mid)" }}>{t("vocabAllCaughtUpBody")}</p>
+          <Button onClick={() => restart(mode, "all")} className={isDesktop ? "w-auto" : "w-full"}>{t("vocabScopeAll")}</Button>
+        </Card>
       ) : finished ? (
         <Card className="text-center py-8">
           <p className="pmi-display font-semibold text-lg mb-2">{t("vocabDone")}</p>
           <p className="text-sm mb-4" style={{ color: "var(--ink-mid)" }}>
-            {t("vocabDoneSummary", { known: sessionStats.known, total: deck.length, unknown: sessionStats.unknown })}
+            {t("vocabDoneSummary", { known: sessionStats.correct, total: deck.length, unknown: sessionStats.incorrect })}
           </p>
           <Button onClick={() => restart()} className={isDesktop ? "w-auto" : "w-full"}>{t("vocabRestart")}</Button>
         </Card>
+      ) : mode === "choice" ? (
+        <VocabChoiceCard key={current.id} tm={current} onGrade={grade} />
+      ) : mode === "type" ? (
+        <VocabTypeCard key={current.id} tm={current} onGrade={grade} />
       ) : (
-        <>
-          <Card
-            className="text-center py-10 px-6 cursor-pointer select-none"
-            onClick={() => setFlipped((f) => !f)}
-            style={{ minHeight: 200, display: "flex", flexDirection: "column", justifyContent: "center" }}
-          >
-            {!flipped ? (
-              <>
-                <p className="pmi-eyebrow mb-3">{current.category}</p>
-                <p className="pmi-display font-bold text-2xl">{(current.sourceTerms && current.sourceTerms[0]) || current.termVi}</p>
-              </>
-            ) : (
-              <div className="space-y-2 text-left">
-                <p className="pmi-display font-semibold text-base text-center mb-2">{(current.sourceTerms && current.sourceTerms[0]) || current.termVi}</p>
-                <p className="text-sm" style={{ color: "var(--ink)" }}>{current.definitionVi}</p>
-                {current.exampleEn && (
-                  <p className="text-xs italic" style={{ color: "var(--ink-soft)" }}>
-                    <span className="pmi-mono not-italic text-[10px] mr-1" style={{ color: "var(--sky)" }}>{t("vocabExampleLabel")}</span>
-                    “{current.exampleEn}”
-                  </p>
-                )}
-              </div>
-            )}
-          </Card>
-
-          {!flipped ? (
-            <Button onClick={() => setFlipped(true)} className={isDesktop ? "w-auto" : "w-full"}>{t("vocabFlip")}</Button>
-          ) : (
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="secondary" onClick={() => mark(false)}>{t("vocabDontKnow")}</Button>
-              <Button variant="primary" onClick={() => mark(true)}>{t("vocabKnow")}</Button>
-            </div>
-          )}
-        </>
+        <VocabFlashcardCard key={current.id} tm={current} onGrade={grade} />
       )}
     </div>
   );
