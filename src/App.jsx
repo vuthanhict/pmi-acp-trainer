@@ -20,7 +20,7 @@ const UI_TEXT = {
     appTitle: "PMI-ACP Daily Trainer",
     appSubtitle: "1.470 câu · 12 đề · GAP thông minh · Hỗ trợ tiếng Việt",
     navToday: "Hôm nay", navLibrary: "Thư viện", navGap: "GAP", navGlossary: "Từ điển", navData: "Dữ liệu",
-    publishBanner: "Publish Artifact để bật lưu trữ lâu dài — dữ liệu tiến trình hiện chỉ tồn tại trong phiên này.",
+    publishBanner: "Trình duyệt đang chặn lưu trữ cục bộ (chế độ ẩn danh hoặc cài đặt riêng tư) — tiến trình sẽ không được lưu giữa các phiên. Hãy dùng \"Xuất backup\" ở mục Dữ liệu để lưu thủ công.",
     savedToast: "Đã tự động lưu",
 
     // Today
@@ -100,7 +100,7 @@ const UI_TEXT = {
     appTitle: "PMI-ACP Daily Trainer",
     appSubtitle: "1,470 questions · 12 exams · Smart GAP · Vietnamese support",
     navToday: "Today", navLibrary: "Library", navGap: "GAP", navGlossary: "Glossary", navData: "Data",
-    publishBanner: "Publish this Artifact to enable persistent storage — progress currently only lasts this session.",
+    publishBanner: "This browser is blocking local storage (private/incognito mode or privacy settings) — progress won't persist between sessions. Use \"Export backup\" under Data to save manually.",
     savedToast: "Auto-saved",
 
     inProgress: "IN PROGRESS", questionsAnswered: "{n}/{total} questions answered", continueBtn: "Continue",
@@ -545,7 +545,70 @@ function gradeAttempt(question, selectedOptionIds) {
   return { isCorrect, gradeStatus: "graded", eligibleForGap: question.eligibleForGap };
 }
 
-/* ---------- Persistent storage (window.storage) ---------- */
+/* ---------- Persistent storage (IndexedDB, localStorage fallback) ---------- */
+/* Ưu tiên IndexedDB (hạn mức lớn, hoạt động ổn định trên Chrome/Edge/Firefox/Safari kể cả  */
+/* iOS/Android); nếu trình duyệt chặn IndexedDB (chế độ ẩn danh nghiêm ngặt, cài đặt riêng   */
+/* tư…) thì rơi về localStorage; nếu cả hai đều bị chặn, storageOk=false và app vẫn chạy     */
+/* bình thường trong bộ nhớ phiên, người dùng có thể tự lưu qua Xuất/Khôi phục backup.       */
+const IDB_NAME = "pmi_acp_trainer";
+const IDB_STORE = "kv";
+
+function openIdb() {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === "undefined") { reject(new Error("no-indexeddb")); return; }
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => { req.result.createObjectStore(IDB_STORE); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error("idb-open-failed"));
+  });
+}
+function idbGet(key) {
+  return openIdb().then((db) => new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, "readonly");
+    const req = tx.objectStore(IDB_STORE).get(key);
+    req.onsuccess = () => resolve(req.result ?? null);
+    req.onerror = () => reject(req.error || new Error("idb-get-failed"));
+  }));
+}
+function idbSet(key, value) {
+  return openIdb().then((db) => new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, "readwrite");
+    tx.objectStore(IDB_STORE).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error("idb-set-failed"));
+  }));
+}
+let idbUsable = null;
+async function checkIdbUsable() {
+  if (idbUsable !== null) return idbUsable;
+  try {
+    await idbSet("__probe__", "1");
+    idbUsable = true;
+  } catch (e) {
+    idbUsable = false;
+  }
+  return idbUsable;
+}
+const storage = {
+  async get(key) {
+    if (await checkIdbUsable()) {
+      try { return await idbGet(key); } catch (e) { /* rơi về localStorage bên dưới */ }
+    }
+    return localStorage.getItem(key);
+  },
+  async set(key, value) {
+    let ok = false;
+    if (await checkIdbUsable()) {
+      try { await idbSet(key, value); ok = true; } catch (e) { /* thử localStorage bên dưới */ }
+    }
+    try {
+      localStorage.setItem(key, value);
+      ok = true;
+    } catch (e) { /* localStorage cũng bị chặn (vd. Safari private mode cũ) */ }
+    if (!ok) throw new Error("storage-unavailable");
+  },
+};
+
 const PROGRESS_KEY = "progress";
 const PROGRESS_SCHEMA_VERSION = 2;
 function defaultProgress() {
@@ -574,12 +637,12 @@ function migrateProgress(raw) {
   return base;
 }
 async function loadProgressFromStorage() {
-  const res = await window.storage.get(PROGRESS_KEY, false);
-  if (!res || !res.value) return null;
-  return JSON.parse(res.value);
+  const raw = await storage.get(PROGRESS_KEY);
+  if (!raw) return null;
+  return JSON.parse(raw);
 }
 async function saveProgressToStorage(progress) {
-  await window.storage.set(PROGRESS_KEY, JSON.stringify(progress), false);
+  await storage.set(PROGRESS_KEY, JSON.stringify(progress));
 }
 
 /* ---------- Study plan recommendation ---------- */
