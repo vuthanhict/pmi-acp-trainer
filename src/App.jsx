@@ -2655,7 +2655,13 @@ function GapScreen({ gapProfile, onFillGap }) {
           </div>
           <div className={isWide ? "grid grid-cols-3 gap-2" : isDesktop ? "grid grid-cols-2 gap-2" : "space-y-2"}>
             {(byDomain.get(d.domain) || []).map((tk) => {
-              const isMindsetIssue = tk.diagnoses.includes("reading_or_mindset_trap") || tk.diagnoses.includes("blind_spot");
+              // Ngoài 2 chẩn đoán hành vi rõ rệt (đọc nhanh dính bẫy, tự tin nhưng sai), tip tư duy cũng
+              // đáng hiện cho concept_gap và answer_change_risk: phần lớn câu hỏi tình huống PMI-ACP
+              // sai không phải vì thiếu kiến thức mà vì áp tư duy truyền thống/waterfall thay vì agile —
+              // và việc đổi từ đáp án đúng bản năng sang đáp án "nghe có vẻ đúng quy trình" cũng là
+              // biểu hiện của việc chưa tin vào tư duy agile. Không áp dụng cho fluency_gap (vấn đề tốc
+              // độ) hay language_gap_candidate (vấn đề đọc hiểu tiếng Anh) vì không liên quan tư duy.
+              const isMindsetIssue = ["reading_or_mindset_trap", "blind_spot", "concept_gap", "answer_change_risk"].some((d) => tk.diagnoses.includes(d));
               return (
               <Card key={tk.taskId}>
                 <div className="flex items-center justify-between mb-1">
