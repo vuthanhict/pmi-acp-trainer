@@ -483,44 +483,77 @@ function calculateGapProfile({ attempts, now = Date.now(), halfLifeDays = 30 }) 
     groups.get(row.taskId).push(row);
   }
 
-  const tasks = [...groups.entries()]
-    .map(([taskId, rows]) => {
-      const weight = (row) => recencyWeight(row.answeredAt, now, halfLifeDays);
-      const accuracy = weightedMean(rows, (r) => Number(r.isCorrect), weight);
-      const confidenceCalibration = weightedMean(rows, calibrationScoreOf, weight);
-      const speed = weightedMeanAvailable(rows, speedScoreOf, weight);
-      const masteryWeight = speed === null ? 0.85 : 1;
-      const mastery = clamp((0.65 * accuracy + 0.2 * confidenceCalibration + (speed === null ? 0 : 0.15 * speed)) / masteryWeight);
-      const attemptsCount = rows.length;
-      const distinctQuestions = new Set(rows.map((r) => r.questionId)).size;
-      const sessions = new Set(rows.map((r) => r.sessionId)).size;
-      const evidence = Math.min(1, distinctQuestions / 8) * Math.min(1, sessions / 2);
-      const recurrenceFactor = 1 + Math.min(0.5, recentWrongStreak(rows) * 0.1);
-      const domain = rows[0].domain;
-      const examWeight = DOMAIN_WEIGHTS[domain] ?? 0;
-      const weaknessPriority = examWeight * evidence * (1 - mastery) * recurrenceFactor;
-      const coveragePriority = examWeight * (1 - evidence) * 0.3;
-      const assistedRows = rows.filter((r) => r.supportUsage?.assisted);
-      const assistedRatio = rows.length ? assistedRows.length / rows.length : null;
-      return {
-        domain,
-        taskId,
-        taskName: rows[0].taskName,
-        attempts: attemptsCount,
-        distinctQuestions,
-        sessions,
-        accuracy: Number(accuracy.toFixed(4)),
-        confidenceCalibration: Number(confidenceCalibration.toFixed(4)),
-        speedScore: speed === null ? null : Number(speed.toFixed(4)),
-        mastery: Number(mastery.toFixed(4)),
-        evidence: Number(evidence.toFixed(4)),
-        assistedRatio: assistedRatio === null ? null : Number(assistedRatio.toFixed(4)),
-        status: statusFor(mastery, attemptsCount, sessions),
-        gapPriority: Number((weaknessPriority + coveragePriority).toFixed(4)),
-        diagnoses: diagnoseTask(rows, accuracy, speed, assistedRatio),
-      };
-    })
-    .sort((a, b) => b.gapPriority - a.gapPriority);
+  // Danh mục ĐẦY ĐỦ các task có trong ngân hàng câu hỏi — không chỉ những task đã có lượt làm.
+  // Nếu chỉ duyệt qua `groups` (suy ra từ attempts) thì task nào 0 lượt làm sẽ biến mất hoàn
+  // toàn khỏi GAP thay vì được đánh dấu là gap nặng nhất (chưa có dữ liệu gì để đánh giá).
+  const knownTasks = new Map();
+  for (const q of QUESTION_INDEX.values()) {
+    if (q.manualReview || !q.domain || !q.taskId || q.domain === "Unclassified") continue;
+    if (!knownTasks.has(q.taskId)) knownTasks.set(q.taskId, { domain: q.domain, taskName: q.taskName });
+  }
+  for (const taskId of groups.keys()) knownTasks.delete(taskId); // đã có rows, xử lý ở nhánh dưới
+
+  const attemptedTasks = [...groups.entries()].map(([taskId, rows]) => {
+    const weight = (row) => recencyWeight(row.answeredAt, now, halfLifeDays);
+    const accuracy = weightedMean(rows, (r) => Number(r.isCorrect), weight);
+    const confidenceCalibration = weightedMean(rows, calibrationScoreOf, weight);
+    const speed = weightedMeanAvailable(rows, speedScoreOf, weight);
+    const masteryWeight = speed === null ? 0.85 : 1;
+    const mastery = clamp((0.65 * accuracy + 0.2 * confidenceCalibration + (speed === null ? 0 : 0.15 * speed)) / masteryWeight);
+    const attemptsCount = rows.length;
+    const distinctQuestions = new Set(rows.map((r) => r.questionId)).size;
+    const sessions = new Set(rows.map((r) => r.sessionId)).size;
+    const evidence = Math.min(1, distinctQuestions / 8) * Math.min(1, sessions / 2);
+    const recurrenceFactor = 1 + Math.min(0.5, recentWrongStreak(rows) * 0.1);
+    const domain = rows[0].domain;
+    const examWeight = DOMAIN_WEIGHTS[domain] ?? 0;
+    const weaknessPriority = examWeight * evidence * (1 - mastery) * recurrenceFactor;
+    const coveragePriority = examWeight * (1 - evidence) * 0.3;
+    const assistedRows = rows.filter((r) => r.supportUsage?.assisted);
+    const assistedRatio = rows.length ? assistedRows.length / rows.length : null;
+    return {
+      domain,
+      taskId,
+      taskName: rows[0].taskName,
+      attempts: attemptsCount,
+      distinctQuestions,
+      sessions,
+      accuracy: Number(accuracy.toFixed(4)),
+      confidenceCalibration: Number(confidenceCalibration.toFixed(4)),
+      speedScore: speed === null ? null : Number(speed.toFixed(4)),
+      mastery: Number(mastery.toFixed(4)),
+      evidence: Number(evidence.toFixed(4)),
+      assistedRatio: assistedRatio === null ? null : Number(assistedRatio.toFixed(4)),
+      status: statusFor(mastery, attemptsCount, sessions),
+      gapPriority: Number((weaknessPriority + coveragePriority).toFixed(4)),
+      diagnoses: diagnoseTask(rows, accuracy, speed, assistedRatio),
+    };
+  });
+
+  // Task chưa từng làm: coi là gap ưu tiên cao (hệ số 0.5, cao hơn mức "thiếu bằng chứng" 0.3
+  // dành cho task đã có vài lượt làm) — thay vì im lặng biến mất khỏi danh sách như trước.
+  const untouchedTasks = [...knownTasks.entries()].map(([taskId, info]) => {
+    const examWeight = DOMAIN_WEIGHTS[info.domain] ?? 0;
+    return {
+      domain: info.domain,
+      taskId,
+      taskName: info.taskName,
+      attempts: 0,
+      distinctQuestions: 0,
+      sessions: 0,
+      accuracy: null,
+      confidenceCalibration: null,
+      speedScore: null,
+      mastery: null,
+      evidence: 0,
+      assistedRatio: null,
+      status: "insufficient_data",
+      gapPriority: Number((examWeight * 0.5).toFixed(4)),
+      diagnoses: ["coverage_gap"],
+    };
+  });
+
+  const tasks = [...attemptedTasks, ...untouchedTasks].sort((a, b) => b.gapPriority - a.gapPriority);
 
   const domains = Object.keys(DOMAIN_WEIGHTS).map((domain) => {
     const domainTasks = tasks.filter((t) => t.domain === domain);
