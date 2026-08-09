@@ -747,10 +747,11 @@ const DESIGN_CSS = `
   --ink: #16233F; --ink-mid: #5B6472; --ink-soft: #939AA6;
   --paper: #EFF1EA; --paper-raised: #FCFCF9; --line: #DBDFD1; --line-strong: #C3C8B8;
   --seal: #A5761F; --seal-fg: #8A611A; --seal-tint: #F1E4C6;
-  --flag: #A23B44; --flag-tint: #F3E0E1;
+  --flag: #A23B44; --flag-tint: #F3E0E1; --flag-solid: #A23B44; --flag-solid-fg: #fff;
   --sage: #45654F; --sage-tint: #DFE9E0;
   --sky: #2E5E7C; --sky-tint: #DCE9EF;
   --focus: #16233F;
+  --accent: #16233F; --accent-fg: #FCFCF9;
   --font-display: 'IBM Plex Serif', Georgia, 'Times New Roman', serif;
   --font-body: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
@@ -766,6 +767,7 @@ const DESIGN_CSS = `
   --sage: #86AC8F; --sage-tint: rgba(134,172,143,0.14);
   --sky: #7FB2D3; --sky-tint: rgba(127,178,211,0.14);
   --focus: #EBEEE7;
+  --accent: #34406B; --accent-fg: #F4F1E6;
 }
 .pmi-app * { border-color: var(--line); }
 .pmi-display { font-family: var(--font-display); letter-spacing: -0.01em; }
@@ -779,11 +781,11 @@ const DESIGN_CSS = `
 
 .pmi-btn { border-radius: var(--radius-sm); font-family: var(--font-body); font-weight: 600; font-size: 13.5px; transition: background-color .15s, color .15s, border-color .15s, opacity .15s; }
 .pmi-btn:disabled { cursor: not-allowed; opacity: 0.5; }
-.pmi-btn-primary { background: var(--ink); color: var(--paper-raised); }
-.pmi-btn-primary:hover:not(:disabled) { background: var(--ink-mid); }
+.pmi-btn-primary { background: var(--accent); color: var(--accent-fg); }
+.pmi-btn-primary:hover:not(:disabled) { filter: brightness(1.2); }
 .pmi-btn-secondary { background: transparent; color: var(--ink); border: 1px solid var(--line-strong); }
 .pmi-btn-secondary:hover:not(:disabled) { background: var(--line); }
-.pmi-btn-danger { background: var(--flag); color: #fff; }
+.pmi-btn-danger { background: var(--flag-solid); color: var(--flag-solid-fg); }
 .pmi-btn-danger:hover:not(:disabled) { filter: brightness(1.08); }
 .pmi-btn-ghost { background: transparent; color: var(--ink-mid); }
 .pmi-btn-ghost:hover:not(:disabled) { color: var(--ink); }
@@ -796,7 +798,7 @@ const DESIGN_CSS = `
 .pmi-status-ready { background: var(--sage-tint); color: var(--sage); }
 
 .pmi-track { background: var(--line); border-radius: var(--radius-pill); overflow: hidden; }
-.pmi-track > div { background: var(--ink); border-radius: var(--radius-pill); }
+.pmi-track > div { background: var(--accent); border-radius: var(--radius-pill); }
 
 .pmi-input { background: var(--paper-raised); border: 1px solid var(--line-strong); border-radius: var(--radius-sm); color: var(--ink); font-family: var(--font-body); }
 .pmi-input:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
@@ -808,16 +810,15 @@ const DESIGN_CSS = `
 .pmi-toggle-btn:not(.is-active) { color: var(--ink-soft); }
 
 /* "Ticket stub" — cuống vé thi, chỉ dùng cho Exam mode để tách rõ tâm lý làm bài thật */
-.pmi-ticket { background: var(--ink); color: var(--paper); border-radius: var(--radius) var(--radius) 0 0; }
+.pmi-ticket { background: var(--accent); color: var(--accent-fg); border-radius: var(--radius) var(--radius) 0 0; }
 .pmi-ticket-body { background: var(--paper-raised); border: 1px solid var(--line); border-top: none; border-radius: 0 0 var(--radius) var(--radius); position: relative; }
-.pmi-ticket-tear { border-top: 2px dashed rgba(239,241,234,0.35); }
-.pmi-app.dark .pmi-ticket-tear { border-top-color: rgba(16,20,29,0.5); }
+.pmi-ticket-tear { border-top: 2px dashed rgba(244,241,230,0.35); }
 
 /* Ô "phiếu trả lời trắc nghiệm" (bubble sheet) cho question palette */
 .pmi-bubble { border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 11px; font-weight: 600; border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink-soft); position: relative; }
 .pmi-bubble.is-visited { background: var(--line); color: var(--ink-mid); border-color: var(--line-strong); }
 .pmi-bubble.is-done { background: var(--sage-tint); color: var(--sage); border-color: var(--sage); }
-.pmi-bubble.is-current { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.pmi-bubble.is-current { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
 .pmi-bubble-flag { position: absolute; top: -4px; right: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--seal); border: 1.5px solid var(--paper-raised); }
 
 .pmi-choice { border-radius: var(--radius-sm); border: 1.5px solid var(--line-strong); background: var(--paper-raised); text-align: left; transition: border-color .12s, background-color .12s; }
@@ -948,7 +949,7 @@ function Toast({ text }) {
   const isDesktop = useIsDesktop();
   if (!text) return null;
   return (
-    <div className={`pmi-mono fixed ${isDesktop ? "bottom-6" : "bottom-20"} left-1/2 -translate-x-1/2 z-50 text-[11px] px-3 py-1.5 rounded-md shadow-lg pointer-events-none`} style={{ background: "var(--ink)", color: "var(--paper)" }}>
+    <div className={`pmi-mono fixed ${isDesktop ? "bottom-6" : "bottom-20"} left-1/2 -translate-x-1/2 z-50 text-[11px] px-3 py-1.5 rounded-md shadow-lg pointer-events-none`} style={{ background: "var(--accent)", color: "var(--accent-fg)" }}>
       {text}
     </div>
   );
@@ -1259,20 +1260,26 @@ function App() {
 
   if (dataError) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6 text-center" style={{ background: "#EFF1EA", color: "#16233F" }}>
-        <div>
-          <p className="font-semibold mb-2">Không thể tải dữ liệu đề thi</p>
-          <p className="text-sm" style={{ color: "#5B6472" }}>Trình duyệt của bạn có thể chưa hỗ trợ giải nén dữ liệu (DecompressionStream). Hãy thử cập nhật trình duyệt hoặc mở bằng Chrome/Edge/Safari phiên bản mới.</p>
+      <>
+        <style>{DESIGN_CSS}</style>
+        <div className={`pmi-app ${theme === "dark" ? "dark" : ""} min-h-screen flex items-center justify-center px-6 text-center`} style={{ color: "var(--ink)" }}>
+          <div>
+            <p className="font-semibold mb-2">Không thể tải dữ liệu đề thi</p>
+            <p className="text-sm" style={{ color: "var(--ink-mid)" }}>Trình duyệt của bạn có thể chưa hỗ trợ giải nén dữ liệu (DecompressionStream). Hãy thử cập nhật trình duyệt hoặc mở bằng Chrome/Edge/Safari phiên bản mới.</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (!loaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#EFF1EA", color: "#8891A0" }}>
-        <span className="pmi-mono text-sm">···</span>
-      </div>
+      <>
+        <style>{DESIGN_CSS}</style>
+        <div className={`pmi-app ${theme === "dark" ? "dark" : ""} min-h-screen flex items-center justify-center`} style={{ color: "var(--ink-soft)" }}>
+          <span className="pmi-mono text-sm">···</span>
+        </div>
+      </>
     );
   }
 
@@ -1666,7 +1673,7 @@ function MatchingQuestion({ question, mode }) {
                   ...(used
                     ? { background: "var(--line)", color: "var(--ink-soft)", textDecoration: "line-through" }
                     : receiving
-                    ? { background: "var(--ink)", color: "var(--paper)" }
+                    ? { background: "var(--accent)", color: "var(--accent-fg)" }
                     : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }),
                 }}
               >
@@ -1753,8 +1760,8 @@ function MatchingQuestion({ question, mode }) {
             left: dragPos.x,
             top: dragPos.y,
             transform: "translate(-50%, -50%) scale(1.1)",
-            background: "var(--ink)",
-            color: "var(--paper)",
+            background: "var(--accent)",
+            color: "var(--accent-fg)",
             zIndex: 1000,
             boxShadow: "0 6px 16px rgba(0,0,0,0.3)",
             pointerEvents: "none",
@@ -1793,7 +1800,7 @@ function TermChip({ termId, onExpand, expandedId }) {
     <button
       onClick={() => onExpand(isOpen ? null : termId)}
       className="pmi-mono text-[11px] px-2.5 py-1 rounded-full transition-colors"
-      style={isOpen ? { background: "var(--ink)", color: "var(--paper)" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
+      style={isOpen ? { background: "var(--accent)", color: "var(--accent-fg)" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
     >
       {en}
     </button>
@@ -1910,7 +1917,7 @@ function PaletteBody({ questions, filteredIndices, paletteFilter, setPaletteFilt
             key={f.key}
             onClick={() => setPaletteFilter(f.key)}
             className="pmi-mono text-xs px-3 py-1.5 rounded-full font-medium"
-            style={paletteFilter === f.key ? { background: "var(--ink)", color: "var(--paper)" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
+            style={paletteFilter === f.key ? { background: "var(--accent)", color: "var(--accent-fg)" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
           >
             {f.label} ({f.count})
           </button>
@@ -2280,7 +2287,7 @@ function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, onFinis
                 key={n}
                 onClick={() => setConfidence(n)}
                 className="pmi-focusable pmi-mono flex-1 py-1.5 rounded-lg text-xs font-semibold"
-                style={confidence === n ? { background: "var(--ink)", color: "var(--paper)" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
+                style={confidence === n ? { background: "var(--accent)", color: "var(--accent-fg)" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
               >{n}</button>
             ))}
             <button
@@ -2512,7 +2519,7 @@ function ResultsScreen({ sessionId, progress, onDone, onGap }) {
             key={f.key}
             onClick={() => setFilter(f.key)}
             className="pmi-mono shrink-0 text-xs px-3 py-1.5 rounded-full font-medium"
-            style={filter === f.key ? { background: "var(--ink)", color: "var(--paper)" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
+            style={filter === f.key ? { background: "var(--accent)", color: "var(--accent-fg)" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
           >
             {f.label} ({f.count})
           </button>
@@ -2738,7 +2745,7 @@ function FillGapScreen({ progress, gapProfile, onStart, onBack }) {
             <button
               key={n} onClick={() => setSize(n)}
               className="pmi-focusable pmi-mono flex-1 py-2 rounded-lg text-sm font-semibold"
-              style={size === n ? { background: "var(--ink)", color: "var(--paper)" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
+              style={size === n ? { background: "var(--accent)", color: "var(--accent-fg)" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
             >{n}</button>
           ))}
         </div>
@@ -2779,7 +2786,7 @@ function GlossaryScreen() {
           <button
             key={c} onClick={() => setCategory(c)}
             className="pmi-focusable pmi-mono shrink-0 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap"
-            style={category === c ? { background: "var(--ink)", color: "var(--paper)" } : { background: "var(--paper)", color: "var(--ink-mid)", border: "1px solid var(--line-strong)" }}
+            style={category === c ? { background: "var(--accent)", color: "var(--accent-fg)" } : { background: "var(--paper)", color: "var(--ink-mid)", border: "1px solid var(--line-strong)" }}
           >
             {c === "all" ? t("glossaryAllCategories") : c}
           </button>
