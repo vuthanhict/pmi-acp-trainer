@@ -20,7 +20,7 @@ const UI_TEXT = {
   vi: {
     appTitle: "PMI-ACP Daily Trainer",
     appSubtitle: "1.684 câu · 14 đề · GAP thông minh · Hỗ trợ tiếng Việt",
-    navToday: "Hôm nay", navLibrary: "Thư viện", navHistory: "Lịch sử", navGap: "GAP", navGlossary: "Từ điển", navVocab: "Ôn từ vựng", navData: "Dữ liệu",
+    navToday: "Hôm nay", navLibrary: "Thư viện", navHistory: "Lịch sử", navGap: "Tiến độ", navGlossary: "Từ điển", navVocab: "Ôn từ vựng", navData: "Dữ liệu",
     publishBanner: "Trình duyệt đang chặn lưu trữ cục bộ (chế độ ẩn danh hoặc cài đặt riêng tư) — tiến trình sẽ không được lưu giữa các phiên. Hãy dùng \"Xuất backup\" ở mục Dữ liệu để lưu thủ công.",
     savedToast: "Đã tự động lưu",
 
@@ -118,13 +118,81 @@ const UI_TEXT = {
     glossaryTitle: "Từ điển thuật ngữ", glossarySearchPlaceholder: "Tìm thuật ngữ tiếng Anh hoặc tiếng Việt...",
     glossaryAllCategories: "Tất cả", glossaryCount: "{n} thuật ngữ", glossaryNoResults: "Không tìm thấy thuật ngữ phù hợp.",
 
+    // Tracking — mục tiêu hằng ngày
+    goalHeaderToday: "MỤC TIÊU HÔM NAY",
+    goalSetupTitle: "Đặt mục tiêu luyện mỗi ngày",
+    goalSetupBody: "Chọn một nhịp bạn giữ được đều đặn. Đổi lại bất cứ lúc nào.",
+    goalUnitQuestions: "{n} câu",
+    goalUnitQuizset: "Trọn 1 bộ đề",
+    goalQuizsetHint: "Bộ đề dài (>60 câu) khó xong trong một ngày — tiến độ tính theo phần trăm bộ đề hoàn thành trong ngày.",
+    goalSaveBtn: "Lưu mục tiêu", goalChangeBtn: "Đổi mục tiêu", goalSetBtn: "Đặt mục tiêu",
+    goalProgressCount: "{done}/{total} câu",
+    goalTodayStats: "Đúng {c}/{a} ({p}%) · ~{m} phút",
+    goalTodayEmpty: "Chưa làm câu nào hôm nay.",
+    goalContinueBtn: "Làm tiếp {n} câu", goalStartBtn: "Bắt đầu {n} câu", goalExtraBtn: "Luyện thêm 10 câu",
+    goalMetTitle: "ĐÃ ĐẠT MỤC TIÊU HÔM NAY", goalMetBody: "Làm thêm vẫn được tính vào tiến bộ.",
+    streakLabel: "{n} ngày", streakNone: "Chưa có chuỗi",
+    streakLongest: "Dài nhất {n} ngày", streakFreezeLeft: "Còn {n}/2 lượt bảo vệ chuỗi tháng này",
+    streakFreezeExplain: "Nghỉ tối đa 2 ngày mỗi tháng mà không mất chuỗi.",
+
+    // Tracking — màn Tiến độ
+    progressTabOverview: "Tổng quan", progressTabRhythm: "Nhịp luyện", progressTabGap: "GAP",
+    readinessHeader: "MỨC SẴN SÀNG THI",
+    readinessLevel_insufficient: "Chưa đủ dữ liệu", readinessLevel_high_risk: "Rủi ro cao",
+    readinessLevel_progressing: "Đang tiến bộ", readinessLevel_near_ready: "Gần sẵn sàng", readinessLevel_ready: "Sẵn sàng",
+    readinessMissingHeader: "Còn thiếu gì để lên mức tiếp theo",
+    readinessDisclaimer: "Ước lượng nội bộ dựa trên dữ liệu luyện tập của bạn. PMI không công bố ngưỡng đỗ chính thức — ngưỡng 75 ở đây là mức thận trọng do app đặt ra.",
+    readinessActionBtn: "Luyện đúng những điểm này",
+    reasonCritical: "{n} task ở mức critical (nặng nhất: {domain})",
+    reasonCoverage: "Độ phủ {p}% — {n} task chưa từng làm",
+    reasonAssisted: "{p}% câu có mở hỗ trợ tiếng Việt",
+    reasonRecency: "Đã {n} ngày không luyện — dữ liệu cũ bị giảm trọng số",
+    reasonVolume: "Mới có {n}/60 lượt làm hợp lệ để đánh giá",
+    reasonDomainLow: "Domain {domain} mới đạt {p}% mastery (chiếm {w}% đề thi)",
+    reasonAllGood: "Không còn điểm nghẽn lớn — giữ nhịp và làm mới dữ liệu mỗi tuần.",
+
+    trendHeader: "XU HƯỚNG 30 NGÀY",
+    trendFirstExposure: "Lần đầu gặp", trendRetake: "Làm lại",
+    trendThreshold: "ngưỡng 75%",
+    trendExplain: "Khoảng cách giữa hai đường là phần bạn nhớ đáp án chứ chưa thực sự nắm. Đường \"Lần đầu gặp\" mới phản ánh năng lực thật.",
+    trendNoData: "Cần thêm dữ liệu ở ít nhất 2 ngày khác nhau để vẽ xu hướng.",
+
+    heatmapHeader: "NHỊP LUYỆN 12 TUẦN GẦN NHẤT",
+    heatmapLegendLess: "ít", heatmapLegendMore: "nhiều",
+    heatmapSummary: "Đạt mục tiêu {met}/{total} ngày ({p}%)",
+    heatmapDayDetail: "{date}: {answered} câu · đúng {p}%",
+    heatmapDayEmpty: "{date}: chưa luyện",
+    heatmapNeedGoal: "Đặt mục tiêu hằng ngày để theo dõi ngày nào đạt/không đạt.",
+
+    examDateHeader: "NGÀY THI DỰ KIẾN",
+    examDateNotSet: "Chưa đặt", examDateSetBtn: "Đặt ngày thi", examDateClearBtn: "Xóa",
+    examDateCountdown: "Còn {n} ngày", examDatePassed: "Ngày thi đã qua",
+    examDatePace: "Để phủ hết {n} task chưa làm, cần ~{q} câu/ngày.",
+    examDatePaceOk: "Nhịp hiện tại ({q} câu/ngày) đủ để phủ hết trước ngày thi.",
+    examDatePaceLow: "Nhịp hiện tại {cur} câu/ngày — cần ~{need} câu/ngày mới kịp.",
+
+    masteryTrendHeader: "MASTERY THEO DOMAIN",
+    masteryTrendEmpty: "Cần ít nhất 2 lần nộp bài để vẽ diễn biến mastery.",
+
+    // Tracking — Library & Results
+    attemptHistoryHeader: "Các lần làm",
+    attemptNth: "L{n}",
+    attemptDelta: "{sign}{n} điểm so với lần đầu",
+    firstExposureLabel: "Lần đầu gặp", retakeLabel: "Làm lại",
+    resultsCompareHeader: "SO VỚI LẦN TRƯỚC CÙNG BỘ ĐỀ",
+    resultsCompareTrusted: "Trusted: {prev}% → {cur}%",
+    resultsCompareFirst: "Trong đó, câu lần đầu gặp: {prev}% → {cur}%",
+    resultsCompareNoPrev: "Đây là lần đầu bạn làm bộ đề này — lần sau sẽ có so sánh.",
+    resultsFirstExposureLine: "Lần đầu gặp: {p}% ({c}/{n})",
+    resultsFirstExposureNone: "Lần đầu gặp: — (mọi câu đều đã gặp trước đó)",
+
     // Domain names (giữ nguyên tiếng Anh theo chuẩn PMI-ACP, không dịch)
     domainMindset: "Mindset", domainLeadership: "Leadership", domainProduct: "Product", domainDelivery: "Delivery",
   },
   en: {
     appTitle: "PMI-ACP Daily Trainer",
     appSubtitle: "1,684 questions · 14 exams · Smart GAP · Vietnamese support",
-    navToday: "Today", navLibrary: "Library", navHistory: "History", navGap: "GAP", navGlossary: "Glossary", navVocab: "Vocab drill", navData: "Data",
+    navToday: "Today", navLibrary: "Library", navHistory: "History", navGap: "Progress", navGlossary: "Glossary", navVocab: "Vocab drill", navData: "Data",
     publishBanner: "This browser is blocking local storage (private/incognito mode or privacy settings) — progress won't persist between sessions. Use \"Export backup\" under Data to save manually.",
     savedToast: "Auto-saved",
 
@@ -213,6 +281,71 @@ const UI_TEXT = {
 
     glossaryTitle: "Glossary", glossarySearchPlaceholder: "Search English or Vietnamese term...",
     glossaryAllCategories: "All", glossaryCount: "{n} terms", glossaryNoResults: "No matching terms found.",
+
+    goalHeaderToday: "TODAY'S GOAL",
+    goalSetupTitle: "Set a daily practice goal",
+    goalSetupBody: "Pick a pace you can actually keep. Change it any time.",
+    goalUnitQuestions: "{n} questions",
+    goalUnitQuizset: "One full exam set",
+    goalQuizsetHint: "Long sets (>60 questions) are hard to finish in one day — progress is counted as the percentage of the set completed today.",
+    goalSaveBtn: "Save goal", goalChangeBtn: "Change goal", goalSetBtn: "Set goal",
+    goalProgressCount: "{done}/{total} questions",
+    goalTodayStats: "{c}/{a} correct ({p}%) · ~{m} min",
+    goalTodayEmpty: "No questions answered today yet.",
+    goalContinueBtn: "Continue — {n} more", goalStartBtn: "Start {n} questions", goalExtraBtn: "Practice 10 more",
+    goalMetTitle: "TODAY'S GOAL MET", goalMetBody: "Extra practice still counts toward your progress.",
+    streakLabel: "{n} days", streakNone: "No streak yet",
+    streakLongest: "Longest {n} days", streakFreezeLeft: "{n}/2 streak freezes left this month",
+    streakFreezeExplain: "Skip up to 2 days per month without losing your streak.",
+
+    progressTabOverview: "Overview", progressTabRhythm: "Rhythm", progressTabGap: "GAP",
+    readinessHeader: "EXAM READINESS",
+    readinessLevel_insufficient: "Not enough data", readinessLevel_high_risk: "High risk",
+    readinessLevel_progressing: "Progressing", readinessLevel_near_ready: "Nearly ready", readinessLevel_ready: "Ready",
+    readinessMissingHeader: "What's missing to reach the next level",
+    readinessDisclaimer: "An internal estimate based on your own practice data. PMI does not publish an official passing score — the 75 threshold here is a conservative bar set by this app.",
+    readinessActionBtn: "Practice exactly these",
+    reasonCritical: "{n} task(s) at critical level (worst domain: {domain})",
+    reasonCoverage: "Coverage {p}% — {n} task(s) never attempted",
+    reasonAssisted: "{p}% of answers used Vietnamese support",
+    reasonRecency: "{n} day(s) since last practice — older data is down-weighted",
+    reasonVolume: "Only {n}/60 eligible attempts so far",
+    reasonDomainLow: "{domain} is at {p}% mastery (worth {w}% of the exam)",
+    reasonAllGood: "No major blockers left — keep the rhythm and refresh data weekly.",
+
+    trendHeader: "30-DAY TREND",
+    trendFirstExposure: "First exposure", trendRetake: "Retake",
+    trendThreshold: "75% bar",
+    trendExplain: "The gap between the two lines is what you remember rather than know. The \"First exposure\" line is the one that reflects real ability.",
+    trendNoData: "Need data on at least 2 different days to draw a trend.",
+
+    heatmapHeader: "LAST 12 WEEKS",
+    heatmapLegendLess: "less", heatmapLegendMore: "more",
+    heatmapSummary: "Goal met on {met}/{total} days ({p}%)",
+    heatmapDayDetail: "{date}: {answered} questions · {p}% correct",
+    heatmapDayEmpty: "{date}: no practice",
+    heatmapNeedGoal: "Set a daily goal to track which days you hit it.",
+
+    examDateHeader: "TARGET EXAM DATE",
+    examDateNotSet: "Not set", examDateSetBtn: "Set exam date", examDateClearBtn: "Clear",
+    examDateCountdown: "{n} days left", examDatePassed: "Exam date has passed",
+    examDatePace: "To cover the remaining {n} task(s), you need ~{q} questions/day.",
+    examDatePaceOk: "Your current pace ({q}/day) is enough to cover everything in time.",
+    examDatePaceLow: "Current pace {cur}/day — you need ~{need}/day to make it.",
+
+    masteryTrendHeader: "MASTERY BY DOMAIN",
+    masteryTrendEmpty: "Need at least 2 submitted sessions to chart mastery over time.",
+
+    attemptHistoryHeader: "Attempts",
+    attemptNth: "#{n}",
+    attemptDelta: "{sign}{n} points vs first attempt",
+    firstExposureLabel: "First exposure", retakeLabel: "Retake",
+    resultsCompareHeader: "VS YOUR PREVIOUS RUN OF THIS SET",
+    resultsCompareTrusted: "Trusted: {prev}% → {cur}%",
+    resultsCompareFirst: "Of which, first-exposure questions: {prev}% → {cur}%",
+    resultsCompareNoPrev: "First time through this set — you'll get a comparison next run.",
+    resultsFirstExposureLine: "First exposure: {p}% ({c}/{n})",
+    resultsFirstExposureNone: "First exposure: — (every question had been seen before)",
 
     domainMindset: "Mindset", domainLeadership: "Leadership", domainProduct: "Product", domainDelivery: "Delivery",
   },
@@ -333,6 +466,56 @@ function fmtClock(ms) {
   const s = totalSec % 60;
   const pad = (n) => String(n).padStart(2, "0");
   return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+/* ---------- Ngày theo múi giờ NGƯỜI HỌC (không phải UTC, không phải giờ máy) ---------- */
+/* Bắt buộc: làm bài lúc 23h giờ VN mà cắt ngày theo UTC sẽ bị tính sang hôm sau, khiến   */
+/* chuỗi ngày (streak) và tiến độ hôm nay sai lệch mỗi tối. Dùng Intl với timeZone của     */
+/* learner; nếu môi trường không hỗ trợ thì rơi về giờ máy (vẫn tốt hơn UTC).              */
+const DEFAULT_TZ = "Asia/Ho_Chi_Minh";
+const _dayKeyFmtCache = new Map();
+function dayKeyFormatter(tz) {
+  if (!_dayKeyFmtCache.has(tz)) {
+    let fmt;
+    try {
+      fmt = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" });
+    } catch {
+      fmt = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" });
+    }
+    _dayKeyFmtCache.set(tz, fmt);
+  }
+  return _dayKeyFmtCache.get(tz);
+}
+/** "2026-08-10" theo múi giờ tz. Trả về null nếu input không phải thời điểm hợp lệ. */
+function dayKey(dateLike, tz = DEFAULT_TZ) {
+  const d = dateLike instanceof Date ? dateLike : new Date(dateLike);
+  if (!Number.isFinite(d.getTime())) return null;
+  return dayKeyFormatter(tz).format(d);
+}
+function todayKey(tz = DEFAULT_TZ, now = Date.now()) {
+  return dayKey(new Date(now), tz);
+}
+/* Cộng/trừ ngày trên chuỗi "YYYY-MM-DD". Neo vào 12:00 UTC để không bị lệch do DST. */
+function shiftDayKey(key, deltaDays) {
+  const [y, m, d] = key.split("-").map(Number);
+  const anchor = Date.UTC(y, m - 1, d, 12);
+  return new Date(anchor + deltaDays * 86_400_000).toISOString().slice(0, 10);
+}
+function diffDayKeys(a, b) {
+  const toMs = (k) => {
+    const [y, m, d] = k.split("-").map(Number);
+    return Date.UTC(y, m - 1, d, 12);
+  };
+  return Math.round((toMs(a) - toMs(b)) / 86_400_000);
+}
+/** 0 = Chủ nhật … 6 = Thứ 7 */
+function weekdayOfDayKey(key) {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d, 12)).getUTCDay();
+}
+function fmtDayKey(key, lang) {
+  if (!key) return "—";
+  const [y, m, d] = key.split("-");
+  return lang === "en" ? `${m}/${d}/${y}` : `${d}/${m}/${y}`;
 }
 function downloadJson(filename, obj) {
   const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
@@ -616,6 +799,358 @@ function calculateGapProfile({ attempts, now = Date.now(), halfLifeDays = 30 }) 
   };
 }
 
+/* ===================== Tracking engine ===================== */
+/* NGUYÊN TẮC THIẾT KẾ QUAN TRỌNG: mọi số liệu tracking đều được TÍNH LẠI từ `attempts[]`  */
+/* và `completedQuizzes[]` — không lưu bản sao đã tổng hợp vào progress. Nhờ vậy việc merge */
+/* backup từ Drive / import file / làm bài trên 2 thiết bị không bao giờ tạo ra chuỗi ngày  */
+/* hay tiến độ sai. Trong progress chỉ lưu ĐÚNG hai thứ người dùng tự đặt: mục tiêu hằng    */
+/* ngày và ngày thi dự kiến. Dữ liệu đề thi (QUESTION_INDEX/QUIZ_CATALOG) chỉ được ĐỌC.     */
+
+const GOAL_PRESETS = [10, 20, 30, 50];
+const DEFAULT_GOAL_VALUE = 20;
+const READINESS_READY_BAR = 75;          // ngưỡng thận trọng do app đặt, KHÔNG phải chuẩn PMI
+const STREAK_FREEZES_PER_MONTH = 2;
+const MAX_MINUTES_PER_ATTEMPT = 10;       // chặn outlier: mở tab rồi bỏ đi cả tiếng
+const READINESS_MIN_ATTEMPTS = 60;        // dưới mức này chỉ hiện "chưa đủ dữ liệu"
+
+/** Câu hỏi được tính vào tiến độ hằng ngày: đã chấm được (loại matching/manual review). */
+function isCountableAttempt(a) {
+  return a && a.gradeStatus === "graded";
+}
+
+/**
+ * Gom attempts theo ngày (múi giờ người học) và tách rõ hai lớp:
+ *  - firstExposure: lần ĐẦU TIÊN trong đời gặp questionId đó  → phản ánh năng lực thật
+ *  - retake:        các lần gặp lại                            → phần lớn là đo trí nhớ
+ * Đây là cơ chế chống "ảo tưởng tiến bộ" khi làm lại cùng một bộ đề.
+ */
+function buildDailyHistory(attempts, tz = DEFAULT_TZ) {
+  const sorted = attempts
+    .filter(isCountableAttempt)
+    .filter((a) => a.answeredAt)
+    .slice()
+    .sort((x, y) => new Date(x.answeredAt) - new Date(y.answeredAt));
+
+  const seenQuestions = new Set();
+  const history = new Map();
+  for (const a of sorted) {
+    const key = dayKey(a.answeredAt, tz);
+    if (!key) continue;
+    if (!history.has(key)) {
+      history.set(key, {
+        dayKey: key, answered: 0, correct: 0,
+        firstExposure: 0, firstExposureCorrect: 0,
+        retake: 0, retakeCorrect: 0,
+        minutes: 0, sessionIds: new Set(),
+      });
+    }
+    const row = history.get(key);
+    const isFirst = !seenQuestions.has(a.questionId);
+    seenQuestions.add(a.questionId);
+
+    row.answered += 1;
+    if (a.isCorrect) row.correct += 1;
+    if (isFirst) {
+      row.firstExposure += 1;
+      if (a.isCorrect) row.firstExposureCorrect += 1;
+    } else {
+      row.retake += 1;
+      if (a.isCorrect) row.retakeCorrect += 1;
+    }
+    if (Number.isFinite(a.responseTimeMs) && a.responseTimeMs > 0) {
+      row.minutes += Math.min(MAX_MINUTES_PER_ATTEMPT, a.responseTimeMs / 60_000);
+    }
+    if (a.sessionId) row.sessionIds.add(a.sessionId);
+  }
+  for (const row of history.values()) {
+    row.sessions = row.sessionIds.size;
+    delete row.sessionIds;
+    row.minutes = Math.round(row.minutes);
+  }
+  return history;
+}
+
+/** Số câu mục tiêu quy đổi ra "câu" cho một ngày, dù người dùng chọn kiểu mục tiêu nào. */
+function goalTargetCount(goal) {
+  if (!goal) return null;
+  if (goal.type === "quizset") {
+    const cat = QUIZ_CATALOG.find((c) => c.quizIndex === goal.quizIndex);
+    return cat?.questionCount || null;
+  }
+  return goal.value || null;
+}
+
+function isGoalMet(dayRow, goal) {
+  const target = goalTargetCount(goal);
+  if (!target || !dayRow) return false;
+  return dayRow.answered >= target;
+}
+
+/**
+ * Chuỗi ngày liên tiếp đạt mục tiêu, có cơ chế "bảo vệ chuỗi" 2 lượt/tháng dương lịch.
+ * Không có cơ chế này, ốm đúng 1 ngày là mất chuỗi 30 ngày — và người học bỏ app luôn.
+ * Ngày HÔM NAY chưa đạt thì không phá chuỗi (còn cả ngày để làm), chỉ không cộng thêm.
+ */
+function computeStreak(history, goal, tz = DEFAULT_TZ, now = Date.now()) {
+  const today = todayKey(tz, now);
+  if (!goalTargetCount(goal)) {
+    return { current: 0, longest: 0, freezesUsed: 0, freezesLeft: STREAK_FREEZES_PER_MONTH, lastActiveDay: null, todayMet: false };
+  }
+
+  const metDays = new Set();
+  for (const [key, row] of history.entries()) if (isGoalMet(row, goal)) metDays.add(key);
+
+  const todayMet = metDays.has(today);
+  const freezeBudget = new Map(); // "YYYY-MM" → số lượt đã dùng
+  const takeFreeze = (key) => {
+    const month = key.slice(0, 7);
+    const used = freezeBudget.get(month) || 0;
+    if (used >= STREAK_FREEZES_PER_MONTH) return false;
+    freezeBudget.set(month, used + 1);
+    return true;
+  };
+
+  let current = 0;
+  let cursor = todayMet ? today : shiftDayKey(today, -1);
+  // Trần an toàn 400 vòng: không ai có chuỗi dài hơn thế, và tránh lặp vô hạn nếu dữ liệu lỗi.
+  for (let i = 0; i < 400; i++) {
+    if (metDays.has(cursor)) {
+      current += 1;
+      cursor = shiftDayKey(cursor, -1);
+      continue;
+    }
+    if (current > 0 && takeFreeze(cursor)) {
+      cursor = shiftDayKey(cursor, -1);
+      continue;
+    }
+    break;
+  }
+
+  // Chuỗi dài nhất: quét toàn bộ lịch sử, cùng luật freeze (ngân sách riêng cho mỗi lần quét).
+  let longest = 0;
+  const allDays = [...metDays].sort();
+  if (allDays.length) {
+    const first = allDays[0];
+    const last = allDays[allDays.length - 1];
+    const span = Math.min(2000, diffDayKeys(last, first) + 1);
+    const localBudget = new Map();
+    let run = 0;
+    let gapRun = 0;
+    for (let i = 0; i < span; i++) {
+      const key = shiftDayKey(first, i);
+      if (metDays.has(key)) {
+        run += 1;
+        gapRun = 0;
+        longest = Math.max(longest, run);
+      } else if (run > 0) {
+        const month = key.slice(0, 7);
+        const used = localBudget.get(month) || 0;
+        gapRun += 1;
+        if (gapRun <= 1 && used < STREAK_FREEZES_PER_MONTH) {
+          localBudget.set(month, used + 1);
+        } else {
+          run = 0;
+          gapRun = 0;
+          localBudget.clear();
+        }
+      }
+    }
+  }
+  longest = Math.max(longest, current);
+
+  const thisMonth = today.slice(0, 7);
+  const freezesUsed = freezeBudget.get(thisMonth) || 0;
+  const activeDays = [...history.keys()].sort();
+  return {
+    current,
+    longest,
+    todayMet,
+    freezesUsed,
+    freezesLeft: Math.max(0, STREAK_FREEZES_PER_MONTH - freezesUsed),
+    lastActiveDay: activeDays.length ? activeDays[activeDays.length - 1] : null,
+  };
+}
+
+/**
+ * Chuỗi thời gian 2 đường cho biểu đồ xu hướng: độ chính xác lần-đầu-gặp và làm-lại.
+ * Dùng cửa sổ trượt `window` ngày để làm mượt — dữ liệu từng ngày quá thưa (10-20 câu)
+ * nên đường thô sẽ nhảy 0%↔100% và không đọc được gì.
+ */
+function buildAccuracyTrend(history, { days = 30, window = 7, tz = DEFAULT_TZ, now = Date.now() } = {}) {
+  const today = todayKey(tz, now);
+  const points = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const key = shiftDayKey(today, -i);
+    let fe = 0, feC = 0, rt = 0, rtC = 0;
+    for (let w = 0; w < window; w++) {
+      const row = history.get(shiftDayKey(key, -w));
+      if (!row) continue;
+      fe += row.firstExposure; feC += row.firstExposureCorrect;
+      rt += row.retake; rtC += row.retakeCorrect;
+    }
+    points.push({
+      dayKey: key,
+      firstExposure: fe >= 5 ? feC / fe : null,   // dưới 5 mẫu thì con số vô nghĩa → để trống
+      retake: rt >= 5 ? rtC / rt : null,
+      firstExposureN: fe,
+      retakeN: rt,
+    });
+  }
+  return points;
+}
+
+/** Diễn biến mastery từng domain, đọc từ gapSnapshots — dữ liệu app đã ghi sẵn từ đầu. */
+function buildMasteryTrend(gapSnapshots) {
+  return (gapSnapshots || [])
+    .filter((s) => s?.generatedAt && s?.profile?.domains)
+    .slice(-40)
+    .map((s) => ({
+      at: s.generatedAt,
+      sessionId: s.sessionId,
+      domains: Object.fromEntries(s.profile.domains.map((d) => [d.domain, d.mastery])),
+    }));
+}
+
+const READINESS_LEVELS = [
+  { key: "high_risk", min: 0, ring: "critical" },
+  { key: "progressing", min: 60, ring: "needs_work" },
+  { key: "near_ready", min: READINESS_READY_BAR, ring: "developing" },
+  { key: "ready", min: 85, ring: "ready" },
+];
+function readinessLevelFor(score) {
+  let level = READINESS_LEVELS[0];
+  for (const l of READINESS_LEVELS) if (score >= l.min) level = l;
+  return level;
+}
+
+/**
+ * Readiness Index 0–100 — trả lời "tôi đỗ được chưa?" bằng 4 hệ số nhân, tất cả đều
+ * lấy từ dữ liệu app đã có. Cố tình KHÔNG hiển thị "xác suất đỗ %" vì không có bộ dữ
+ * liệu chuẩn hóa nào để hiệu chỉnh con số đó — hứa hẹn sai còn tệ hơn không hứa.
+ *
+ *   base         Σ(trọng số đề thi × mastery domain), domain chưa có dữ liệu tính là 0
+ *   coverage     0.5 + 0.5 × (tỉ lệ task đã có bằng chứng) — phủ 10% đề thi không phải là sẵn sàng
+ *   recency      0.5^(số ngày nghỉ / 21), sàn 0.7 — nghỉ 3 tuần thì mastery cũ không còn đúng
+ *   independence 1 − 0.25 × tỉ lệ dùng hỗ trợ tiếng Việt — phòng thi thật không có bản dịch
+ */
+function computeReadiness(gapProfile, attempts, { now = Date.now(), lang = "vi" } = {}) {
+  const totalTasks = gapProfile.tasks.length;
+  const tasksWithEvidence = gapProfile.tasks.filter((t) => t.status !== "insufficient_data").length;
+  const untouched = gapProfile.tasks.filter((t) => t.attempts === 0).length;
+  const critical = gapProfile.tasks.filter((t) => t.status === "critical");
+
+  const base = gapProfile.domains.reduce((s, d) => s + d.examWeight * (d.mastery ?? 0), 0);
+  const coverage = totalTasks ? tasksWithEvidence / totalTasks : 0;
+  const coverageFactor = 0.5 + 0.5 * coverage;
+
+  const graded = attempts.filter(isCountableAttempt);
+  const lastAt = graded.reduce((mx, a) => Math.max(mx, new Date(a.answeredAt || 0).getTime() || 0), 0);
+  const idleDays = lastAt ? Math.max(0, Math.floor((now - lastAt) / 86_400_000)) : 999;
+  const recency = lastAt ? clamp(0.5 ** (idleDays / 21), 0.7, 1) : 0.7;
+
+  const assistedCount = graded.filter((a) => a.supportUsage?.assisted).length;
+  const assistedRatio = graded.length ? assistedCount / graded.length : 0;
+  const independence = 1 - 0.25 * assistedRatio;
+
+  const rawScore = 100 * base * coverageFactor * recency * independence;
+  const score = Math.round(clamp(rawScore, 0, 100));
+  const enoughData = gapProfile.eligibleAttempts >= READINESS_MIN_ATTEMPTS;
+  const level = enoughData ? readinessLevelFor(score) : { key: "insufficient", ring: "insufficient_data" };
+
+  // "Còn thiếu gì" — cụ thể, xếp theo mức ảnh hưởng, mỗi mục gắn được với một hành động.
+  const reasons = [];
+  if (!enoughData) {
+    reasons.push({ key: "reasonVolume", vars: { n: gapProfile.eligibleAttempts } });
+  }
+  if (critical.length) {
+    const worstDomain = [...critical].sort((a, b) => b.gapPriority - a.gapPriority)[0].domain;
+    reasons.push({ key: "reasonCritical", vars: { n: critical.length, domain: worstDomain } });
+  }
+  if (coverage < 0.9 && untouched > 0) {
+    reasons.push({ key: "reasonCoverage", vars: { p: Math.round(coverage * 100), n: untouched } });
+  }
+  const weakDomain = gapProfile.domains
+    .filter((d) => d.mastery !== null && d.mastery < 0.7)
+    .sort((a, b) => a.mastery * a.examWeight - b.mastery * b.examWeight)[0];
+  if (weakDomain) {
+    reasons.push({ key: "reasonDomainLow", vars: { domain: weakDomain.domain, p: Math.round(weakDomain.mastery * 100), w: Math.round(weakDomain.examWeight * 100) } });
+  }
+  if (assistedRatio >= 0.2) {
+    reasons.push({ key: "reasonAssisted", vars: { p: Math.round(assistedRatio * 100) } });
+  }
+  if (idleDays >= 7 && lastAt) {
+    reasons.push({ key: "reasonRecency", vars: { n: idleDays } });
+  }
+  if (!reasons.length) reasons.push({ key: "reasonAllGood", vars: {} });
+
+  return {
+    score, level: level.key, ring: level.ring, enoughData,
+    factors: { base, coverage, coverageFactor, recency, independence, idleDays, assistedRatio },
+    stats: { totalTasks, tasksWithEvidence, untouched, criticalCount: critical.length, eligibleAttempts: gapProfile.eligibleAttempts },
+    reasons,
+  };
+}
+
+/**
+ * Chọn câu cho một phiên luyện GAP. Tách khỏi FillGapScreen để nút "Làm tiếp N câu" ở
+ * màn Hôm nay dùng chung được — một chạm là vào bài, không bắt người dùng chọn task.
+ * CHỈ ĐỌC ngân hàng câu hỏi.
+ */
+function buildGapPracticeQuestionIds({ attempts, taskIds, size }) {
+  const answeredIds = new Set(attempts.map((a) => a.questionId));
+  const wrongIds = new Set(attempts.filter((a) => a.gradeStatus === "graded" && !a.isCorrect).map((a) => a.questionId));
+  const taskFilter = taskIds && taskIds.length ? new Set(taskIds) : null;
+
+  const pool = [];
+  for (const [, list] of QUESTIONS_BY_QUIZ) {
+    for (const q of list) {
+      if (q.manualReview) continue;
+      if (taskFilter && !taskFilter.has(q.taskId)) continue;
+      pool.push(q);
+    }
+  }
+  const unseen = pool.filter((q) => !answeredIds.has(q.id));
+  const needReview = pool.filter((q) => wrongIds.has(q.id));
+  const rest = pool.filter((q) => answeredIds.has(q.id) && !wrongIds.has(q.id));
+  const ordered = [...shuffleArray(unseen), ...shuffleArray(needReview), ...shuffleArray(rest)];
+
+  const seenDup = new Set();
+  const picked = [];
+  for (const q of ordered) {
+    if (picked.length >= size) break;
+    if (q.duplicateGroupId && seenDup.has(q.duplicateGroupId)) continue;
+    picked.push(q);
+    if (q.duplicateGroupId) seenDup.add(q.duplicateGroupId);
+  }
+  return picked.map((q) => q.id);
+}
+
+/**
+ * Nén gapSnapshots cũ hơn 90 ngày: giữ lại phần domains + 10 task ưu tiên nhất, bỏ phần
+ * chi tiết hàng trăm task. Snapshot đầy đủ nặng ~40KB, sau 100 phiên là 4MB — vượt hạn
+ * mức localStorage và làm chậm mọi lần lưu.
+ */
+function compactGapSnapshots(snapshots, now = Date.now()) {
+  const cutoff = now - 90 * 86_400_000;
+  return (snapshots || []).map((s) => {
+    if (!s?.profile || s.compacted) return s;
+    const at = new Date(s.generatedAt || 0).getTime();
+    if (!at || at >= cutoff) return s;
+    return {
+      sessionId: s.sessionId,
+      generatedAt: s.generatedAt,
+      compacted: true,
+      profile: {
+        generatedAt: s.profile.generatedAt,
+        eligibleAttempts: s.profile.eligibleAttempts,
+        domains: s.profile.domains,
+        tasks: (s.profile.tasks || []).slice(0, 10),
+        nextBestActions: s.profile.nextBestActions || [],
+      },
+    };
+  });
+}
+
 /* ---------- Grading ---------- */
 function gradeAttempt(question, selectedOptionIds) {
   if (!question || question.manualReview) {
@@ -692,7 +1227,7 @@ const storage = {
 };
 
 const PROGRESS_KEY = "progress";
-const PROGRESS_SCHEMA_VERSION = 2;
+const PROGRESS_SCHEMA_VERSION = 3;
 const DRIVE_AUTO_KEY = "pmi_acp_drive_auto_backup";
 const DRIVE_LAST_SYNC_KEY = "pmi_acp_drive_last_sync";
 const DRIVE_ERROR_I18N_KEY = {
@@ -710,6 +1245,9 @@ function defaultProgress() {
     activeSession: null,
     attempts: [],
     gapSnapshots: [],
+    // Chỉ lưu thứ người dùng TỰ ĐẶT. Lịch sử ngày, chuỗi ngày, readiness đều được tính lại
+    // từ attempts mỗi lần render — xem chú thích ở đầu "Tracking engine".
+    tracking: { dailyGoal: null, examDate: null },
     settings: { theme: "light", uiLanguage: "vi", sidebarOpen: true },
     updatedAt: null,
   };
@@ -723,6 +1261,10 @@ function ensureSupportUsage(attempt) {
 function migrateProgress(raw) {
   const base = { ...defaultProgress(), ...raw, settings: { ...defaultProgress().settings, ...(raw.settings || {}) } };
   base.attempts = (raw.attempts || []).map(ensureSupportUsage);
+  // v2 → v3: thêm nhánh `tracking`. Backup cũ không có trường này vẫn nạp bình thường,
+  // chỉ là chưa đặt mục tiêu — không có bước migrate nào đụng tới attempts/completedQuizzes.
+  base.tracking = { ...defaultProgress().tracking, ...(raw.tracking || {}) };
+  base.gapSnapshots = compactGapSnapshots(raw.gapSnapshots || []);
   base.schemaVersion = PROGRESS_SCHEMA_VERSION;
   return base;
 }
@@ -735,8 +1277,13 @@ function mergeProgressData(base, data) {
     ...base,
     attempts: [...base.attempts, ...newAttempts],
     completedQuizzes: [...base.completedQuizzes, ...newCompleted],
-    gapSnapshots: [...base.gapSnapshots, ...(data.gapSnapshots || [])],
+    gapSnapshots: compactGapSnapshots([...base.gapSnapshots, ...(data.gapSnapshots || [])]),
     activeSession: base.activeSession || data.activeSession || null,
+    // Mục tiêu/ngày thi của máy hiện tại được ưu tiên giữ; chỉ lấy từ file nếu máy này chưa đặt.
+    tracking: {
+      dailyGoal: base.tracking?.dailyGoal ?? data.tracking?.dailyGoal ?? null,
+      examDate: base.tracking?.examDate ?? data.tracking?.examDate ?? null,
+    },
     settings: { ...base.settings, ...(data.settings || {}) },
   };
   return { merged, addedCount: newAttempts.length };
@@ -893,6 +1440,43 @@ const DESIGN_CSS = `
 .pmi-choice.is-wrong { border-color: var(--flag); background: var(--flag-tint); }
 .pmi-choice-letter { font-family: var(--font-mono); font-weight: 600; color: var(--ink-soft); }
 
+/* ---- Tracking ---- */
+/* Ô heatmap nhịp luyện: thang ĐƠN SẮC theo --sage. Cố tình không dùng đỏ/vàng vì trong app
+   này đỏ (--flag) và vàng (--seal) đã mang nghĩa "sai / cần chú ý" ở phần chấm điểm —
+   dùng lẫn sang biểu đồ chuyên cần sẽ khiến "hôm đó làm ít" trông như "hôm đó làm sai". */
+/* Ô cố định 14px thay vì 1fr: heatmap phải giữ đúng tỉ lệ vuông và thẳng hàng với cột nhãn
+   thứ trong ngày ở mọi bề rộng card — dùng 1fr thì trên desktop ô phình lên 70px và lệch nhãn. */
+.pmi-heat-wrap { --heat: 14px; --heat-gap: 3px; display: flex; gap: var(--heat-gap); }
+.pmi-heat-labels { display: grid; grid-template-rows: repeat(7, var(--heat)); gap: var(--heat-gap); }
+.pmi-heat-grid { display: grid; grid-auto-flow: column; grid-template-columns: repeat(12, var(--heat)); grid-template-rows: repeat(7, var(--heat)); gap: var(--heat-gap); }
+.pmi-heat { border-radius: 3px; border: 1px solid var(--line); display: inline-block; }
+.pmi-heat.lvl-0 { background: transparent; }
+.pmi-heat.lvl-1 { background: var(--sage-tint); }
+.pmi-heat.lvl-2 { background: var(--sage-tint); border-color: var(--sage); }
+.pmi-heat.lvl-3 { background: var(--sage); border-color: var(--sage); opacity: .75; }
+.pmi-heat.lvl-4 { background: var(--sage); border-color: var(--sage); }
+.pmi-heat.is-future { border-style: dashed; opacity: .45; }
+.pmi-heat.is-today { outline: 1.5px solid var(--ink); outline-offset: 1px; }
+
+/* Thước readiness 0–100 với vạch ngưỡng 75 */
+.pmi-meter { position: relative; height: 8px; background: var(--line); border-radius: var(--radius-pill); }
+.pmi-meter-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: var(--radius-pill); }
+.pmi-meter-bar { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink-soft); }
+.pmi-meter-dot { position: absolute; top: 50%; width: 12px; height: 12px; margin-top: -6px; margin-left: -6px; border-radius: 50%; border: 2px solid var(--paper-raised); }
+
+/* Sparkline lần 1..n trong Thư viện */
+.pmi-spark-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); }
+.pmi-spark-dot.is-last { background: var(--ink); width: 9px; height: 9px; }
+.pmi-spark-line { flex: 1; height: 1px; background: var(--line-strong); }
+
+/* Bảng dữ liệu tương đương cho trình đọc màn hình (biểu đồ SVG không tự đọc được).
+   Tự định nghĩa thay vì dựa vào .sr-only của Tailwind để chắc chắn luôn có mặt. */
+.pmi-sr { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
+
+.pmi-tabs { display: flex; gap: 2px; padding: 3px; background: var(--line); border-radius: var(--radius-pill); }
+.pmi-tab { flex: 1; padding: 6px 10px; border-radius: var(--radius-pill); font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+.pmi-tab.is-active { background: var(--paper-raised); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+
 .pmi-divider-dashed { border-top: 1px dashed var(--line-strong); }
 .pmi-focusable:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .pmi-app * { transition: none !important; animation: none !important; } }
@@ -974,6 +1558,10 @@ function Icon({ name, size = 18, className = "" }) {
     seal: <><circle cx="12" cy="9" r="6" /><path d="M9 14.5L7 22l5-3 5 3-2-7.5" /></>,
     sidebar: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /></>,
     cloud: <path d="M7 18a4.5 4.5 0 01-.5-8.98A5.5 5.5 0 0117 8.5a4 4 0 01-1 7.5H7z" />,
+    flame: <path d="M12 22a6 6 0 006-6c0-4-3-5-3-9 0 0-3 1.5-3 5 0-1.5-1-3-2-3.5C8 10 6 12 6 16a6 6 0 006 6z" />,
+    calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></>,
+    trend: <><path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" /></>,
+    gauge: <><path d="M12 21a9 9 0 100-18 9 9 0 000 18z" /><path d="M12 12l4-4" /></>,
   };
   return <svg {...common}>{paths[name]}</svg>;
 }
@@ -982,6 +1570,16 @@ function Icon({ name, size = 18, className = "" }) {
 function StatusChip({ status }) {
   const { lang } = useAppCtx();
   return <span className={`pmi-chip pmi-status-${status}`}>{STATUS_LABEL[lang][status] || status}</span>;
+}
+function DeltaChip({ delta }) {
+  const d = Math.round(delta);
+  if (d === 0) return <span className="pmi-chip pmi-status-insufficient_data">±0</span>;
+  const up = d > 0;
+  return (
+    <span className="pmi-chip" style={{ background: up ? "var(--sage-tint)" : "var(--flag-tint)", color: up ? "var(--sage)" : "var(--flag)" }}>
+      {up ? "▲" : "▼"} {up ? "+" : ""}{d}
+    </span>
+  );
 }
 function TierChip({ tier }) {
   const { lang } = useAppCtx();
@@ -996,9 +1594,9 @@ function ProgressBar({ value, className = "" }) {
     </div>
   );
 }
-function Card({ children, className = "", onClick, id }) {
+function Card({ children, className = "", onClick, id, style }) {
   return (
-    <div id={id} onClick={onClick} className={`pmi-card ${onClick ? "pmi-card-interactive" : ""} p-4 ${className}`}>
+    <div id={id} onClick={onClick} style={style} className={`pmi-card ${onClick ? "pmi-card-interactive" : ""} p-4 ${className}`}>
       {children}
     </div>
   );
@@ -1187,7 +1785,12 @@ function App() {
     setDriveConnectedState(false);
   }, []);
 
-  const gapProfile = useMemo(() => calculateGapProfile({ attempts: progress.attempts }), [progress.attempts]);
+  // `loaded` PHẢI nằm trong deps: lần render đầu tiên chạy khi QUESTION_INDEX còn rỗng (dữ liệu
+  // đề được giải nén bất đồng bộ). Với người dùng mới, storage rỗng nên setProgress không bao giờ
+  // được gọi → progress.attempts giữ nguyên tham chiếu [] → memo không tính lại và toàn bộ task
+  // "chưa từng làm" biến mất khỏi GAP/Readiness vĩnh viễn.
+  const gapProfile = useMemo(() => calculateGapProfile({ attempts: progress.attempts }), [progress.attempts, loaded]);
+  const tracking = useTracking(progress, gapProfile);
 
   function startQuizSession(quizIndex, mode) {
     const cat = QUIZ_CATALOG.find((c) => c.quizIndex === quizIndex);
@@ -1207,6 +1810,22 @@ function App() {
     };
     persist((prev) => ({ ...prev, activeSession: session }));
     setView("quiz");
+  }
+
+  /* ---- Tracking ---- */
+  function setDailyGoal(goal) {
+    persist((prev) => ({ ...prev, tracking: { ...prev.tracking, dailyGoal: goal } }));
+    showToast(t("savedToast"));
+  }
+  function setExamDate(dateKey) {
+    persist((prev) => ({ ...prev, tracking: { ...prev.tracking, examDate: dateKey } }));
+  }
+  /** Nút "Làm tiếp N câu" ở màn Hôm nay: tự chọn câu theo GAP, vào bài ngay trong một chạm. */
+  function startQuickPractice(size) {
+    const taskIds = gapProfile.tasks.slice(0, 5).map((tk) => tk.taskId);
+    const ids = buildGapPracticeQuestionIds({ attempts: progress.attempts, taskIds, size });
+    if (!ids.length) return;
+    startFillGapSession(ids, ids.length);
   }
 
   function startFillGapSession(questionIds, size) {
@@ -1258,6 +1877,13 @@ function App() {
       const independent = trusted.filter((a) => !a.supportUsage?.assisted);
       const independentCorrect = independent.filter((a) => a.isCorrect).length;
 
+      // Điểm "lần đầu gặp": chỉ tính những câu chưa từng xuất hiện ở BẤT KỲ phiên nào trước đó.
+      // Làm lại một bộ đề thì phần lớn điểm tăng là do nhớ đáp án; con số này tách phần đó ra
+      // để người học không tự tin sai trước kỳ thi thật.
+      const seenBefore = new Set(prev.attempts.filter((a) => a.sessionId !== session.sessionId).map((a) => a.questionId));
+      const firstExposure = trusted.filter((a) => !seenBefore.has(a.questionId));
+      const firstExposureCorrect = firstExposure.filter((a) => a.isCorrect).length;
+
       const completedEntry = {
         quizIndex: session.quizIndex,
         quizName: session.quizName,
@@ -1270,6 +1896,9 @@ function App() {
         independentScore: independent.length
           ? { correct: independentCorrect, graded: independent.length, percent: Number(((independentCorrect / independent.length) * 100).toFixed(2)) }
           : null,
+        firstExposureScore: firstExposure.length
+          ? { correct: firstExposureCorrect, graded: firstExposure.length, percent: Number(((firstExposureCorrect / firstExposure.length) * 100).toFixed(2)) }
+          : null,
       };
 
       const nextProgress = {
@@ -1279,7 +1908,10 @@ function App() {
         completedQuizzes: [...prev.completedQuizzes, completedEntry],
       };
       const nextGap = calculateGapProfile({ attempts: nextProgress.attempts });
-      nextProgress.gapSnapshots = [...nextProgress.gapSnapshots, { sessionId: session.sessionId, generatedAt: isoNow(), profile: nextGap }];
+      nextProgress.gapSnapshots = compactGapSnapshots([
+        ...nextProgress.gapSnapshots,
+        { sessionId: session.sessionId, generatedAt: isoNow(), profile: nextGap },
+      ]);
       if (session.quizIndex) {
         const rec = recommendNextQuiz(nextProgress);
         nextProgress.plan = { ...nextProgress.plan, recommendedNextQuizIndex: rec.quizIndex, currentStageId: rec.stageId };
@@ -1428,11 +2060,14 @@ function App() {
                   <TodayScreen
                     progress={progress}
                     gapProfile={gapProfile}
+                    tracking={tracking}
                     onResume={resumeSession}
                     onStart={(qi) => startQuizSession(qi, "exam")}
                     onGoLibrary={() => setView("library")}
                     onGoGap={() => setView("gap")}
                     onGoFillGap={() => setView("fillgap")}
+                    onSetGoal={setDailyGoal}
+                    onQuickPractice={startQuickPractice}
                   />
                 )}
                 {view === "library" && <LibraryScreen progress={progress} onOpenQuiz={(qi, mode) => startQuizSession(qi, mode)} onOpenHistory={(qi) => { setHistoryQuizFilter(qi); setView("history"); }} />}
@@ -1449,7 +2084,16 @@ function App() {
                   />
                 )}
                 {view === "results" && <ResultsScreen sessionId={lastSessionId} progress={progress} onDone={() => setView(resultsReturnView)} onGap={() => setView("gap")} backLabel={resultsReturnView === "history" ? t("historyBackToHistory") : null} />}
-                {view === "gap" && <GapScreen gapProfile={gapProfile} onFillGap={() => setView("fillgap")} />}
+                {view === "gap" && (
+                  <ProgressScreen
+                    progress={progress}
+                    gapProfile={gapProfile}
+                    tracking={tracking}
+                    onFillGap={() => setView("fillgap")}
+                    onSetGoal={setDailyGoal}
+                    onSetExamDate={setExamDate}
+                  />
+                )}
                 {view === "fillgap" && <FillGapScreen progress={progress} gapProfile={gapProfile} onStart={(ids, size) => startFillGapSession(ids, size)} onBack={() => setView("gap")} />}
                 {view === "glossary" && <GlossaryScreen />}
                 {view === "vocab" && <VocabScreen />}
@@ -1500,8 +2144,619 @@ function ThemeLangControls({ theme, lang, setTheme, setLang }) {
   );
 }
 
+/* ===================== Tracking: hook + components ===================== */
+
+/** Tính lại toàn bộ số liệu tracking từ attempts. Không đọc/ghi bản sao tổng hợp nào. */
+function useTracking(progress, gapProfile) {
+  const tz = progress.learner?.timezone || DEFAULT_TZ;
+  const goal = progress.tracking?.dailyGoal || null;
+  return useMemo(() => {
+    const history = buildDailyHistory(progress.attempts, tz);
+    const today = todayKey(tz);
+    const todayRow = history.get(today) || null;
+    const streak = computeStreak(history, goal, tz);
+    const target = goalTargetCount(goal);
+    const done = todayRow?.answered || 0;
+
+    // Nhịp thực tế 14 ngày gần nhất (chia cho 14, không chia cho số ngày có hoạt động —
+    // ngày nghỉ cũng là một phần của nhịp và phải kéo con số xuống).
+    let last14 = 0;
+    for (let i = 0; i < 14; i++) last14 += history.get(shiftDayKey(today, -i))?.answered || 0;
+    const currentPace = Math.round(last14 / 14);
+
+    const examDate = progress.tracking?.examDate || null;
+    const daysLeft = examDate ? diffDayKeys(examDate, today) : null;
+    // ~5 câu/task là mức tối thiểu để gap engine coi là "có bằng chứng" (evidence dùng
+    // ngưỡng 8 câu phân biệt + 2 phiên; 5 là mốc thực dụng để thoát insufficient_data).
+    const untouchedTasks = gapProfile.tasks.filter((tk) => tk.attempts === 0).length;
+    const questionsNeeded = untouchedTasks * 5;
+    const examDateInfo = {
+      daysLeft,
+      currentPace,
+      paceOk: daysLeft && daysLeft > 0 ? currentPace * daysLeft >= questionsNeeded : false,
+      questionsNeeded,
+    };
+
+    return {
+      tz, today, history, todayRow, streak, goal, target, examDate, examDateInfo, currentPace,
+      done,
+      remaining: target ? Math.max(0, target - done) : 0,
+      ratio: target ? clamp(done / target) : 0,
+      goalMet: target ? done >= target : false,
+      trend: buildAccuracyTrend(history, { tz }),
+      masteryTrend: buildMasteryTrend(progress.gapSnapshots),
+      readiness: computeReadiness(gapProfile, progress.attempts),
+    };
+    // gapProfile đã được memo hoá ở App theo attempts nên không cần thêm dependency.
+  }, [progress.attempts, progress.gapSnapshots, progress.tracking?.examDate, goal, tz, gapProfile]);
+}
+
+/* ---------- Mục tiêu hằng ngày ---------- */
+function GoalPicker({ goal, onSave, onCancel }) {
+  const { t } = useAppCtx();
+  const [type, setType] = useState(goal?.type || "questions");
+  const [value, setValue] = useState(goal?.value || DEFAULT_GOAL_VALUE);
+  const [quizIndex, setQuizIndex] = useState(goal?.quizIndex ?? (QUIZ_CATALOG[0]?.quizIndex ?? null));
+  const selectedCat = QUIZ_CATALOG.find((c) => c.quizIndex === quizIndex);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        {GOAL_PRESETS.map((n) => (
+          <button
+            key={n}
+            onClick={() => { setType("questions"); setValue(n); }}
+            className="pmi-focusable pmi-mono flex-1 py-2.5 rounded-lg text-sm font-semibold"
+            style={type === "questions" && value === n
+              ? { background: "var(--accent)", color: "var(--accent-fg)" }
+              : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
+          >{n}</button>
+        ))}
+      </div>
+      <button
+        onClick={() => setType("quizset")}
+        className="pmi-focusable w-full text-left px-3 py-2.5 rounded-lg text-sm"
+        style={type === "quizset"
+          ? { border: "1.5px solid var(--ink)", background: "var(--paper)" }
+          : { border: "1.5px solid var(--line-strong)" }}
+      >{t("goalUnitQuizset")}</button>
+
+      {type === "quizset" && (
+        <>
+          <select
+            value={quizIndex ?? ""}
+            onChange={(e) => setQuizIndex(Number(e.target.value))}
+            className="pmi-input w-full px-3 py-2 text-sm"
+          >
+            {QUIZ_CATALOG.map((c) => (
+              <option key={c.quizIndex} value={c.quizIndex}>{c.quizName} ({c.questionCount})</option>
+            ))}
+          </select>
+          {selectedCat && selectedCat.questionCount > 60 && (
+            <p className="text-xs" style={{ color: "var(--seal-fg)" }}>{t("goalQuizsetHint")}</p>
+          )}
+        </>
+      )}
+
+      <div className="flex gap-2">
+        <Button
+          onClick={() => onSave(type === "quizset" ? { type: "quizset", quizIndex } : { type: "questions", value })}
+          className="flex-1"
+        >{t("goalSaveBtn")}</Button>
+        {onCancel && <Button onClick={onCancel} variant="secondary">{t("cancelBtn")}</Button>}
+      </div>
+    </div>
+  );
+}
+
+function StreakBadge({ streak }) {
+  const { t } = useAppCtx();
+  if (!streak.current) {
+    return <span className="pmi-mono text-[11px]" style={{ color: "var(--ink-soft)" }}>{t("streakNone")}</span>;
+  }
+  return (
+    <span className="pmi-mono text-[11px] flex items-center gap-1" style={{ color: "var(--seal-fg)" }}>
+      <Icon name="flame" size={13} />
+      {t("streakLabel", { n: streak.current })}
+    </span>
+  );
+}
+
+function DailyGoalCard({ tracking, onSetGoal, onPractice }) {
+  const { t } = useAppCtx();
+  const isDesktop = useIsDesktop();
+  const [editing, setEditing] = useState(false);
+  const { goal, target, done, remaining, ratio, goalMet, todayRow, streak } = tracking;
+
+  if (!goal || editing) {
+    return (
+      <Card>
+        <p className="pmi-eyebrow mb-1">{t("goalSetupTitle")}</p>
+        <p className="text-xs mb-3" style={{ color: "var(--ink-mid)" }}>{t("goalSetupBody")}</p>
+        <GoalPicker
+          goal={goal}
+          onSave={(g) => { onSetGoal(g); setEditing(false); }}
+          onCancel={goal ? () => setEditing(false) : null}
+        />
+      </Card>
+    );
+  }
+
+  const accuracy = todayRow && todayRow.answered ? Math.round((todayRow.correct / todayRow.answered) * 100) : 0;
+  // Số câu gợi ý cho một lượt bấm: phần còn thiếu, nhưng không quá 15 câu/lượt để phiên
+  // luyện vẫn đủ ngắn mà làm hết trong một lần ngồi.
+  const chunk = goalMet ? 10 : Math.min(15, Math.max(1, remaining));
+
+  return (
+    <Card style={goalMet ? { borderColor: "var(--sage)" } : undefined}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="pmi-eyebrow" style={goalMet ? { color: "var(--sage)" } : undefined}>
+          {goalMet ? t("goalMetTitle") : t("goalHeaderToday")}
+        </span>
+        <div className="flex items-center gap-2.5">
+          <StreakBadge streak={streak} />
+          <button onClick={() => setEditing(true)} className="pmi-focusable pmi-mono text-[11px]" style={{ color: "var(--ink-soft)" }}>
+            {t("goalChangeBtn")}
+          </button>
+        </div>
+      </div>
+
+      <p className="pmi-display font-bold text-3xl mb-2" style={goalMet ? { color: "var(--sage)" } : undefined}>
+        {t("goalProgressCount", { done, total: target })}
+      </p>
+      <ProgressBar value={ratio} className="mb-2.5" />
+
+      <p className="pmi-mono text-[11px] mb-3" style={{ color: "var(--ink-soft)" }}>
+        {todayRow
+          ? t("goalTodayStats", { c: todayRow.correct, a: todayRow.answered, p: accuracy, m: todayRow.minutes })
+          : t("goalTodayEmpty")}
+      </p>
+      {goalMet && <p className="text-xs mb-3" style={{ color: "var(--ink-mid)" }}>{t("goalMetBody")}</p>}
+
+      <Button onClick={() => onPractice(chunk)} className={isDesktop ? "w-auto" : "w-full"} variant={goalMet ? "secondary" : "primary"}>
+        {goalMet ? t("goalExtraBtn") : done > 0 ? t("goalContinueBtn", { n: chunk }) : t("goalStartBtn", { n: chunk })}
+      </Button>
+    </Card>
+  );
+}
+
+/* ---------- Sparkline lần 1..n (Thư viện) ---------- */
+function AttemptSparkline({ entries }) {
+  const { t } = useAppCtx();
+  if (!entries.length) return null;
+  const first = entries[0].trustedScore.percent;
+  const last = entries[entries.length - 1].trustedScore.percent;
+  const delta = Math.round(last - first);
+  const shown = entries.slice(-6); // giữ card gọn khi làm đi làm lại nhiều lần
+  const colorFor = (p) => (p >= READINESS_READY_BAR ? "var(--sage)" : p >= 60 ? "var(--sky)" : "var(--flag)");
+
+  return (
+    <div className="mb-2.5">
+      <div className="flex items-center gap-1 mb-1">
+        {shown.map((e, i) => (
+          <React.Fragment key={e.sessionId}>
+            {i > 0 && <div className="pmi-spark-line" />}
+            <div className="flex flex-col items-center gap-1" style={{ minWidth: 34 }}>
+              <span className="pmi-mono text-[10px]" style={{ color: colorFor(e.trustedScore.percent) }}>
+                {Math.round(e.trustedScore.percent)}%
+              </span>
+              <div className={`pmi-spark-dot ${i === shown.length - 1 ? "is-last" : ""}`} style={{ background: colorFor(e.trustedScore.percent) }} />
+              <span className="pmi-mono text-[9px]" style={{ color: "var(--ink-soft)" }}>
+                {t("attemptNth", { n: entries.length - shown.length + i + 1 })}
+              </span>
+            </div>
+          </React.Fragment>
+        ))}
+      </div>
+      {entries.length > 1 && (
+        <p className="pmi-mono text-[10px]" style={{ color: delta >= 0 ? "var(--sage)" : "var(--flag)" }}>
+          {t("attemptDelta", { sign: delta >= 0 ? "+" : "", n: delta })}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Thước Readiness ---------- */
+function ReadinessCard({ readiness, onAction }) {
+  const { t } = useAppCtx();
+  const isDesktop = useIsDesktop();
+  const color = STATUS_RING_VAR[readiness.ring];
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-3">
+        <span className="pmi-eyebrow">{t("readinessHeader")}</span>
+        <span className={`pmi-chip pmi-status-${readiness.ring}`}>{t(`readinessLevel_${readiness.level}`)}</span>
+      </div>
+
+      <p className="pmi-display font-bold text-5xl mb-3" style={{ color }}>{readiness.score}</p>
+
+      <div className="pmi-meter mb-1.5">
+        <div className="pmi-meter-fill" style={{ width: `${readiness.score}%`, background: color }} />
+        <div className="pmi-meter-bar" style={{ left: `${READINESS_READY_BAR}%` }} />
+        <div className="pmi-meter-dot" style={{ left: `${readiness.score}%`, background: color }} />
+      </div>
+      <div className="pmi-mono flex justify-between text-[10px] mb-4" style={{ color: "var(--ink-soft)" }}>
+        <span>0</span><span>{READINESS_READY_BAR}</span><span>100</span>
+      </div>
+
+      <p className="pmi-eyebrow mb-2">{t("readinessMissingHeader")}</p>
+      <ul className="space-y-1.5 text-xs mb-3" style={{ color: "var(--ink-mid)" }}>
+        {readiness.reasons.map((r) => (
+          <li key={r.key} className="flex gap-2">
+            <span className="shrink-0" style={{ color: "var(--ink-soft)" }}>•</span>
+            <span>{t(r.key, r.vars)}</span>
+          </li>
+        ))}
+      </ul>
+
+      <Button onClick={onAction} className={isDesktop ? "w-auto" : "w-full"}>{t("readinessActionBtn")}</Button>
+      <p className="text-[10px] mt-3" style={{ color: "var(--ink-soft)" }}>{t("readinessDisclaimer")}</p>
+    </Card>
+  );
+}
+
+/* ---------- Biểu đồ xu hướng 2 đường ---------- */
+/* Đây là chi tiết quan trọng nhất của cả tính năng: khoảng cách giữa "lần đầu gặp" và  */
+/* "làm lại" chính là phần người học chỉ đang NHỚ đáp án. Vẽ chung một đường sẽ cho biểu */
+/* đồ dốc đẹp và tạo tự tin sai trước kỳ thi thật.                                       */
+function TrendChart({ points }) {
+  const { t, lang } = useAppCtx();
+  const W = 320, H = 140, padL = 26, padR = 6, padT = 8, padB = 18;
+  const usable = points.filter((p) => p.firstExposure !== null || p.retake !== null);
+  if (usable.length < 2) {
+    return <p className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("trendNoData")}</p>;
+  }
+
+  const x = (i) => padL + (i / Math.max(1, points.length - 1)) * (W - padL - padR);
+  const y = (v) => padT + (1 - v) * (H - padT - padB);
+
+  // Giá trị null (chưa đủ 5 mẫu trong cửa sổ) phải NGẮT đường, không nội suy — nếu nối
+  // liền qua khoảng trống thì biểu đồ sẽ bịa ra dữ liệu không tồn tại.
+  const segmentsOf = (field) => {
+    const segs = [];
+    let cur = [];
+    points.forEach((p, i) => {
+      const v = p[field];
+      if (v === null || v === undefined) {
+        if (cur.length > 1) segs.push(cur);
+        cur = [];
+      } else cur.push([x(i), y(v)]);
+    });
+    if (cur.length > 1) segs.push(cur);
+    return segs;
+  };
+  const toPath = (seg) => seg.map(([px, py], i) => `${i ? "L" : "M"}${px.toFixed(1)},${py.toFixed(1)}`).join(" ");
+
+  const gridLines = [0.25, 0.5, 0.75, 1];
+  const labelEvery = Math.ceil(points.length / 4);
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto" }} role="img" aria-label={t("trendHeader")}>
+        {gridLines.map((g) => (
+          <g key={g}>
+            <line x1={padL} x2={W - padR} y1={y(g)} y2={y(g)} stroke="var(--line)" strokeWidth="0.5" />
+            <text x={padL - 4} y={y(g) + 3} textAnchor="end" fontSize="7.5" fill="var(--ink-soft)" fontFamily="var(--font-mono)">{Math.round(g * 100)}</text>
+          </g>
+        ))}
+        <line
+          x1={padL} x2={W - padR} y1={y(READINESS_READY_BAR / 100)} y2={y(READINESS_READY_BAR / 100)}
+          stroke="var(--ink-soft)" strokeWidth="0.8" strokeDasharray="3 3"
+        />
+        {segmentsOf("retake").map((seg, i) => (
+          <path key={`r${i}`} d={toPath(seg)} fill="none" stroke="var(--ink-soft)" strokeWidth="1.6" strokeDasharray="4 3" strokeLinejoin="round" />
+        ))}
+        {segmentsOf("firstExposure").map((seg, i) => (
+          <path key={`f${i}`} d={toPath(seg)} fill="none" stroke="var(--sky)" strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" />
+        ))}
+        {points.map((p, i) => (
+          i % labelEvery === 0 || i === points.length - 1 ? (
+            <text key={p.dayKey} x={x(i)} y={H - 5} textAnchor="middle" fontSize="7" fill="var(--ink-soft)" fontFamily="var(--font-mono)">
+              {p.dayKey.slice(5).replace("-", "/")}
+            </text>
+          ) : null
+        ))}
+      </svg>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 pmi-mono text-[10px]" style={{ color: "var(--ink-mid)" }}>
+        <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 2.5, background: "var(--sky)", display: "inline-block" }} />{t("trendFirstExposure")}</span>
+        <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 0, borderTop: "2px dashed var(--ink-soft)", display: "inline-block" }} />{t("trendRetake")}</span>
+        <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 0, borderTop: "1px dashed var(--ink-soft)", display: "inline-block" }} />{t("trendThreshold")}</span>
+      </div>
+      <p className="text-xs mt-2.5 flex gap-1.5" style={{ color: "var(--seal-fg)" }}>
+        <span className="shrink-0">ⓘ</span><span>{t("trendExplain")}</span>
+      </p>
+      {/* Bảng tương đương cho trình đọc màn hình — biểu đồ SVG không tự đọc được. */}
+      <table className="pmi-sr">
+        <caption>{t("trendHeader")}</caption>
+        <thead><tr><th>{lang === "en" ? "Date" : "Ngày"}</th><th>{t("trendFirstExposure")}</th><th>{t("trendRetake")}</th></tr></thead>
+        <tbody>
+          {points.filter((p) => p.firstExposure !== null || p.retake !== null).map((p) => (
+            <tr key={p.dayKey}>
+              <td>{fmtDayKey(p.dayKey, lang)}</td>
+              <td>{p.firstExposure === null ? "—" : `${Math.round(p.firstExposure * 100)}%`}</td>
+              <td>{p.retake === null ? "—" : `${Math.round(p.retake * 100)}%`}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* ---------- Heatmap 12 tuần ---------- */
+function Heatmap({ tracking }) {
+  const { t, lang } = useAppCtx();
+  const [selected, setSelected] = useState(null);
+  const { history, today, goal, target } = tracking;
+
+  const { cells, metCount, activeCount } = useMemo(() => {
+    const mondayIdx = (weekdayOfDayKey(today) + 6) % 7; // 0 = thứ 2
+    const startOfThisWeek = shiftDayKey(today, -mondayIdx);
+    const firstDay = shiftDayKey(startOfThisWeek, -11 * 7);
+    const out = [];
+    let met = 0, active = 0;
+    for (let w = 0; w < 12; w++) {
+      for (let d = 0; d < 7; d++) {
+        const key = shiftDayKey(firstDay, w * 7 + d);
+        const row = history.get(key) || null;
+        const future = diffDayKeys(key, today) > 0;
+        let level = 0;
+        if (row) {
+          active += 1;
+          if (target) {
+            const r = row.answered / target;
+            level = r >= 1.5 ? 4 : r >= 1 ? 3 : r >= 0.5 ? 2 : 1;
+            if (r >= 1) met += 1;
+          } else {
+            level = row.answered >= 40 ? 4 : row.answered >= 20 ? 3 : row.answered >= 10 ? 2 : 1;
+          }
+        }
+        out.push({ key, row, level, future, weekIdx: w, dayIdx: d });
+      }
+    }
+    return { cells: out, metCount: met, activeCount: active };
+  }, [history, today, target]);
+
+  const selectedCell = selected ? cells.find((c) => c.key === selected) : null;
+  const dayLabels = lang === "en" ? ["M", "T", "W", "T", "F", "S", "S"] : ["2", "3", "4", "5", "6", "7", "CN"];
+
+  return (
+    <div>
+      <div className="pmi-heat-wrap">
+        <div className="pmi-heat-labels shrink-0">
+          {dayLabels.map((d, i) => (
+            <span key={i} className="pmi-mono text-[8px] flex items-center justify-center" style={{ color: "var(--ink-soft)" }}>{d}</span>
+          ))}
+        </div>
+        <div className="pmi-heat-grid">
+          {cells.map((c) => (
+            <button
+              key={c.key}
+              onClick={() => setSelected(c.key === selected ? null : c.key)}
+              disabled={c.future}
+              title={c.row
+                ? t("heatmapDayDetail", { date: fmtDayKey(c.key, lang), answered: c.row.answered, p: Math.round((c.row.correct / c.row.answered) * 100) })
+                : t("heatmapDayEmpty", { date: fmtDayKey(c.key, lang) })}
+              className={`pmi-heat pmi-focusable lvl-${c.level} ${c.future ? "is-future" : ""} ${c.key === today ? "is-today" : ""}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between mt-2 pmi-mono text-[10px]" style={{ color: "var(--ink-soft)" }}>
+        <span>
+          {goal
+            ? t("heatmapSummary", { met: metCount, total: 84, p: Math.round((metCount / 84) * 100) })
+            : t("heatmapNeedGoal")}
+        </span>
+        <span className="flex items-center gap-1">
+          {t("heatmapLegendLess")}
+          {[0, 1, 2, 3, 4].map((l) => <span key={l} className={`pmi-heat lvl-${l}`} style={{ width: 9, height: 9 }} />)}
+          {t("heatmapLegendMore")}
+        </span>
+      </div>
+
+      {selectedCell && (
+        <div className="mt-3 px-3 py-2.5 rounded-lg text-xs" style={{ background: "var(--paper)", border: "1px solid var(--line)" }}>
+          {selectedCell.row ? (
+            <>
+              <p className="pmi-mono font-semibold mb-1">{fmtDayKey(selectedCell.key, lang)}</p>
+              <p style={{ color: "var(--ink-mid)" }}>
+                {t("goalTodayStats", {
+                  c: selectedCell.row.correct, a: selectedCell.row.answered,
+                  p: Math.round((selectedCell.row.correct / selectedCell.row.answered) * 100),
+                  m: selectedCell.row.minutes,
+                })}
+              </p>
+              <p className="pmi-mono text-[10px] mt-1" style={{ color: "var(--ink-soft)" }}>
+                {t("firstExposureLabel")} {selectedCell.row.firstExposure} · {t("retakeLabel")} {selectedCell.row.retake}
+              </p>
+            </>
+          ) : (
+            <p style={{ color: "var(--ink-soft)" }}>{t("heatmapDayEmpty", { date: fmtDayKey(selectedCell.key, lang) })}</p>
+          )}
+        </div>
+      )}
+      <p className="pmi-sr">{t("heatmapSummary", { met: metCount, total: 84, p: Math.round((metCount / 84) * 100) })} · {activeCount}</p>
+    </div>
+  );
+}
+
+/* ---------- Diễn biến mastery theo domain (đọc từ gapSnapshots đã có sẵn) ---------- */
+function MasteryTrendCard({ masteryTrend }) {
+  const { t } = useAppCtx();
+  if (masteryTrend.length < 2) {
+    return <p className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("masteryTrendEmpty")}</p>;
+  }
+  const W = 320, H = 110, padL = 24, padR = 6, padT = 6, padB = 12;
+  const domains = Object.keys(DOMAIN_WEIGHTS);
+  const colorOf = { Mindset: "var(--sky)", Leadership: "var(--seal)", Product: "var(--sage)", Delivery: "var(--flag)" };
+  const x = (i) => padL + (i / Math.max(1, masteryTrend.length - 1)) * (W - padL - padR);
+  const y = (v) => padT + (1 - v) * (H - padT - padB);
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto" }} role="img" aria-label={t("masteryTrendHeader")}>
+        {[0.5, 1].map((g) => (
+          <g key={g}>
+            <line x1={padL} x2={W - padR} y1={y(g)} y2={y(g)} stroke="var(--line)" strokeWidth="0.5" />
+            <text x={padL - 4} y={y(g) + 3} textAnchor="end" fontSize="7" fill="var(--ink-soft)" fontFamily="var(--font-mono)">{g * 100}</text>
+          </g>
+        ))}
+        {domains.map((d) => {
+          const pts = masteryTrend.map((s, i) => [i, s.domains[d]]).filter(([, v]) => v !== null && v !== undefined);
+          if (pts.length < 2) return null;
+          const path = pts.map(([i, v], k) => `${k ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+          return <path key={d} d={path} fill="none" stroke={colorOf[d]} strokeWidth="1.8" strokeLinejoin="round" />;
+        })}
+      </svg>
+      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 pmi-mono text-[10px]" style={{ color: "var(--ink-mid)" }}>
+        {domains.map((d) => (
+          <span key={d} className="flex items-center gap-1.5">
+            <span style={{ width: 12, height: 2.5, background: colorOf[d], display: "inline-block" }} />{d}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Ngày thi + nhịp cần thiết ---------- */
+function ExamDateCard({ tracking, gapProfile, onSetExamDate }) {
+  const { t, lang } = useAppCtx();
+  const { examDateInfo } = tracking;
+  const [draft, setDraft] = useState(tracking.examDate || "");
+
+  const untouched = gapProfile.tasks.filter((tk) => tk.attempts === 0).length;
+  // Ước lượng thô nhưng đủ dùng: mỗi task chưa đụng cần ~5 câu để có bằng chứng tối thiểu.
+  const questionsNeeded = untouched * 5;
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-3">
+        <span className="pmi-eyebrow">{t("examDateHeader")}</span>
+        {tracking.examDate && (
+          <button onClick={() => { onSetExamDate(null); setDraft(""); }} className="pmi-focusable pmi-mono text-[11px]" style={{ color: "var(--ink-soft)" }}>
+            {t("examDateClearBtn")}
+          </button>
+        )}
+      </div>
+
+      {tracking.examDate ? (
+        <>
+          <p className="pmi-display font-semibold text-2xl mb-1">
+            {examDateInfo.daysLeft >= 0 ? t("examDateCountdown", { n: examDateInfo.daysLeft }) : t("examDatePassed")}
+          </p>
+          <p className="pmi-mono text-[11px] mb-3" style={{ color: "var(--ink-soft)" }}>{fmtDayKey(tracking.examDate, lang)}</p>
+          {examDateInfo.daysLeft > 0 && untouched > 0 && (
+            <p className="text-xs" style={{ color: "var(--ink-mid)" }}>
+              {t("examDatePace", { n: untouched, q: Math.ceil(questionsNeeded / examDateInfo.daysLeft) })}
+            </p>
+          )}
+          {examDateInfo.daysLeft > 0 && (
+            <p className="text-xs mt-1.5" style={{ color: examDateInfo.paceOk ? "var(--sage)" : "var(--seal-fg)" }}>
+              {examDateInfo.paceOk
+                ? t("examDatePaceOk", { q: examDateInfo.currentPace })
+                : t("examDatePaceLow", { cur: examDateInfo.currentPace, need: Math.ceil(questionsNeeded / examDateInfo.daysLeft) })}
+            </p>
+          )}
+        </>
+      ) : (
+        <>
+          <p className="text-sm mb-3" style={{ color: "var(--ink-soft)" }}>{t("examDateNotSet")}</p>
+          <div className="flex gap-2">
+            <input
+              type="date"
+              value={draft}
+              min={tracking.today}
+              onChange={(e) => setDraft(e.target.value)}
+              className="pmi-input flex-1 px-3 py-2 text-sm"
+            />
+            <Button onClick={() => draft && onSetExamDate(draft)} disabled={!draft}>{t("examDateSetBtn")}</Button>
+          </div>
+        </>
+      )}
+    </Card>
+  );
+}
+
+/* ===================== Progress Screen (Tổng quan / Nhịp luyện / GAP) ===================== */
+function ProgressScreen({ progress, gapProfile, tracking, onFillGap, onSetGoal, onSetExamDate }) {
+  const { t } = useAppCtx();
+  const isDesktop = useIsDesktop();
+  const [tab, setTab] = useState("overview");
+  const tabs = [
+    { key: "overview", label: t("progressTabOverview") },
+    { key: "rhythm", label: t("progressTabRhythm") },
+    { key: "gap", label: t("progressTabGap") },
+  ];
+
+  return (
+    <div className="pt-1 space-y-4 pb-4">
+      <div className="pmi-tabs" role="tablist">
+        {tabs.map((tb) => (
+          <button
+            key={tb.key}
+            role="tab"
+            aria-selected={tab === tb.key}
+            onClick={() => setTab(tb.key)}
+            className={`pmi-tab pmi-focusable ${tab === tb.key ? "is-active" : ""}`}
+          >{tb.label}</button>
+        ))}
+      </div>
+
+      {tab === "overview" && (
+        <div className={isDesktop ? "grid grid-cols-2 gap-4 items-start" : "space-y-4"}>
+          <Card className="flex items-center justify-around py-5" style={isDesktop ? { gridColumn: "span 2" } : undefined}>
+            {gapProfile.domains.map((d) => (
+              <DomainRing key={d.domain} domain={d.domain} mastery={d.mastery} />
+            ))}
+          </Card>
+          <ReadinessCard readiness={tracking.readiness} onAction={onFillGap} />
+          <div className="space-y-4">
+            <Card>
+              <p className="pmi-eyebrow mb-3">{t("trendHeader")}</p>
+              <TrendChart points={tracking.trend} />
+            </Card>
+            <Card>
+              <p className="pmi-eyebrow mb-3">{t("masteryTrendHeader")}</p>
+              <MasteryTrendCard masteryTrend={tracking.masteryTrend} />
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {tab === "rhythm" && (
+        <div className={isDesktop ? "grid grid-cols-2 gap-4 items-start" : "space-y-4"}>
+          <Card style={isDesktop ? { gridColumn: "span 2" } : undefined}>
+            <p className="pmi-eyebrow mb-3">{t("heatmapHeader")}</p>
+            <Heatmap tracking={tracking} />
+          </Card>
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <span className="pmi-eyebrow">{t("goalHeaderToday")}</span>
+              <StreakBadge streak={tracking.streak} />
+            </div>
+            <div className="pmi-mono grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] mb-3" style={{ color: "var(--ink-mid)" }}>
+              <span>{t("streakLongest", { n: tracking.streak.longest })}</span>
+              <span>{t("streakFreezeLeft", { n: tracking.streak.freezesLeft })}</span>
+            </div>
+            <p className="text-xs mb-3" style={{ color: "var(--ink-soft)" }}>{t("streakFreezeExplain")}</p>
+            <GoalPicker goal={tracking.goal} onSave={onSetGoal} onCancel={null} />
+          </Card>
+          <ExamDateCard tracking={tracking} gapProfile={gapProfile} onSetExamDate={onSetExamDate} />
+        </div>
+      )}
+
+      {tab === "gap" && <GapScreen gapProfile={gapProfile} onFillGap={onFillGap} embedded />}
+    </div>
+  );
+}
+
 /* ===================== Today Screen ===================== */
-function TodayScreen({ progress, gapProfile, onResume, onStart, onGoLibrary, onGoGap, onGoFillGap }) {
+function TodayScreen({ progress, gapProfile, tracking, onResume, onStart, onGoLibrary, onGoGap, onGoFillGap, onSetGoal, onQuickPractice }) {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
   const rec = recommendNextQuiz(progress);
@@ -1510,6 +2765,10 @@ function TodayScreen({ progress, gapProfile, onResume, onStart, onGoLibrary, onG
 
   return (
     <div className="space-y-4 pt-1">
+      {/* Mục tiêu hôm nay đứng TRÊN mọi thứ khác: đây là thứ biến app từ công cụ chẩn đoán
+          thành công cụ giữ nhịp. Một chạm là vào bài, không bắt chọn task trước. */}
+      <DailyGoalCard tracking={tracking} onSetGoal={onSetGoal} onPractice={onQuickPractice} />
+
       {/* Hero: 4 Domain Rings — con số mastery thật của app, không phải trang trí */}
       <Card className="flex items-center justify-around py-5">
         {gapProfile.domains.map((d) => (
@@ -1588,11 +2847,18 @@ function LibraryScreen({ progress, onOpenQuiz, onOpenHistory }) {
     return [...byStage.entries()].sort((a, b) => a[0] - b[0]);
   }, []);
 
-  function lastResultFor(quizIndex) {
-    const list = progress.completedQuizzes.filter((c) => c.quizIndex === quizIndex);
-    if (!list.length) return null;
-    return list[list.length - 1];
-  }
+  // Toàn bộ lần làm của mỗi bộ đề, xếp theo thời gian — để vẽ được L1 → L2 → L3 thay vì
+  // chỉ hiện điểm lần cuối (mất hoàn toàn cảm giác tiến bộ, thứ giữ động lực ôn thi).
+  const entriesByQuiz = useMemo(() => {
+    const m = new Map();
+    for (const c of progress.completedQuizzes) {
+      if (c.quizIndex == null) continue;
+      if (!m.has(c.quizIndex)) m.set(c.quizIndex, []);
+      m.get(c.quizIndex).push(c);
+    }
+    for (const list of m.values()) list.sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
+    return m;
+  }, [progress.completedQuizzes]);
 
   return (
     <div className="space-y-5 pt-1">
@@ -1601,8 +2867,17 @@ function LibraryScreen({ progress, onOpenQuiz, onOpenHistory }) {
           <p className="pmi-eyebrow mb-2">{t("stage")} {stageOrder}</p>
           <div className={isWide ? "grid grid-cols-3 gap-2" : isDesktop ? "grid grid-cols-2 gap-2" : "space-y-2"}>
             {quizzes.map((c) => {
-              const last = lastResultFor(c.quizIndex);
-              const attempts = progress.completedQuizzes.filter((x) => x.quizIndex === c.quizIndex).length;
+              const entries = entriesByQuiz.get(c.quizIndex) || [];
+              const last = entries.length ? entries[entries.length - 1] : null;
+              const attempts = entries.length;
+              // Chỉ số "sự thật": lần đầu gặp và làm độc lập của lượt gần nhất. Cố tình đặt
+              // ngay cạnh sparkline để con số đẹp không đứng một mình.
+              const truth = last
+                ? [
+                    last.firstExposureScore ? t("resultsFirstExposureLine", { p: Math.round(last.firstExposureScore.percent), c: last.firstExposureScore.correct, n: last.firstExposureScore.graded }) : null,
+                    last.independentScore ? `${t("independentLabel")} ${Math.round(last.independentScore.percent)}%` : null,
+                  ].filter(Boolean).join(" · ")
+                : "";
               return (
                 <Card key={c.quizIndex}>
                   <div className="flex items-center justify-between mb-1">
@@ -1611,8 +2886,9 @@ function LibraryScreen({ progress, onOpenQuiz, onOpenHistory }) {
                   </div>
                   <p className="pmi-mono text-[11px] mb-2" style={{ color: "var(--ink-soft)" }}>
                     {c.questionCount} {t("questionsShort")} · {attempts > 0 ? t("attemptedTimes", { n: attempts }) : t("notAttempted")}
-                    {last ? ` · ${t("lastScore", { p: last.trustedScore.percent })}` : ""}
                   </p>
+                  {attempts > 0 && <AttemptSparkline entries={entries} />}
+                  {truth && <p className="pmi-mono text-[10px] mb-2" style={{ color: "var(--ink-soft)" }}>{truth}</p>}
                   <div className="flex gap-2">
                     <Button onClick={() => onOpenQuiz(c.quizIndex, "exam")} className="flex-1">{t("examBtn")}</Button>
                     <Button onClick={() => onOpenQuiz(c.quizIndex, "practice")} variant="secondary" className="flex-1">{t("practiceBtn")}</Button>
@@ -2712,6 +3988,14 @@ function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel }) {
   const [jumpValue, setJumpValue] = useState("");
   const [jumpError, setJumpError] = useState(false);
   const entry = progress.completedQuizzes.find((c) => c.sessionId === sessionId);
+  // Lượt gần nhất TRƯỚC lượt này của cùng bộ đề (nếu có) — dùng để so sánh tiến bộ.
+  const prevEntry = useMemo(() => {
+    if (!entry || entry.quizIndex == null) return null;
+    const earlier = progress.completedQuizzes
+      .filter((c) => c.quizIndex === entry.quizIndex && c.sessionId !== entry.sessionId && new Date(c.completedAt) < new Date(entry.completedAt))
+      .sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
+    return earlier.length ? earlier[earlier.length - 1] : null;
+  }, [entry, progress.completedQuizzes]);
   const sessAttempts = progress.attempts.filter((a) => a.sessionId === sessionId);
   const wrong = sessAttempts.filter((a) => a.gradeStatus === "graded" && !a.isCorrect);
   const correctList = sessAttempts.filter((a) => a.gradeStatus === "graded" && a.isCorrect);
@@ -2777,9 +4061,38 @@ function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel }) {
         <p className="pmi-mono text-xs mb-3" style={{ color: "var(--ink-soft)" }}>
           {t("independentLabel")}: {entry.independentScore ? `${entry.independentScore.percent}% (${entry.independentScore.correct}/${entry.independentScore.graded}, ${t("independentSuffix")})` : t("independentNoData")}
         </p>
+        <p className="pmi-mono text-xs mb-3" style={{ color: "var(--ink-soft)" }}>
+          {entry.firstExposureScore
+            ? t("resultsFirstExposureLine", { p: Math.round(entry.firstExposureScore.percent), c: entry.firstExposureScore.correct, n: entry.firstExposureScore.graded })
+            : t("resultsFirstExposureNone")}
+        </p>
         {manual.length > 0 && <p className="text-xs" style={{ color: "var(--seal-fg)" }}>{t("manualReviewNote", { n: manual.length })}</p>}
         {unansweredQuestions.length > 0 && <p className="text-xs mt-1" style={{ color: "var(--seal-fg)" }}>{t("unansweredNote", { n: unansweredQuestions.length })}</p>}
       </Card>
+
+      {/* So sánh với lần trước cùng bộ đề — đặt ngay sau điểm số, đúng khoảnh khắc người học
+          quan tâm nhất và dễ tiếp nhận thông tin "sự thật" nhất. */}
+      {entry.quizIndex != null && (
+        <Card className="py-3">
+          <p className="pmi-eyebrow mb-2">{t("resultsCompareHeader")}</p>
+          {prevEntry ? (
+            <div className="space-y-1 text-xs" style={{ color: "var(--ink-mid)" }}>
+              <p className="flex items-center gap-2">
+                <span>{t("resultsCompareTrusted", { prev: Math.round(prevEntry.trustedScore.percent), cur: Math.round(entry.trustedScore.percent) })}</span>
+                <DeltaChip delta={entry.trustedScore.percent - prevEntry.trustedScore.percent} />
+              </p>
+              {entry.firstExposureScore && prevEntry.firstExposureScore && (
+                <p className="flex items-center gap-2">
+                  <span>{t("resultsCompareFirst", { prev: Math.round(prevEntry.firstExposureScore.percent), cur: Math.round(entry.firstExposureScore.percent) })}</span>
+                  <DeltaChip delta={entry.firstExposureScore.percent - prevEntry.firstExposureScore.percent} />
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("resultsCompareNoPrev")}</p>
+          )}
+        </Card>
+      )}
 
       <Card className="py-3">
         <button onClick={() => setMindsetOpen((o) => !o)} className="pmi-focusable w-full flex items-center justify-between">
@@ -2869,7 +4182,7 @@ function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel }) {
 }
 
 /* ===================== GAP Screen ===================== */
-function GapScreen({ gapProfile, onFillGap }) {
+function GapScreen({ gapProfile, onFillGap, embedded = false }) {
   const { t, lang } = useAppCtx();
   const isDesktop = useIsDesktop();
   const isWide = useIsWide();
@@ -2883,12 +4196,15 @@ function GapScreen({ gapProfile, onFillGap }) {
   }, [gapProfile]);
 
   return (
-    <div className="pt-1 space-y-4 pb-4">
-      <Card className="flex items-center justify-around py-5">
-        {gapProfile.domains.map((d) => (
-          <DomainRing key={d.domain} domain={d.domain} mastery={d.mastery} />
-        ))}
-      </Card>
+    <div className={embedded ? "space-y-4" : "pt-1 space-y-4 pb-4"}>
+      {/* Khi nhúng trong màn Tiến độ, vòng domain đã hiển thị ở tab Tổng quan — không lặp lại. */}
+      {!embedded && (
+        <Card className="flex items-center justify-around py-5">
+          {gapProfile.domains.map((d) => (
+            <DomainRing key={d.domain} domain={d.domain} mastery={d.mastery} />
+          ))}
+        </Card>
+      )}
 
       {gapProfile.domains.map((d) => (
         <div key={d.domain}>
@@ -2966,38 +4282,9 @@ function FillGapScreen({ progress, gapProfile, onStart, onBack }) {
     });
   }
 
+  // Dùng chung bộ chọn câu với nút "Làm tiếp N câu" ở màn Hôm nay (xem buildGapPracticeQuestionIds).
   function buildSession() {
-    const answeredIds = new Set(progress.attempts.map((a) => a.questionId));
-    const wrongIds = new Set(progress.attempts.filter((a) => a.gradeStatus === "graded" && !a.isCorrect).map((a) => a.questionId));
-    let pool = [];
-    for (const [, list] of QUESTIONS_BY_QUIZ) {
-      for (const q of list) {
-        if (q.manualReview) continue;
-        if (!selectedTasks.includes(q.taskId)) continue;
-        pool.push(q);
-      }
-    }
-    const unseen = pool.filter((q) => !answeredIds.has(q.id));
-    const needReview = pool.filter((q) => wrongIds.has(q.id));
-    const rest = pool.filter((q) => answeredIds.has(q.id) && !wrongIds.has(q.id));
-    function shuffle(arr) {
-      const a = arr.slice();
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
-    }
-    const ordered = [...shuffle(unseen), ...shuffle(needReview), ...shuffle(rest)];
-    const seenDup = new Set();
-    const picked = [];
-    for (const q of ordered) {
-      if (picked.length >= size) break;
-      if (q.duplicateGroupId && seenDup.has(q.duplicateGroupId)) continue;
-      picked.push(q);
-      if (q.duplicateGroupId) seenDup.add(q.duplicateGroupId);
-    }
-    return picked.map((q) => q.id);
+    return buildGapPracticeQuestionIds({ attempts: progress.attempts, taskIds: selectedTasks, size });
   }
 
   return (
@@ -3421,6 +4708,7 @@ function DataScreen({
     downloadJson(`pmi-acp-progress-${Date.now()}.json`, {
       schemaVersion: progress.schemaVersion, settings: progress.settings, attempts: progress.attempts,
       completedQuizzes: progress.completedQuizzes, activeSession: progress.activeSession, gapSnapshots: progress.gapSnapshots,
+      tracking: progress.tracking,
     });
     showToast(t("exportProgress"));
   }
