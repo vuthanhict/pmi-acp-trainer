@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+.pmi-app {
+  --ink: #16233F; --ink-mid: #5B6472; --ink-soft: #939AA6;
+  --paper: #EFF1EA; --paper-raised: #FCFCF9; --line: #DBDFD1; --line-strong: #C3C8B8;
+  --seal: #A5761F; --seal-fg: #8A611A; --seal-tint: #F1E4C6;
+  --flag: #A23B44; --flag-tint: #F3E0E1; --flag-solid: #A23B44; --flag-solid-fg: #fff;
+  --sage: #45654F; --sage-tint: #DFE9E0;
+  --sky: #2E5E7C; --sky-tint: #DCE9EF;
+  --focus: #16233F;
+  --accent: #16233F; --accent-fg: #FCFCF9;
+  --font-display: 'IBM Plex Serif', Georgia, 'Times New Roman', serif;
+  --font-body: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --radius: 10px; --radius-sm: 7px; --radius-pill: 999px;
+  background: var(--paper); color: var(--ink); font-family: var(--font-body);
+  min-height: 100vh;
+}
+.pmi-app.dark {
+  --ink: #EBEEE7; --ink-mid: #ABB2BE; --ink-soft: #6C7688;
+  --paper: #10141D; --paper-raised: #1A2030; --line: #2A3142; --line-strong: #3A4256;
+  --seal: #D9A857; --seal-fg: #E8C387; --seal-tint: rgba(217,168,87,0.14);
+  --flag: #E08088; --flag-tint: rgba(224,128,136,0.14);
+  --sage: #86AC8F; --sage-tint: rgba(134,172,143,0.14);
+  --sky: #7FB2D3; --sky-tint: rgba(127,178,211,0.14);
+  --focus: #EBEEE7;
+  --accent: #34406B; --accent-fg: #F4F1E6;
+}
+.pmi-app * { border-color: var(--line); }
+.pmi-display { font-family: var(--font-display); letter-spacing: -0.01em; }
+.pmi-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+.pmi-eyebrow { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-soft); }
+
+.pmi-card { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius); }
+.pmi-card-interactive { cursor: pointer; transition: border-color .15s, transform .1s; }
+.pmi-card-interactive:active { transform: scale(0.99); }
+.pmi-card-interactive:hover { border-color: var(--line-strong); }
+
+.pmi-btn { border-radius: var(--radius-sm); font-family: var(--font-body); font-weight: 600; font-size: 13.5px; transition: background-color .15s, color .15s, border-color .15s, opacity .15s; }
+.pmi-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+.pmi-btn-primary { background: var(--accent); color: var(--accent-fg); }
+.pmi-btn-primary:hover:not(:disabled) { filter: brightness(1.2); }
+.pmi-btn-secondary { background: transparent; color: var(--ink); border: 1px solid var(--line-strong); }
+.pmi-btn-secondary:hover:not(:disabled) { background: var(--line); }
+.pmi-btn-danger { background: var(--flag-solid); color: var(--flag-solid-fg); }
+.pmi-btn-danger:hover:not(:disabled) { filter: brightness(1.08); }
+.pmi-btn-ghost { background: transparent; color: var(--ink-mid); }
+.pmi-btn-ghost:hover:not(:disabled) { color: var(--ink); }
+
+.pmi-chip { border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.02em; padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px; font-weight: 500; white-space: nowrap; }
+.pmi-status-insufficient_data { background: var(--line); color: var(--ink-mid); }
+.pmi-status-critical { background: var(--flag-tint); color: var(--flag); }
+.pmi-status-needs_work { background: var(--seal-tint); color: var(--seal-fg); }
+.pmi-status-developing { background: var(--sky-tint); color: var(--sky); }
+.pmi-status-ready { background: var(--sage-tint); color: var(--sage); }
+
+.pmi-track { background: var(--line); border-radius: var(--radius-pill); overflow: hidden; }
+.pmi-track > div { background: var(--accent); border-radius: var(--radius-pill); }
+
+.pmi-input { background: var(--paper-raised); border: 1px solid var(--line-strong); border-radius: var(--radius-sm); color: var(--ink); font-family: var(--font-body); }
+.pmi-input:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
+.pmi-input::placeholder { color: var(--ink-soft); }
+
+.pmi-toggle { background: var(--line); border-radius: var(--radius-pill); }
+.pmi-toggle-btn { border-radius: var(--radius-pill); }
+.pmi-toggle-btn.is-active { background: var(--paper-raised); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.pmi-toggle-btn:not(.is-active) { color: var(--ink-soft); }
+
+/* "Ticket stub" — cuống vé thi, chỉ dùng cho Exam mode để tách rõ tâm lý làm bài thật */
+.pmi-ticket { background: var(--accent); color: var(--accent-fg); border-radius: var(--radius) var(--radius) 0 0; }
+.pmi-ticket-body { background: var(--paper-raised); border: 1px solid var(--line); border-top: none; border-radius: 0 0 var(--radius) var(--radius); position: relative; }
+.pmi-ticket-tear { border-top: 2px dashed rgba(244,241,230,0.35); }
+
+/* Ô "phiếu trả lời trắc nghiệm" (bubble sheet) cho question palette */
+.pmi-bubble { border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 11px; font-weight: 600; border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink-soft); position: relative; }
+.pmi-bubble.is-visited { background: var(--line); color: var(--ink-mid); border-color: var(--line-strong); }
+.pmi-bubble.is-done { background: var(--sage-tint); color: var(--sage); border-color: var(--sage); }
+.pmi-bubble.is-wrong { background: var(--flag-tint); color: var(--flag); border-color: var(--flag); }
+.pmi-bubble.is-current { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.pmi-bubble-flag { position: absolute; top: -4px; right: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--seal); border: 1.5px solid var(--paper-raised); }
+
+.pmi-choice { border-radius: var(--radius-sm); border: 1.5px solid var(--line-strong); background: var(--paper-raised); text-align: left; transition: border-color .12s, background-color .12s; }
+.pmi-choice.is-selected { border-color: var(--ink); background: var(--paper); }
+.pmi-choice.is-correct { border-color: var(--sage); background: var(--sage-tint); }
+.pmi-choice.is-wrong { border-color: var(--flag); background: var(--flag-tint); }
+.pmi-choice-letter { font-family: var(--font-mono); font-weight: 600; color: var(--ink-soft); }
+
+/* ---- Tracking ---- */
+/* Ô heatmap nhịp luyện: thang ĐƠN SẮC theo --sage. Cố tình không dùng đỏ/vàng vì trong app
+   này đỏ (--flag) và vàng (--seal) đã mang nghĩa "sai / cần chú ý" ở phần chấm điểm —
+   dùng lẫn sang biểu đồ chuyên cần sẽ khiến "hôm đó làm ít" trông như "hôm đó làm sai". */
+/* Ô cố định 14px thay vì 1fr: heatmap phải giữ đúng tỉ lệ vuông và thẳng hàng với cột nhãn
+   thứ trong ngày ở mọi bề rộng card — dùng 1fr thì trên desktop ô phình lên 70px và lệch nhãn. */
+.pmi-heat-wrap { --heat: 14px; --heat-gap: 3px; display: flex; gap: var(--heat-gap); }
+.pmi-heat-labels { display: grid; grid-template-rows: repeat(7, var(--heat)); gap: var(--heat-gap); }
+.pmi-heat-grid { display: grid; grid-auto-flow: column; grid-template-columns: repeat(12, var(--heat)); grid-template-rows: repeat(7, var(--heat)); gap: var(--heat-gap); }
+.pmi-heat { border-radius: 3px; border: 1px solid var(--line); display: inline-block; }
+.pmi-heat.lvl-0 { background: transparent; }
+.pmi-heat.lvl-1 { background: var(--sage-tint); }
+.pmi-heat.lvl-2 { background: var(--sage-tint); border-color: var(--sage); }
+.pmi-heat.lvl-3 { background: var(--sage); border-color: var(--sage); opacity: .75; }
+.pmi-heat.lvl-4 { background: var(--sage); border-color: var(--sage); }
+.pmi-heat.is-future { border-style: dashed; opacity: .45; }
+.pmi-heat.is-today { outline: 1.5px solid var(--ink); outline-offset: 1px; }
+
+/* Thước readiness 0–100 với vạch ngưỡng 75 */
+.pmi-meter { position: relative; height: 8px; background: var(--line); border-radius: var(--radius-pill); }
+.pmi-meter-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: var(--radius-pill); }
+.pmi-meter-bar { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink-soft); }
+.pmi-meter-dot { position: absolute; top: 50%; width: 12px; height: 12px; margin-top: -6px; margin-left: -6px; border-radius: 50%; border: 2px solid var(--paper-raised); }
+
+/* Sparkline lần 1..n trong Thư viện */
+.pmi-spark-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); }
+.pmi-spark-dot.is-last { background: var(--ink); width: 9px; height: 9px; }
+.pmi-spark-line { flex: 1; height: 1px; background: var(--line-strong); }
+
+/* Bảng dữ liệu tương đương cho trình đọc màn hình (biểu đồ SVG không tự đọc được).
+   Tự định nghĩa thay vì dựa vào .sr-only của Tailwind để chắc chắn luôn có mặt. */
+.pmi-sr { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
+
+.pmi-tabs { display: flex; gap: 2px; padding: 3px; background: var(--line); border-radius: var(--radius-pill); }
+.pmi-tab { flex: 1; padding: 6px 10px; border-radius: var(--radius-pill); font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+.pmi-tab.is-active { background: var(--paper-raised); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+
+.pmi-divider-dashed { border-top: 1px dashed var(--line-strong); }
+.pmi-focusable:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .pmi-app * { transition: none !important; animation: none !important; } }

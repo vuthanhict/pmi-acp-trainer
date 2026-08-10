@@ -1,0 +1,409 @@
+/* ===================== i18n: text bảng tra cứu song ngữ (VI/EN) ===================== */
+/* Chỉ chứa dữ liệu văn bản hiển thị + hàm format chuỗi thuần — không import React,
+   không phụ thuộc bất kỳ module nào khác trong app. */
+
+/* ---------- i18n: giao diện (chrome) hỗ trợ song ngữ VI/EN ---------- */
+/* Lưu ý: đây là ngôn ngữ GIAO DIỆN của app. Nội dung đề thi (stem/choices)  */
+/* luôn ở tiếng Anh gốc; bản dịch câu hỏi là tính năng "Hỗ trợ tiếng Việt"   */
+/* riêng, không phụ thuộc vào ngôn ngữ giao diện này.                        */
+export const UI_TEXT = {
+  vi: {
+    appTitle: "PMI-ACP Daily Trainer",
+    appSubtitle: "1.684 câu · 14 đề · GAP thông minh · Hỗ trợ tiếng Việt",
+    navToday: "Hôm nay", navLibrary: "Thư viện", navHistory: "Lịch sử", navGap: "Tiến độ", navGlossary: "Từ điển", navVocab: "Ôn từ vựng", navData: "Dữ liệu",
+    publishBanner: "Trình duyệt đang chặn lưu trữ cục bộ (chế độ ẩn danh hoặc cài đặt riêng tư) — tiến trình sẽ không được lưu giữa các phiên. Hãy dùng \"Xuất backup\" ở mục Dữ liệu để lưu thủ công.",
+    savedToast: "Đã tự động lưu",
+
+    // Today
+    inProgress: "ĐANG LÀM DỞ", questionsAnswered: "{n}/{total} câu đã trả lời", continueBtn: "Tiếp tục",
+    recommendedNext: "ĐỀ KHUYẾN NGHỊ TIẾP THEO", questionsCount: "{n} câu", startExamBtn: "Bắt đầu đề", libraryBtn: "Thư viện",
+    top3Gaps: "BA GAP ƯU TIÊN", viewAll: "Xem tất cả", noGapData: "Chưa có đủ dữ liệu để xác định GAP. Hãy làm ít nhất một đề.",
+    accuracyLabel: "độ chính xác", practiceGapBtn: "Luyện GAP",
+
+    // Library
+    stage: "GIAI ĐOẠN", questionsShort: "câu", attemptedTimes: "đã làm {n} lần", notAttempted: "chưa làm", lastScore: "gần nhất {p}%",
+    examBtn: "Exam", practiceBtn: "Practice", historyOfQuizBtn: "Lịch sử",
+
+    // History
+    historyTitle: "Lịch sử làm bài", historyEmpty: "Chưa có lần làm bài nào. Hãy bắt đầu một đề trong Thư viện.",
+    historyFilterQuizAll: "Tất cả bộ đề", historyFilterModeAll: "Tất cả", historyEntryCount: "{n} lần làm",
+    historyReviewBtn: "Xem lại", historyBackToHistory: "← Về Lịch sử",
+
+    // Quiz Runner
+    exitSaved: "← Thoát (đã lưu)", questionOf: "Câu {n}/{total}", modeExam: "Exam", modePractice: "Practice", modeFillgap: "Fill-gap",
+    manualReviewWarn: "⚠ Câu này cần review thủ công, không tính điểm/GAP.",
+    confidenceLabel: "Mức độ tự tin", notRecorded: "Không ghi nhận",
+    explanationHeader: "GIẢI THÍCH", correctAnswerLabel: "Đáp án đúng", showFullExplanation: "Xem đầy đủ", hideFullExplanation: "Thu gọn",
+    prevBtn: "Trước", nextBtn: "Tiếp", checkBtn: "Kiểm tra", submitBtn: "Nộp bài", finishEarlyBtn: "Nộp bài sớm",
+    submitConfirmTitle: "Nộp bài?", submitConfirmBody: "Đã trả lời {n}/{total} câu. Sau khi nộp sẽ không thể sửa đáp án.",
+    submitConfirmUnansweredWarn: "Còn {n} câu chưa trả lời.",
+    cancelBtn: "Hủy", confirmSubmitBtn: "Xác nhận nộp",
+    assistedConfirmTitle: "Dùng hỗ trợ tiếng Việt?",
+    assistedConfirmBody: "Kết quả câu này sẽ được đánh dấu Assisted và không tính vào Independent score.",
+    assistedConfirmOk: "Đồng ý, mở hỗ trợ",
+    viSupportHeader: "Hỗ trợ tiếng Việt", viNoData: "Câu này chưa có bản dịch tiếng Việt (gói dữ liệu bị bỏ qua khi nhúng). Ứng dụng vẫn hoạt động bình thường bằng tiếng Anh.",
+    viNeedsReview: "Câu này cần đối chiếu bản tiếng Anh", viTermsHeader: "Thuật ngữ liên quan", viNoTerms: "Không có thuật ngữ nào được gắn cho câu này.",
+    bilingualToggleOn: "Song ngữ: Bật", bilingualToggleOff: "Song ngữ EN/VI", viBlockLabel: "TIẾNG VIỆT",
+    vocabExampleLabel: "Ví dụ", vocabHeader: "Ôn từ vựng", vocabSubtitle: "303 thẻ: thuật ngữ PMI-ACP/Agile, từ vựng/cụm từ tiếng Anh khó hoặc hay gặp trong đề thi (kể cả ngoài 1.684 câu hiện có), và cấu trúc câu quen thuộc — lật thẻ để xem nghĩa, ví dụ và tự đánh giá mức độ nhớ.",
+    vocabFlip: "Lật thẻ", vocabKnow: "Đã thuộc", vocabDontKnow: "Chưa thuộc", vocabProgress: "Thẻ {n}/{total}", vocabRestart: "Ôn lại từ đầu",
+    vocabDone: "Đã ôn hết bộ thẻ!", vocabDoneSummary: "Đã thuộc {known}/{total} — {unknown} thẻ sẽ ưu tiên xuất hiện lại ở vòng sau.",
+    vocabModeFlashcard: "Flashcard", vocabModeChoice: "Trắc nghiệm", vocabModeType: "Gõ từ",
+    vocabScopeDue: "Đến hạn ({n})", vocabScopeAll: "Tất cả", vocabNext: "Tiếp theo",
+    vocabAllCaughtUp: "Không còn thẻ nào đến hạn ôn!", vocabAllCaughtUpBody: "Bạn đã ôn hết các thẻ đến hạn hôm nay. Có thể ôn thêm toàn bộ bộ thẻ, hoặc quay lại sau khi có thẻ mới đến hạn.",
+    vocabTypePlaceholder: "Gõ từ tiếng Anh...", vocabCheck: "Kiểm tra", vocabCorrect: "Chính xác!", vocabIncorrect: "Chưa đúng",
+    vocabYourAnswer: "Bạn đã gõ", vocabCorrectAnswer: "Đáp án đúng",
+    viPostHeader: "DỊCH ĐÁP ÁN & GIẢI THÍCH",
+    flagTooltip: "Đánh dấu để xem lại",
+    paletteLegend: "Chưa xem · Đã xem · Đã trả lời · Đánh dấu",
+    paletteBarAnswered: "đã trả lời", paletteBarOpen: "Xem danh sách",
+    paletteSheetTitle: "Danh sách câu hỏi", paletteFilterAll: "Tất cả", paletteFilterUnanswered: "Chưa trả lời",
+    paletteFilterFlagged: "Đánh dấu", paletteFilterEmpty: "Không có câu nào trong mục này.",
+    matchingHeader: "Ghép cặp (không tính điểm — chỉ để luyện tập)",
+    matchingPickPlaceholder: "— Chưa chọn —", matchingTapHint: "Kéo thả đáp án vào vùng trống, hoặc chạm vào câu rồi chạm đáp án để ghép cặp.", matchingActiveHint: "Chọn đáp án bên dưới cho câu này ↓", matchingDropHint: "Thả đáp án vào đây",
+    matchingCheckBtn: "Xem đáp án ghép cặp", matchingExamLocked: "Đây là câu ghép cặp — đáp án sẽ hiển thị sau khi bạn nộp bài (giống các câu khác trong Exam).", resultsFilterMatching: "Ghép cặp",
+    matchingCorrectHeader: "Đáp án đúng",
+    timeLabel: "Thời gian",
+
+    // Results
+    trustedLabel: "Trusted score", rawLabel: "Raw score", independentLabel: "Independent score",
+    independentNoData: "Chưa đủ dữ liệu độc lập", independentSuffix: "không dùng hỗ trợ tiếng Việt",
+    manualReviewNote: "{n} câu cần review thủ công, không tính vào điểm.",
+    wrongAnswersHeader: "CÂU SAI ({n})", yourAnswer: "Bạn chọn", confidenceShort: "Độ tự tin",
+    resultsFilterAll: "Tất cả", resultsFilterWrong: "Sai", resultsFilterCorrect: "Đúng", resultsFilterUnanswered: "Chưa làm",
+    notAnsweredLabel: "Bạn chưa trả lời câu này", resultsEmptyFilter: "Không có câu nào trong mục này.",
+    unansweredNote: "Còn {n} câu chưa làm — có thể do bạn đã kết thúc sớm.",
+    viAnswerTranslation: "DỊCH ĐÁP ÁN & GIẢI THÍCH (hỗ trợ, chưa duyệt thủ công)",
+    viewGapBtn: "Xem GAP", backHomeBtn: "Về Hôm nay", assistedBadge: "Assisted",
+    reviewQuestionNumber: "Câu {n}", jumpHeader: "Đi nhanh tới câu", jumpPlaceholder: "Số câu...", jumpGoBtn: "Đi tới",
+    jumpNotFound: "Không tìm thấy câu số {n}.", jumpLegend: "Đúng · Sai · Chưa làm · Ghép cặp",
+
+    // Gap screen
+    masteryLabel: "mastery", insufficientDataShort: "chưa đủ dữ liệu", noDataForDomain: "Chưa có dữ liệu cho domain này.", mindsetTipsHeader: "Tư duy làm bài PMI-ACP", mindsetTipLabel: "Tư duy", domainMindsetLabel: "Lưu ý tư duy",
+    attemptsLabel: "Attempts", sessionsLabel: "Sessions", accLabel: "Accuracy", calLabel: "Calibration",
+    speedLabel: "Speed", evidenceLabel: "Evidence", viHelpRatioLabel: "Hỗ trợ VN", practiceGapNow: "Luyện GAP ngay",
+
+    // Fill-gap
+    backToGap: "← Quay lại GAP", chooseTasks: "Chọn tối đa 3 task ưu tiên", noTasksYet: "Chưa có task nào để luyện, hãy làm ít nhất một đề trước.",
+    sessionSize: "Số câu trong session", startFillGapBtn: "Bắt đầu luyện GAP",
+
+    // Data
+    overview: "Tổng quan", attemptsCount: "{n} attempts · {m} đề đã hoàn thành", lastUpdated: "Cập nhật lần cuối: {t}",
+    backupProgress: "Sao lưu progress", exportProgress: "Xuất progress", importProgress: "Nhập progress",
+    fullBackup: "Backup đầy đủ", exportBackup: "Xuất backup", restoreBackup: "Khôi phục",
+    driveHeader: "Sao lưu Google Drive", driveDesc: "Tự động sao lưu tiến trình lên Google Drive của bạn để khôi phục trên trình duyệt hoặc thiết bị khác.",
+    driveConnectBtn: "Kết nối Google Drive", driveDisconnectBtn: "Ngắt kết nối", driveBackupBtn: "Sao lưu ngay", driveRestoreBtn: "Khôi phục từ Drive",
+    driveConnectedLabel: "Đã kết nối", driveNotConnectedLabel: "Chưa kết nối", driveAutoLabel: "Tự động sao lưu mỗi khi có thay đổi",
+    driveLastSyncLabel: "Đồng bộ lần cuối: {t}", driveNeverSynced: "chưa từng", driveBackupDone: "Đã sao lưu lên Drive", driveNoBackup: "Chưa có bản sao lưu nào trên Drive",
+    driveErrorLabel: "Lỗi kết nối Drive",
+    driveErrorPopupTimeout: "Không mở được cửa sổ đăng nhập Google (có thể bị trình duyệt chặn popup) — hãy cho phép popup cho trang này rồi thử lại.",
+    driveErrorPopupClosed: "Cửa sổ đăng nhập đã đóng trước khi hoàn tất.",
+    driveErrorDenied: "Bạn đã từ chối cấp quyền truy cập Google Drive.",
+    resetHeader: "Reset progress", resetBtn: "Reset toàn bộ tiến trình",
+    resetConfirmText: "Gõ RESET để xác nhận xóa toàn bộ attempts, completedQuizzes, gapSnapshots.",
+    resetConfirmPlaceholder: "RESET", resetConfirmBtn: "Xác nhận reset",
+    dataFooterNote: "Dữ liệu 14 đề (1.684 câu), termbase (100 thuật ngữ) và bản dịch tiếng Việt (1.470/1.684 câu — bộ SUPER 1 mới chưa có bản dịch) đã đóng gói sẵn trong artifact — không cần import, chỉ progress (bao gồm supportUsage) được lưu trữ.",
+    interfaceLanguage: "Ngôn ngữ giao diện", themeLabel: "Giao diện", themeLight: "Sáng", themeDark: "Tối", hideSidebar: "Ẩn menu bên trái", showSidebar: "Hiện menu bên trái",
+
+    // Glossary
+    glossaryTitle: "Từ điển thuật ngữ", glossarySearchPlaceholder: "Tìm thuật ngữ tiếng Anh hoặc tiếng Việt...",
+    glossaryAllCategories: "Tất cả", glossaryCount: "{n} thuật ngữ", glossaryNoResults: "Không tìm thấy thuật ngữ phù hợp.",
+
+    // Tracking — mục tiêu hằng ngày
+    goalHeaderToday: "MỤC TIÊU HÔM NAY",
+    goalSetupTitle: "Đặt mục tiêu luyện mỗi ngày",
+    goalSetupBody: "Chọn một nhịp bạn giữ được đều đặn. Đổi lại bất cứ lúc nào.",
+    goalUnitQuestions: "{n} câu",
+    goalUnitQuizset: "Trọn 1 bộ đề",
+    goalQuizsetHint: "Bộ đề dài (>60 câu) khó xong trong một ngày — tiến độ tính theo phần trăm bộ đề hoàn thành trong ngày.",
+    goalSaveBtn: "Lưu mục tiêu", goalChangeBtn: "Đổi mục tiêu", goalSetBtn: "Đặt mục tiêu",
+    goalProgressCount: "{done}/{total} câu",
+    goalTodayStats: "Đúng {c}/{a} ({p}%) · ~{m} phút",
+    goalTodayEmpty: "Chưa làm câu nào hôm nay.",
+    goalContinueBtn: "Làm tiếp {n} câu", goalStartBtn: "Bắt đầu {n} câu", goalExtraBtn: "Luyện thêm 10 câu",
+    goalMetTitle: "ĐÃ ĐẠT MỤC TIÊU HÔM NAY", goalMetBody: "Làm thêm vẫn được tính vào tiến bộ.",
+    streakLabel: "{n} ngày", streakNone: "Chưa có chuỗi",
+    streakLongest: "Dài nhất {n} ngày", streakFreezeLeft: "Còn {n}/2 lượt bảo vệ chuỗi tháng này",
+    streakFreezeExplain: "Nghỉ tối đa 2 ngày mỗi tháng mà không mất chuỗi.",
+
+    // Tracking — màn Tiến độ
+    progressTabOverview: "Tổng quan", progressTabRhythm: "Nhịp luyện", progressTabGap: "GAP",
+    readinessHeader: "MỨC SẴN SÀNG THI",
+    readinessLevel_insufficient: "Chưa đủ dữ liệu", readinessLevel_high_risk: "Rủi ro cao",
+    readinessLevel_progressing: "Đang tiến bộ", readinessLevel_near_ready: "Gần sẵn sàng", readinessLevel_ready: "Sẵn sàng",
+    readinessMissingHeader: "Còn thiếu gì để lên mức tiếp theo",
+    readinessDisclaimer: "Ước lượng nội bộ dựa trên dữ liệu luyện tập của bạn. PMI không công bố ngưỡng đỗ chính thức — ngưỡng 75 ở đây là mức thận trọng do app đặt ra.",
+    readinessActionBtn: "Luyện đúng những điểm này",
+    reasonCritical: "{n} task ở mức critical (nặng nhất: {domain})",
+    reasonCoverage: "Độ phủ {p}% — {n} task chưa từng làm",
+    reasonAssisted: "{p}% câu có mở hỗ trợ tiếng Việt",
+    reasonRecency: "Đã {n} ngày không luyện — dữ liệu cũ bị giảm trọng số",
+    reasonVolume: "Mới có {n}/60 lượt làm hợp lệ để đánh giá",
+    reasonDomainLow: "Domain {domain} mới đạt {p}% mastery (chiếm {w}% đề thi)",
+    reasonAllGood: "Không còn điểm nghẽn lớn — giữ nhịp và làm mới dữ liệu mỗi tuần.",
+
+    trendHeader: "XU HƯỚNG 30 NGÀY",
+    trendFirstExposure: "Lần đầu gặp", trendRetake: "Làm lại",
+    trendThreshold: "ngưỡng 75%",
+    trendExplain: "Khoảng cách giữa hai đường là phần bạn nhớ đáp án chứ chưa thực sự nắm. Đường \"Lần đầu gặp\" mới phản ánh năng lực thật.",
+    trendNoData: "Cần thêm dữ liệu ở ít nhất 2 ngày khác nhau để vẽ xu hướng.",
+
+    heatmapHeader: "NHỊP LUYỆN 12 TUẦN GẦN NHẤT",
+    heatmapLegendLess: "ít", heatmapLegendMore: "nhiều",
+    heatmapSummary: "Đạt mục tiêu {met}/{total} ngày ({p}%)",
+    heatmapDayDetail: "{date}: {answered} câu · đúng {p}%",
+    heatmapDayEmpty: "{date}: chưa luyện",
+    heatmapNeedGoal: "Đặt mục tiêu hằng ngày để theo dõi ngày nào đạt/không đạt.",
+
+    examDateHeader: "NGÀY THI DỰ KIẾN",
+    examDateNotSet: "Chưa đặt", examDateSetBtn: "Đặt ngày thi", examDateClearBtn: "Xóa",
+    examDateCountdown: "Còn {n} ngày", examDatePassed: "Ngày thi đã qua",
+    examDatePace: "Để phủ hết {n} task chưa làm, cần ~{q} câu/ngày.",
+    examDatePaceOk: "Nhịp hiện tại ({q} câu/ngày) đủ để phủ hết trước ngày thi.",
+    examDatePaceLow: "Nhịp hiện tại {cur} câu/ngày — cần ~{need} câu/ngày mới kịp.",
+
+    masteryTrendHeader: "MASTERY THEO DOMAIN",
+    masteryTrendEmpty: "Cần ít nhất 2 lần nộp bài để vẽ diễn biến mastery.",
+
+    // Tracking — Library & Results
+    attemptHistoryHeader: "Các lần làm",
+    attemptNth: "L{n}",
+    attemptDelta: "{sign}{n} điểm so với lần đầu",
+    firstExposureLabel: "Lần đầu gặp", retakeLabel: "Làm lại",
+    resultsCompareHeader: "SO VỚI LẦN TRƯỚC CÙNG BỘ ĐỀ",
+    resultsCompareTrusted: "Trusted: {prev}% → {cur}%",
+    resultsCompareFirst: "Trong đó, câu lần đầu gặp: {prev}% → {cur}%",
+    resultsCompareNoPrev: "Đây là lần đầu bạn làm bộ đề này — lần sau sẽ có so sánh.",
+    resultsFirstExposureLine: "Lần đầu gặp: {p}% ({c}/{n})",
+    resultsFirstExposureNone: "Lần đầu gặp: — (mọi câu đều đã gặp trước đó)",
+
+    // Domain names (giữ nguyên tiếng Anh theo chuẩn PMI-ACP, không dịch)
+    domainMindset: "Mindset", domainLeadership: "Leadership", domainProduct: "Product", domainDelivery: "Delivery",
+  },
+  en: {
+    appTitle: "PMI-ACP Daily Trainer",
+    appSubtitle: "1,684 questions · 14 exams · Smart GAP · Vietnamese support",
+    navToday: "Today", navLibrary: "Library", navHistory: "History", navGap: "Progress", navGlossary: "Glossary", navVocab: "Vocab drill", navData: "Data",
+    publishBanner: "This browser is blocking local storage (private/incognito mode or privacy settings) — progress won't persist between sessions. Use \"Export backup\" under Data to save manually.",
+    savedToast: "Auto-saved",
+
+    inProgress: "IN PROGRESS", questionsAnswered: "{n}/{total} questions answered", continueBtn: "Continue",
+    recommendedNext: "RECOMMENDED NEXT", questionsCount: "{n} questions", startExamBtn: "Start Exam", libraryBtn: "Library",
+    top3Gaps: "TOP 3 GAPS", viewAll: "View all", noGapData: "Not enough data yet to identify gaps. Take at least one exam.",
+    accuracyLabel: "accuracy", practiceGapBtn: "Practice GAP",
+
+    stage: "STAGE", questionsShort: "questions", attemptedTimes: "attempted {n}x", notAttempted: "not attempted", lastScore: "last {p}%",
+    examBtn: "Exam", practiceBtn: "Practice", historyOfQuizBtn: "History",
+
+    // History
+    historyTitle: "Attempt history", historyEmpty: "No attempts yet. Start an exam from the Library.",
+    historyFilterQuizAll: "All exams", historyFilterModeAll: "All", historyEntryCount: "{n} attempts",
+    historyReviewBtn: "Review", historyBackToHistory: "← Back to History",
+
+    exitSaved: "← Exit (saved)", questionOf: "Question {n}/{total}", modeExam: "Exam", modePractice: "Practice", modeFillgap: "Fill-gap",
+    manualReviewWarn: "⚠ This question needs manual review — excluded from score/GAP.",
+    confidenceLabel: "Confidence level", notRecorded: "Not recorded",
+    explanationHeader: "EXPLANATION", correctAnswerLabel: "Correct answer", showFullExplanation: "Show full", hideFullExplanation: "Collapse",
+    prevBtn: "Previous", nextBtn: "Next", checkBtn: "Check", submitBtn: "Submit", finishEarlyBtn: "Finish early",
+    submitConfirmTitle: "Submit exam?", submitConfirmBody: "{n}/{total} questions answered. You won't be able to change answers after submitting.",
+    submitConfirmUnansweredWarn: "{n} question(s) still unanswered.",
+    cancelBtn: "Cancel", confirmSubmitBtn: "Confirm submit",
+    assistedConfirmTitle: "Use Vietnamese support?",
+    assistedConfirmBody: "This question's result will be marked Assisted and excluded from Independent score.",
+    assistedConfirmOk: "Yes, open support",
+    viSupportHeader: "Vietnamese support", viNoData: "This question doesn't have a Vietnamese translation (its pack was skipped at build time). The app still works fine in English.",
+    viNeedsReview: "This question needs cross-checking with the English source", viTermsHeader: "Related terms", viNoTerms: "No terms tagged for this question.",
+    bilingualToggleOn: "Bilingual: On", bilingualToggleOff: "Bilingual EN/VI", viBlockLabel: "VIETNAMESE",
+    vocabExampleLabel: "Example", vocabHeader: "Vocabulary drill", vocabSubtitle: "303 cards: PMI-ACP/Agile terms, English vocabulary likely to show up in exam scenarios (even beyond these 1,684 questions), and recurring exam sentence patterns — flip each card to see the meaning, an example, and rate how well you know it.",
+    vocabFlip: "Flip card", vocabKnow: "I know this", vocabDontKnow: "Still learning", vocabProgress: "Card {n}/{total}", vocabRestart: "Restart deck",
+    vocabDone: "You've gone through the whole deck!", vocabDoneSummary: "{known}/{total} known — {unknown} cards will resurface first next round.",
+    vocabModeFlashcard: "Flashcard", vocabModeChoice: "Multiple choice", vocabModeType: "Type the word",
+    vocabScopeDue: "Due ({n})", vocabScopeAll: "All", vocabNext: "Next",
+    vocabAllCaughtUp: "No cards due right now!", vocabAllCaughtUpBody: "You've reviewed everything due today. You can drill the full deck anyway, or come back once more cards are due.",
+    vocabTypePlaceholder: "Type the English word...", vocabCheck: "Check", vocabCorrect: "Correct!", vocabIncorrect: "Not quite",
+    vocabYourAnswer: "You typed", vocabCorrectAnswer: "Correct answer",
+    viPostHeader: "ANSWER & EXPLANATION TRANSLATION",
+    flagTooltip: "Flag for review",
+    paletteLegend: "Not visited · Visited · Answered · Flagged",
+    paletteBarAnswered: "answered", paletteBarOpen: "View list",
+    paletteSheetTitle: "Question list", paletteFilterAll: "All", paletteFilterUnanswered: "Unanswered",
+    paletteFilterFlagged: "Flagged", paletteFilterEmpty: "No questions in this filter.",
+    matchingHeader: "Matching (not graded — practice only)",
+    matchingPickPlaceholder: "— Not selected —", matchingTapHint: "Drag an answer into the blank, or tap a statement then tap an answer to pair them.", matchingActiveHint: "Choose an answer below for this ↓", matchingDropHint: "Drop answer here",
+    matchingCheckBtn: "Show matching answer", matchingExamLocked: "This is a matching question — the answer will show after you submit (same as every other question in Exam mode).", resultsFilterMatching: "Matching",
+    matchingCorrectHeader: "Correct answer",
+    timeLabel: "Time",
+
+    trustedLabel: "Trusted score", rawLabel: "Raw score", independentLabel: "Independent score",
+    independentNoData: "Not enough independent data", independentSuffix: "without Vietnamese support",
+    manualReviewNote: "{n} question(s) need manual review — excluded from score.",
+    wrongAnswersHeader: "WRONG ANSWERS ({n})", yourAnswer: "You chose", confidenceShort: "Confidence",
+    resultsFilterAll: "All", resultsFilterWrong: "Wrong", resultsFilterCorrect: "Correct", resultsFilterUnanswered: "Unanswered",
+    notAnsweredLabel: "You didn't answer this question", resultsEmptyFilter: "No questions in this filter.",
+    unansweredNote: "{n} question(s) left unanswered — likely from finishing early.",
+    viAnswerTranslation: "ANSWER & EXPLANATION TRANSLATION (assisted, not manually reviewed)",
+    viewGapBtn: "View GAP", backHomeBtn: "Back to Today", assistedBadge: "Assisted",
+    reviewQuestionNumber: "Question {n}", jumpHeader: "Jump to question", jumpPlaceholder: "Question #...", jumpGoBtn: "Go",
+    jumpNotFound: "Question {n} not found.", jumpLegend: "Correct · Wrong · Unanswered · Matching",
+
+    masteryLabel: "mastery", insufficientDataShort: "not enough data", noDataForDomain: "No data for this domain yet.", mindsetTipsHeader: "PMI-ACP exam mindset", mindsetTipLabel: "Mindset", domainMindsetLabel: "Mindset note",
+    attemptsLabel: "Attempts", sessionsLabel: "Sessions", accLabel: "Accuracy", calLabel: "Calibration",
+    speedLabel: "Speed", evidenceLabel: "Evidence", viHelpRatioLabel: "VN support use", practiceGapNow: "Practice GAP now",
+
+    backToGap: "← Back to GAP", chooseTasks: "Choose up to 3 priority tasks", noTasksYet: "No tasks to practice yet — take at least one exam first.",
+    sessionSize: "Questions per session", startFillGapBtn: "Start GAP practice",
+
+    overview: "Overview", attemptsCount: "{n} attempts · {m} exams completed", lastUpdated: "Last updated: {t}",
+    backupProgress: "Progress backup", exportProgress: "Export progress", importProgress: "Import progress",
+    fullBackup: "Full backup", exportBackup: "Export backup", restoreBackup: "Restore",
+    driveHeader: "Google Drive backup", driveDesc: "Automatically back up your progress to your Google Drive so you can restore it on another browser or device.",
+    driveConnectBtn: "Connect Google Drive", driveDisconnectBtn: "Disconnect", driveBackupBtn: "Back up now", driveRestoreBtn: "Restore from Drive",
+    driveConnectedLabel: "Connected", driveNotConnectedLabel: "Not connected", driveAutoLabel: "Auto backup on every change",
+    driveLastSyncLabel: "Last synced: {t}", driveNeverSynced: "never", driveBackupDone: "Backed up to Drive", driveNoBackup: "No backup found on Drive yet",
+    driveErrorLabel: "Drive connection error",
+    driveErrorPopupTimeout: "Couldn't open the Google sign-in window (your browser may be blocking pop-ups) — allow pop-ups for this site and try again.",
+    driveErrorPopupClosed: "The sign-in window was closed before finishing.",
+    driveErrorDenied: "You declined Google Drive access.",
+    resetHeader: "Reset progress", resetBtn: "Reset all progress",
+    resetConfirmText: "Type RESET to confirm deleting all attempts, completedQuizzes, gapSnapshots.",
+    resetConfirmPlaceholder: "RESET", resetConfirmBtn: "Confirm reset",
+    dataFooterNote: "All 14 exams (1,684 questions), the termbase (100 terms), and Vietnamese translations (1,470 of 1,684 questions — the new SUPER 1 set has no translation yet) are bundled into this artifact — no import needed. Only progress (including supportUsage) is stored.",
+    interfaceLanguage: "Interface language", themeLabel: "Appearance", themeLight: "Light", themeDark: "Dark", hideSidebar: "Hide sidebar", showSidebar: "Show sidebar",
+
+    glossaryTitle: "Glossary", glossarySearchPlaceholder: "Search English or Vietnamese term...",
+    glossaryAllCategories: "All", glossaryCount: "{n} terms", glossaryNoResults: "No matching terms found.",
+
+    goalHeaderToday: "TODAY'S GOAL",
+    goalSetupTitle: "Set a daily practice goal",
+    goalSetupBody: "Pick a pace you can actually keep. Change it any time.",
+    goalUnitQuestions: "{n} questions",
+    goalUnitQuizset: "One full exam set",
+    goalQuizsetHint: "Long sets (>60 questions) are hard to finish in one day — progress is counted as the percentage of the set completed today.",
+    goalSaveBtn: "Save goal", goalChangeBtn: "Change goal", goalSetBtn: "Set goal",
+    goalProgressCount: "{done}/{total} questions",
+    goalTodayStats: "{c}/{a} correct ({p}%) · ~{m} min",
+    goalTodayEmpty: "No questions answered today yet.",
+    goalContinueBtn: "Continue — {n} more", goalStartBtn: "Start {n} questions", goalExtraBtn: "Practice 10 more",
+    goalMetTitle: "TODAY'S GOAL MET", goalMetBody: "Extra practice still counts toward your progress.",
+    streakLabel: "{n} days", streakNone: "No streak yet",
+    streakLongest: "Longest {n} days", streakFreezeLeft: "{n}/2 streak freezes left this month",
+    streakFreezeExplain: "Skip up to 2 days per month without losing your streak.",
+
+    progressTabOverview: "Overview", progressTabRhythm: "Rhythm", progressTabGap: "GAP",
+    readinessHeader: "EXAM READINESS",
+    readinessLevel_insufficient: "Not enough data", readinessLevel_high_risk: "High risk",
+    readinessLevel_progressing: "Progressing", readinessLevel_near_ready: "Nearly ready", readinessLevel_ready: "Ready",
+    readinessMissingHeader: "What's missing to reach the next level",
+    readinessDisclaimer: "An internal estimate based on your own practice data. PMI does not publish an official passing score — the 75 threshold here is a conservative bar set by this app.",
+    readinessActionBtn: "Practice exactly these",
+    reasonCritical: "{n} task(s) at critical level (worst domain: {domain})",
+    reasonCoverage: "Coverage {p}% — {n} task(s) never attempted",
+    reasonAssisted: "{p}% of answers used Vietnamese support",
+    reasonRecency: "{n} day(s) since last practice — older data is down-weighted",
+    reasonVolume: "Only {n}/60 eligible attempts so far",
+    reasonDomainLow: "{domain} is at {p}% mastery (worth {w}% of the exam)",
+    reasonAllGood: "No major blockers left — keep the rhythm and refresh data weekly.",
+
+    trendHeader: "30-DAY TREND",
+    trendFirstExposure: "First exposure", trendRetake: "Retake",
+    trendThreshold: "75% bar",
+    trendExplain: "The gap between the two lines is what you remember rather than know. The \"First exposure\" line is the one that reflects real ability.",
+    trendNoData: "Need data on at least 2 different days to draw a trend.",
+
+    heatmapHeader: "LAST 12 WEEKS",
+    heatmapLegendLess: "less", heatmapLegendMore: "more",
+    heatmapSummary: "Goal met on {met}/{total} days ({p}%)",
+    heatmapDayDetail: "{date}: {answered} questions · {p}% correct",
+    heatmapDayEmpty: "{date}: no practice",
+    heatmapNeedGoal: "Set a daily goal to track which days you hit it.",
+
+    examDateHeader: "TARGET EXAM DATE",
+    examDateNotSet: "Not set", examDateSetBtn: "Set exam date", examDateClearBtn: "Clear",
+    examDateCountdown: "{n} days left", examDatePassed: "Exam date has passed",
+    examDatePace: "To cover the remaining {n} task(s), you need ~{q} questions/day.",
+    examDatePaceOk: "Your current pace ({q}/day) is enough to cover everything in time.",
+    examDatePaceLow: "Current pace {cur}/day — you need ~{need}/day to make it.",
+
+    masteryTrendHeader: "MASTERY BY DOMAIN",
+    masteryTrendEmpty: "Need at least 2 submitted sessions to chart mastery over time.",
+
+    attemptHistoryHeader: "Attempts",
+    attemptNth: "#{n}",
+    attemptDelta: "{sign}{n} points vs first attempt",
+    firstExposureLabel: "First exposure", retakeLabel: "Retake",
+    resultsCompareHeader: "VS YOUR PREVIOUS RUN OF THIS SET",
+    resultsCompareTrusted: "Trusted: {prev}% → {cur}%",
+    resultsCompareFirst: "Of which, first-exposure questions: {prev}% → {cur}%",
+    resultsCompareNoPrev: "First time through this set — you'll get a comparison next run.",
+    resultsFirstExposureLine: "First exposure: {p}% ({c}/{n})",
+    resultsFirstExposureNone: "First exposure: — (every question had been seen before)",
+
+    domainMindset: "Mindset", domainLeadership: "Leadership", domainProduct: "Product", domainDelivery: "Delivery",
+  },
+};
+export function fmtStr(str, vars) {
+  if (!vars) return str;
+  return str.replace(/\{(\w+)\}/g, (_, k) => (vars[k] !== undefined ? vars[k] : `{${k}}`));
+}
+
+
+export const TIER_LABEL = {
+  vi: { required: "Bắt buộc", recommended: "Tăng cường", optional: "Tùy chọn" },
+  en: { required: "Required", recommended: "Recommended", optional: "Optional" },
+};
+export const STATUS_LABEL = {
+  vi: { insufficient_data: "Chưa đủ dữ liệu", critical: "Yếu", needs_work: "Cần cải thiện", developing: "Đang tiến bộ", ready: "Sẵn sàng" },
+  en: { insufficient_data: "Insufficient data", critical: "Critical", needs_work: "Needs work", developing: "Developing", ready: "Ready" },
+};
+export const STATUS_COLOR = {
+  insufficient_data: "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300",
+  critical: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+  needs_work: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  developing: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
+  ready: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+};
+export const DIAGNOSIS_LABEL = {
+  vi: {
+    coverage_gap: "Chưa đủ dữ liệu (coverage gap)", blind_spot: "Điểm mù (tự tin nhưng sai)",
+    reading_or_mindset_trap: "Bẫy đọc đề / tư duy", fluency_gap: "Chưa thành thạo tốc độ",
+    answer_change_risk: "Rủi ro đổi đáp án", concept_gap: "Hổng kiến thức",
+    language_gap_candidate: "Nghi ngờ rào cản ngôn ngữ (candidate)",
+  },
+  en: {
+    coverage_gap: "Coverage gap", blind_spot: "Blind spot (confident but wrong)",
+    reading_or_mindset_trap: "Reading / mindset trap", fluency_gap: "Fluency gap (slow)",
+    answer_change_risk: "Answer-change risk", concept_gap: "Concept gap",
+    language_gap_candidate: "Language-barrier candidate",
+  },
+};
+/* Tư duy cốt lõi theo từng domain PMI-ACP — mục đích: khi GAP chỉ ra lỗi thuộc dạng          */
+/* "blind_spot"/"reading_or_mindset_trap" (tự tin nhưng sai / bẫy tư duy), nguyên nhân thường  */
+/* KHÔNG phải thiếu kiến thức mà là chọn nhầm đáp án "nghe hợp lý" nhưng lệch tư duy Agile.     */
+/* Ngắn gọn có chủ đích — đây là câu nhắc nhanh lúc review, không phải bài giảng.               */
+export const DOMAIN_MINDSET = {
+  vi: {
+    Mindset: "Ưu tiên đáp án thể hiện minh bạch, thích ứng, hợp tác — không phải kiểm soát hay né tránh thay đổi.",
+    Leadership: "PMI-ACP luôn thiên về lãnh đạo phụng sự: trao quyền, đặt câu hỏi, gỡ trở ngại — không ra lệnh hay quyết thay nhóm.",
+    Product: "Ưu tiên giá trị khách hàng nhận được sớm, thực tế hơn là bám sát đúng kế hoạch/tài liệu ban đầu.",
+    Delivery: "Chọn đáp án dựa trên dữ liệu/luồng công việc thực tế (metric, retro, kiểm thử liên tục) hơn quy trình cứng nhắc.",
+  },
+  en: {
+    Mindset: "Favor answers showing transparency, adaptability, collaboration — not control or avoiding change.",
+    Leadership: "PMI-ACP consistently favors servant leadership: empower, ask, remove impediments — not directing or deciding for the team.",
+    Product: "Favor early, real customer value over strict adherence to the original plan/documentation.",
+    Delivery: "Favor answers grounded in real data/flow (metrics, retros, continuous testing) over rigid process.",
+  },
+};
+export const EXAM_MINDSET_TIPS = {
+  vi: [
+    "Loại ngay đáp án mang tư duy waterfall/kiểm soát: \"báo cáo lên quản lý\", \"cứ theo đúng kế hoạch\", \"chờ phê duyệt\".",
+    "Giữa nhiều đáp án nghe có vẻ đúng, chọn đáp án phù hợp NHẤT với tình huống cụ thể trong đề — PMI-ACP rất coi trọng ngữ cảnh.",
+    "Ưu tiên đáp án nói về hành động của CẢ NHÓM/quy trình nhóm hơn quyết định của một cá nhân đơn lẻ.",
+    "Có xung đột hoặc bất đồng? Ưu tiên giải quyết qua đối thoại/facilitation trong nhóm trước khi nghĩ đến leo thang.",
+  ],
+  en: [
+    "Eliminate any waterfall/command-control-flavored option first: \"report to management\", \"stick to the plan\", \"wait for approval\".",
+    "When several options sound reasonable, pick the one that fits THIS specific scenario best — PMI-ACP weighs context heavily.",
+    "Favor answers describing team/process action over one person's unilateral decision.",
+    "Conflict or disagreement? Favor resolving through team dialogue/facilitation before escalating.",
+  ],
+};
