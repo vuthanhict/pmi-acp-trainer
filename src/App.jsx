@@ -1227,7 +1227,7 @@ const storage = {
 };
 
 const PROGRESS_KEY = "progress";
-const PROGRESS_SCHEMA_VERSION = 3;
+const PROGRESS_SCHEMA_VERSION = 4;
 const DRIVE_AUTO_KEY = "pmi_acp_drive_auto_backup";
 const DRIVE_LAST_SYNC_KEY = "pmi_acp_drive_last_sync";
 const DRIVE_ERROR_I18N_KEY = {
@@ -1248,6 +1248,10 @@ function defaultProgress() {
     // Chỉ lưu thứ người dùng TỰ ĐẶT. Lịch sử ngày, chuỗi ngày, readiness đều được tính lại
     // từ attempts mỗi lần render — xem chú thích ở đầu "Tracking engine".
     tracking: { dailyGoal: null, examDate: null },
+    // Tiến độ ôn từ vựng (spaced repetition) — key theo termId, xem nextSrsRecord().
+    // Trước schema v4, dữ liệu này nằm ở localStorage riêng (VOCAB_SRS_KEY), không đồng bộ
+    // được qua export/import/Drive — migrateProgress() sẽ gộp dữ liệu cũ vào đây một lần.
+    vocabSrs: {},
     settings: { theme: "light", uiLanguage: "vi", sidebarOpen: true },
     updatedAt: null,
   };
@@ -1265,6 +1269,10 @@ function migrateProgress(raw) {
   // chỉ là chưa đặt mục tiêu — không có bước migrate nào đụng tới attempts/completedQuizzes.
   base.tracking = { ...defaultProgress().tracking, ...(raw.tracking || {}) };
   base.gapSnapshots = compactGapSnapshots(raw.gapSnapshots || []);
+  // v3 → v4: gộp SRS từ vựng vào progress để đồng bộ được (xem defaultProgress()). Nếu progress
+  // đã có vocabSrs (đã migrate trước đó, hoặc phục hồi từ backup mới) thì giữ nguyên; chỉ đọc
+  // từ localStorage cũ khi đây là lần đầu nâng cấp lên v4.
+  base.vocabSrs = raw.vocabSrs && Object.keys(raw.vocabSrs).length ? raw.vocabSrs : loadLegacyVocabSrs();
   base.schemaVersion = PROGRESS_SCHEMA_VERSION;
   return base;
 }
@@ -1284,9 +1292,24 @@ function mergeProgressData(base, data) {
       dailyGoal: base.tracking?.dailyGoal ?? data.tracking?.dailyGoal ?? null,
       examDate: base.tracking?.examDate ?? data.tracking?.examDate ?? null,
     },
+    vocabSrs: mergeVocabSrs(base.vocabSrs, data.vocabSrs),
     settings: { ...base.settings, ...(data.settings || {}) },
   };
   return { merged, addedCount: newAttempts.length };
+}
+/* Gộp SRS từ vựng của 2 nguồn theo từng thẻ — giữ bản "học nhiều/thuộc kỹ hơn" (reviewCount cao
+   hơn, hoà thì box cao hơn) thay vì luôn ưu tiên 1 phía, để merge từ nhiều thiết bị không bao
+   giờ làm lùi tiến độ đã đạt được ở thiết bị kia. */
+function mergeVocabSrs(base, incoming) {
+  const merged = { ...(base || {}) };
+  for (const [id, rec] of Object.entries(incoming || {})) {
+    const cur = merged[id];
+    if (!cur) { merged[id] = rec; continue; }
+    const curScore = (cur.reviewCount || 0) * 100 + (cur.box || 0);
+    const recScore = (rec.reviewCount || 0) * 100 + (rec.box || 0);
+    if (recScore > curScore) merged[id] = rec;
+  }
+  return merged;
 }
 async function loadProgressFromStorage() {
   const raw = await storage.get(PROGRESS_KEY);
@@ -1820,6 +1843,9 @@ function App() {
   function setExamDate(dateKey) {
     persist((prev) => ({ ...prev, tracking: { ...prev.tracking, examDate: dateKey } }));
   }
+  function updateVocabSrs(nextMap) {
+    persist((prev) => ({ ...prev, vocabSrs: nextMap }));
+  }
   /** Nút "Làm tiếp N câu" ở màn Hôm nay: tự chọn câu theo GAP, vào bài ngay trong một chạm. */
   function startQuickPractice(size) {
     const taskIds = gapProfile.tasks.slice(0, 5).map((tk) => tk.taskId);
@@ -2096,7 +2122,7 @@ function App() {
                 )}
                 {view === "fillgap" && <FillGapScreen progress={progress} gapProfile={gapProfile} onStart={(ids, size) => startFillGapSession(ids, size)} onBack={() => setView("gap")} />}
                 {view === "glossary" && <GlossaryScreen />}
-                {view === "vocab" && <VocabScreen />}
+                {view === "vocab" && <VocabScreen vocabSrs={progress.vocabSrs} onUpdateVocabSrs={updateVocabSrs} />}
                 {view === "data" && (
                   <DataScreen
                     progress={progress} persist={persist} showToast={showToast} theme={theme} lang={lang} setTheme={setTheme} setLang={setLang}
@@ -4407,7 +4433,9 @@ const VOCAB_SRS_KEY = "pmi_acp_vocab_srs";
 const SRS_INTERVAL_DAYS = [0, 1, 3, 7, 16, 35];
 const SRS_MAX_BOX = SRS_INTERVAL_DAYS.length;
 
-function loadSrsMap() {
+/* Đọc SRS từ localStorage đời cũ (trước schema v4, khi dữ liệu này chưa nằm trong progress) —
+   chỉ dùng một lần bởi migrateProgress() để không mất tiến độ ôn từ vựng của người dùng cũ. */
+function loadLegacyVocabSrs() {
   try {
     const raw = localStorage.getItem(VOCAB_SRS_KEY);
     if (raw) return JSON.parse(raw);
@@ -4582,10 +4610,10 @@ function VocabTypeCard({ tm, onGrade }) {
     </>
   );
 }
-function VocabScreen() {
+function VocabScreen({ vocabSrs, onUpdateVocabSrs }) {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
-  const [srsMap, setSrsMap] = useState(() => loadSrsMap());
+  const srsMap = vocabSrs || {};
   const [mode, setMode] = useState("flashcard");
   const [scope, setScope] = useState("due");
   const [deck, setDeck] = useState(() => {
@@ -4615,8 +4643,7 @@ function VocabScreen() {
     const now = Date.now();
     const rec = nextSrsRecord(srsMap[tm.id], correct, now);
     const nextMap = { ...srsMap, [tm.id]: rec };
-    setSrsMap(nextMap);
-    localStorage.setItem(VOCAB_SRS_KEY, JSON.stringify(nextMap));
+    onUpdateVocabSrs(nextMap);
     setSessionStats((s) => ({ correct: s.correct + (correct ? 1 : 0), incorrect: s.incorrect + (correct ? 0 : 1) }));
     setIndex((i) => i + 1);
   }
@@ -4708,7 +4735,7 @@ function DataScreen({
     downloadJson(`pmi-acp-progress-${Date.now()}.json`, {
       schemaVersion: progress.schemaVersion, settings: progress.settings, attempts: progress.attempts,
       completedQuizzes: progress.completedQuizzes, activeSession: progress.activeSession, gapSnapshots: progress.gapSnapshots,
-      tracking: progress.tracking,
+      tracking: progress.tracking, vocabSrs: progress.vocabSrs,
     });
     showToast(t("exportProgress"));
   }
