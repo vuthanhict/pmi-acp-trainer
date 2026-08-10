@@ -20,7 +20,7 @@ const UI_TEXT = {
   vi: {
     appTitle: "PMI-ACP Daily Trainer",
     appSubtitle: "1.684 câu · 14 đề · GAP thông minh · Hỗ trợ tiếng Việt",
-    navToday: "Hôm nay", navLibrary: "Thư viện", navGap: "GAP", navGlossary: "Từ điển", navVocab: "Ôn từ vựng", navData: "Dữ liệu",
+    navToday: "Hôm nay", navLibrary: "Thư viện", navHistory: "Lịch sử", navGap: "GAP", navGlossary: "Từ điển", navVocab: "Ôn từ vựng", navData: "Dữ liệu",
     publishBanner: "Trình duyệt đang chặn lưu trữ cục bộ (chế độ ẩn danh hoặc cài đặt riêng tư) — tiến trình sẽ không được lưu giữa các phiên. Hãy dùng \"Xuất backup\" ở mục Dữ liệu để lưu thủ công.",
     savedToast: "Đã tự động lưu",
 
@@ -32,7 +32,12 @@ const UI_TEXT = {
 
     // Library
     stage: "GIAI ĐOẠN", questionsShort: "câu", attemptedTimes: "đã làm {n} lần", notAttempted: "chưa làm", lastScore: "gần nhất {p}%",
-    examBtn: "Exam", practiceBtn: "Practice",
+    examBtn: "Exam", practiceBtn: "Practice", historyOfQuizBtn: "Lịch sử",
+
+    // History
+    historyTitle: "Lịch sử làm bài", historyEmpty: "Chưa có lần làm bài nào. Hãy bắt đầu một đề trong Thư viện.",
+    historyFilterQuizAll: "Tất cả bộ đề", historyFilterModeAll: "Tất cả", historyEntryCount: "{n} lần làm",
+    historyReviewBtn: "Xem lại", historyBackToHistory: "← Về Lịch sử",
 
     // Quiz Runner
     exitSaved: "← Thoát (đã lưu)", questionOf: "Câu {n}/{total}", modeExam: "Exam", modePractice: "Practice", modeFillgap: "Fill-gap",
@@ -78,6 +83,8 @@ const UI_TEXT = {
     unansweredNote: "Còn {n} câu chưa làm — có thể do bạn đã kết thúc sớm.",
     viAnswerTranslation: "DỊCH ĐÁP ÁN & GIẢI THÍCH (hỗ trợ, chưa duyệt thủ công)",
     viewGapBtn: "Xem GAP", backHomeBtn: "Về Hôm nay", assistedBadge: "Assisted",
+    reviewQuestionNumber: "Câu {n}", jumpHeader: "Đi nhanh tới câu", jumpPlaceholder: "Số câu...", jumpGoBtn: "Đi tới",
+    jumpNotFound: "Không tìm thấy câu số {n}.", jumpLegend: "Đúng · Sai · Chưa làm · Ghép cặp",
 
     // Gap screen
     masteryLabel: "mastery", insufficientDataShort: "chưa đủ dữ liệu", noDataForDomain: "Chưa có dữ liệu cho domain này.", mindsetTipsHeader: "Tư duy làm bài PMI-ACP", mindsetTipLabel: "Tư duy", domainMindsetLabel: "Lưu ý tư duy",
@@ -116,7 +123,7 @@ const UI_TEXT = {
   en: {
     appTitle: "PMI-ACP Daily Trainer",
     appSubtitle: "1,684 questions · 14 exams · Smart GAP · Vietnamese support",
-    navToday: "Today", navLibrary: "Library", navGap: "GAP", navGlossary: "Glossary", navVocab: "Vocab drill", navData: "Data",
+    navToday: "Today", navLibrary: "Library", navHistory: "History", navGap: "GAP", navGlossary: "Glossary", navVocab: "Vocab drill", navData: "Data",
     publishBanner: "This browser is blocking local storage (private/incognito mode or privacy settings) — progress won't persist between sessions. Use \"Export backup\" under Data to save manually.",
     savedToast: "Auto-saved",
 
@@ -126,7 +133,12 @@ const UI_TEXT = {
     accuracyLabel: "accuracy", practiceGapBtn: "Practice GAP",
 
     stage: "STAGE", questionsShort: "questions", attemptedTimes: "attempted {n}x", notAttempted: "not attempted", lastScore: "last {p}%",
-    examBtn: "Exam", practiceBtn: "Practice",
+    examBtn: "Exam", practiceBtn: "Practice", historyOfQuizBtn: "History",
+
+    // History
+    historyTitle: "Attempt history", historyEmpty: "No attempts yet. Start an exam from the Library.",
+    historyFilterQuizAll: "All exams", historyFilterModeAll: "All", historyEntryCount: "{n} attempts",
+    historyReviewBtn: "Review", historyBackToHistory: "← Back to History",
 
     exitSaved: "← Exit (saved)", questionOf: "Question {n}/{total}", modeExam: "Exam", modePractice: "Practice", modeFillgap: "Fill-gap",
     manualReviewWarn: "⚠ This question needs manual review — excluded from score/GAP.",
@@ -170,6 +182,8 @@ const UI_TEXT = {
     unansweredNote: "{n} question(s) left unanswered — likely from finishing early.",
     viAnswerTranslation: "ANSWER & EXPLANATION TRANSLATION (assisted, not manually reviewed)",
     viewGapBtn: "View GAP", backHomeBtn: "Back to Today", assistedBadge: "Assisted",
+    reviewQuestionNumber: "Question {n}", jumpHeader: "Jump to question", jumpPlaceholder: "Question #...", jumpGoBtn: "Go",
+    jumpNotFound: "Question {n} not found.", jumpLegend: "Correct · Wrong · Unanswered · Matching",
 
     masteryLabel: "mastery", insufficientDataShort: "not enough data", noDataForDomain: "No data for this domain yet.", mindsetTipsHeader: "PMI-ACP exam mindset", mindsetTipLabel: "Mindset", domainMindsetLabel: "Mindset note",
     attemptsLabel: "Attempts", sessionsLabel: "Sessions", accLabel: "Accuracy", calLabel: "Calibration",
@@ -867,6 +881,7 @@ const DESIGN_CSS = `
 .pmi-bubble { border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 11px; font-weight: 600; border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink-soft); position: relative; }
 .pmi-bubble.is-visited { background: var(--line); color: var(--ink-mid); border-color: var(--line-strong); }
 .pmi-bubble.is-done { background: var(--sage-tint); color: var(--sage); border-color: var(--sage); }
+.pmi-bubble.is-wrong { background: var(--flag-tint); color: var(--flag); border-color: var(--flag); }
 .pmi-bubble.is-current { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
 .pmi-bubble-flag { position: absolute; top: -4px; right: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--seal); border: 1.5px solid var(--paper-raised); }
 
@@ -979,9 +994,9 @@ function ProgressBar({ value, className = "" }) {
     </div>
   );
 }
-function Card({ children, className = "", onClick }) {
+function Card({ children, className = "", onClick, id }) {
   return (
-    <div onClick={onClick} className={`pmi-card ${onClick ? "pmi-card-interactive" : ""} p-4 ${className}`}>
+    <div id={id} onClick={onClick} className={`pmi-card ${onClick ? "pmi-card-interactive" : ""} p-4 ${className}`}>
       {children}
     </div>
   );
@@ -1007,6 +1022,7 @@ function Toast({ text }) {
 const NAV_ITEMS = [
   { key: "today", icon: "home", labelKey: "navToday" },
   { key: "library", icon: "book", labelKey: "navLibrary" },
+  { key: "history", icon: "clock", labelKey: "navHistory" },
   { key: "gap", icon: "target", labelKey: "navGap" },
   { key: "glossary", icon: "languages", labelKey: "navGlossary" },
   { key: "vocab", icon: "seal", labelKey: "navVocab" },
@@ -1022,6 +1038,8 @@ function App() {
   const [view, setView] = useState("today");
   const [toast, setToast] = useState("");
   const [lastSessionId, setLastSessionId] = useState(null);
+  const [resultsReturnView, setResultsReturnView] = useState("today");
+  const [historyQuizFilter, setHistoryQuizFilter] = useState(null);
   const [driveConnectedState, setDriveConnectedState] = useState(false);
   const [driveBusy, setDriveBusy] = useState(false);
   const [driveError, setDriveError] = useState(null);
@@ -1207,6 +1225,12 @@ function App() {
     setView("quiz");
   }
 
+  function openHistoryEntry(sessionId) {
+    setLastSessionId(sessionId);
+    setResultsReturnView("history");
+    setView("results");
+  }
+
   function resumeSession() {
     if (!progress.activeSession) return;
     setView("quiz");
@@ -1261,6 +1285,7 @@ function App() {
       return nextProgress;
     });
     setLastSessionId(session.sessionId);
+    setResultsReturnView("today");
     setView("results");
   }
 
@@ -1408,7 +1433,8 @@ function App() {
                     onGoFillGap={() => setView("fillgap")}
                   />
                 )}
-                {view === "library" && <LibraryScreen progress={progress} onOpenQuiz={(qi, mode) => startQuizSession(qi, mode)} />}
+                {view === "library" && <LibraryScreen progress={progress} onOpenQuiz={(qi, mode) => startQuizSession(qi, mode)} onOpenHistory={(qi) => { setHistoryQuizFilter(qi); setView("history"); }} />}
+                {view === "history" && <HistoryScreen progress={progress} initialQuizFilter={historyQuizFilter} onOpenEntry={openHistoryEntry} />}
                 {view === "quiz" && progress.activeSession && (
                   <QuizRunner
                     session={progress.activeSession}
@@ -1420,7 +1446,7 @@ function App() {
                     showToast={showToast}
                   />
                 )}
-                {view === "results" && <ResultsScreen sessionId={lastSessionId} progress={progress} onDone={() => setView("today")} onGap={() => setView("gap")} />}
+                {view === "results" && <ResultsScreen sessionId={lastSessionId} progress={progress} onDone={() => setView(resultsReturnView)} onGap={() => setView("gap")} backLabel={resultsReturnView === "history" ? t("historyBackToHistory") : null} />}
                 {view === "gap" && <GapScreen gapProfile={gapProfile} onFillGap={() => setView("fillgap")} />}
                 {view === "fillgap" && <FillGapScreen progress={progress} gapProfile={gapProfile} onStart={(ids, size) => startFillGapSession(ids, size)} onBack={() => setView("gap")} />}
                 {view === "glossary" && <GlossaryScreen />}
@@ -1546,7 +1572,7 @@ function TodayScreen({ progress, gapProfile, onResume, onStart, onGoLibrary, onG
 }
 
 /* ===================== Library Screen ===================== */
-function LibraryScreen({ progress, onOpenQuiz }) {
+function LibraryScreen({ progress, onOpenQuiz, onOpenHistory }) {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
   const isWide = useIsWide();
@@ -1588,6 +1614,11 @@ function LibraryScreen({ progress, onOpenQuiz }) {
                   <div className="flex gap-2">
                     <Button onClick={() => onOpenQuiz(c.quizIndex, "exam")} className="flex-1">{t("examBtn")}</Button>
                     <Button onClick={() => onOpenQuiz(c.quizIndex, "practice")} variant="secondary" className="flex-1">{t("practiceBtn")}</Button>
+                    {attempts > 0 && (
+                      <Button onClick={() => onOpenHistory(c.quizIndex)} variant="ghost" className="shrink-0" title={t("historyOfQuizBtn")}>
+                        <Icon name="clock" size={16} />
+                      </Button>
+                    )}
                   </div>
                 </Card>
               );
@@ -1595,6 +1626,82 @@ function LibraryScreen({ progress, onOpenQuiz }) {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/* ===================== History Screen ===================== */
+function HistoryScreen({ progress, initialQuizFilter, onOpenEntry }) {
+  const { t, lang } = useAppCtx();
+  const [quizFilter, setQuizFilter] = useState(initialQuizFilter ?? "all");
+  const [modeFilter, setModeFilter] = useState("all");
+
+  const entries = useMemo(() => {
+    return progress.completedQuizzes
+      .filter((c) => quizFilter === "all" || c.quizIndex === quizFilter)
+      .filter((c) => modeFilter === "all" || c.mode === modeFilter)
+      .slice()
+      .sort((a, b) => new Date(b.completedAt ?? 0) - new Date(a.completedAt ?? 0));
+  }, [progress.completedQuizzes, quizFilter, modeFilter]);
+
+  const modeFilters = [
+    { key: "all", label: t("historyFilterModeAll") },
+    { key: "exam", label: t("examBtn") },
+    { key: "practice", label: t("practiceBtn") },
+    { key: "fillgap", label: t("modeFillgap") },
+  ];
+
+  return (
+    <div className="space-y-4 pt-1 pb-4">
+      <p className="pmi-eyebrow">{t("historyTitle")}</p>
+
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <select
+          value={quizFilter === "all" ? "all" : String(quizFilter)}
+          onChange={(e) => setQuizFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
+          className="pmi-mono text-xs px-3 py-2 rounded-lg flex-1"
+          style={{ background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
+        >
+          <option value="all">{t("historyFilterQuizAll")}</option>
+          {QUIZ_CATALOG.map((c) => (
+            <option key={c.quizIndex} value={c.quizIndex}>{c.quizName}</option>
+          ))}
+        </select>
+        <div className="flex gap-1.5 overflow-x-auto">
+          {modeFilters.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setModeFilter(f.key)}
+              className="pmi-mono shrink-0 text-xs px-3 py-1.5 rounded-full font-medium"
+              style={modeFilter === f.key ? { background: "var(--accent)", color: "var(--accent-fg)" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {entries.length === 0 ? (
+        <p className="text-sm text-center py-10" style={{ color: "var(--ink-soft)" }}>{t("historyEmpty")}</p>
+      ) : (
+        <>
+          <p className="pmi-mono text-[11px]" style={{ color: "var(--ink-soft)" }}>{t("historyEntryCount", { n: entries.length })}</p>
+          <div className="space-y-2">
+            {entries.map((c) => (
+              <Card key={c.sessionId} onClick={() => onOpenEntry(c.sessionId)}>
+                <div className="flex items-center justify-between mb-1 gap-2">
+                  <p className="font-medium text-sm pr-2">{c.quizName}</p>
+                  <span className="pmi-chip pmi-status-developing shrink-0">{c.mode === "exam" ? t("examBtn") : c.mode === "practice" ? t("practiceBtn") : t("modeFillgap")}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="pmi-mono text-[11px]" style={{ color: "var(--ink-soft)" }}>{fmtDate(c.completedAt, lang)}</p>
+                  <p className="pmi-mono text-sm font-semibold" style={{ color: c.trustedScore.percent >= 70 ? "var(--sage)" : "var(--flag)" }}>{c.trustedScore.percent}%</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -1903,7 +2010,7 @@ function ViSupportPanel({ question, viOn, expandedTerm, onExpandTerm, revealed, 
               {postOpen && (
                 <div className="space-y-1.5">
                   <p className="text-xs font-medium" style={{ color: "var(--sage)" }}>{item.postAnswer.correctAnswerTextVi}</p>
-                  <ExplanationText shortText={item.postAnswer.explanationShortVi} className="text-xs" color="var(--ink-mid)" />
+                  <ExplanationText text={item.postAnswer.explanationShortVi} className="text-xs" color="var(--ink-mid)" />
                 </div>
               )}
             </div>
@@ -1939,17 +2046,28 @@ function ChoiceViLine({ questionId, choiceId }) {
   return <span className="block text-xs italic mt-1" style={{ color: "var(--ink-mid)" }}>{c.textVi}</span>;
 }
 
-/* Mặc định chỉ hiện bản tóm tắt (1-2 câu MỞ ĐẦU trích nguyên văn từ explanation gốc, không   */
-/* diễn giải lại) để review nhanh — bấm "Xem đầy đủ" mới tải toàn bộ giải thích dài. Giúp lướt */
-/* qua nhiều câu nhanh hơn nhiều so với luôn hiện đoạn văn dài ngay từ đầu.                     */
-function ExplanationText({ shortText, fullText, className = "text-sm", color }) {
+/* Tự động cắt văn bản giải thích gốc (thường rất dài, có breakdown từng đáp án A/B/C/D) thành */
+/* bản tóm tắt ~1-2 câu mở đầu, cắt tại ranh giới câu gần nhất cho tự nhiên. Mặc định chỉ hiện  */
+/* bản tóm tắt để review nhanh — bấm "Xem đầy đủ" mới tải toàn bộ. Giúp lướt qua nhiều câu       */
+/* nhanh hơn nhiều so với luôn hiện cả đoạn văn dài ngay từ đầu.                                 */
+function truncateExplanation(text, maxLen) {
+  if (!text || text.length <= maxLen) return text || "";
+  const cut = text.slice(0, maxLen);
+  const sentenceEnd = cut.lastIndexOf(". ");
+  if (sentenceEnd > maxLen * 0.4) return cut.slice(0, sentenceEnd + 1).trim();
+  const lastSpace = cut.lastIndexOf(" ");
+  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim() + "…";
+}
+function ExplanationText({ text, className = "text-sm", color, previewLength = 200 }) {
   const { t } = useAppCtx();
   const [expanded, setExpanded] = useState(false);
-  const hasMore = !!(fullText && shortText && fullText.trim() !== shortText.trim() && fullText.length > shortText.length + 5);
-  const display = expanded || !hasMore ? (fullText || shortText || "—") : (shortText || fullText || "—");
+  const full = (text || "").trim();
+  const preview = truncateExplanation(full, previewLength);
+  const hasMore = preview !== full;
+  const display = expanded || !hasMore ? full : preview;
   return (
     <div>
-      <p className={`${className} whitespace-pre-wrap`} style={{ color }}>{display}</p>
+      <p className={`${className} whitespace-pre-wrap`} style={{ color }}>{display || "—"}</p>
       {hasMore && (
         <button onClick={() => setExpanded((e) => !e)} className="pmi-focusable pmi-mono text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: "var(--sky)" }}>
           {expanded ? t("hideFullExplanation") : t("showFullExplanation")} <Icon name={expanded ? "chevronUp" : "chevronDown"} size={11} />
@@ -2360,7 +2478,7 @@ function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, onFinis
         <Card className="mb-3">
           <p className="pmi-eyebrow mb-1">{t("explanationHeader")}</p>
           <p className="pmi-mono text-[11px] mb-2" style={{ color: "var(--ink-soft)" }}>{t("correctAnswerLabel")}: {(q.correctOptionIds || []).join(", ").toUpperCase() || "—"}</p>
-          <ExplanationText shortText={q.explanationShort} />
+          <ExplanationText text={q.explanationShort} />
         </Card>
       )}
 
@@ -2502,11 +2620,95 @@ function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, onFinis
   );
 }
 
+/* ===================== Review Question Card (dùng trong Results Screen) ===================== */
+function ReviewQuestionCard({ item }) {
+  const { t, lang } = useAppCtx();
+  const [viOpen, setViOpen] = useState(false);
+  const questionId = item.kind === "unanswered" || item.kind === "matching" ? item.q.id : item.a.questionId;
+  const q = item.kind === "unanswered" || item.kind === "matching" ? item.q : QUESTION_INDEX.get(questionId);
+  if (!q) return null;
+  const viItem = VI_ITEM_INDEX.get(questionId);
+  const badgeStyle = item.kind === "wrong" ? "pmi-status-critical" : item.kind === "correct" ? "pmi-status-ready" : item.kind === "matching" ? "pmi-status-developing" : "pmi-status-insufficient_data";
+  const badgeLabel = item.kind === "wrong" ? t("resultsFilterWrong") : item.kind === "correct" ? t("resultsFilterCorrect") : item.kind === "matching" ? t("resultsFilterMatching") : t("resultsFilterUnanswered");
+  const matchingParsed = item.kind === "matching" ? parseMatchingQuestion(q) : null;
+  const selectedIds = item.kind === "unanswered" || item.kind === "matching" ? [] : (item.a.selectedOptionIds || []).map(normOpt);
+  const correctIds = (q.correctOptionIds || []).map(normOpt);
+  return (
+    <Card id={q.questionNumber ? `rev-q-${q.questionNumber}` : undefined}>
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
+        {q.questionNumber != null && <span className="pmi-mono text-xs font-semibold" style={{ color: "var(--ink-soft)" }}>{t("reviewQuestionNumber", { n: q.questionNumber })}</span>}
+        <span className={`pmi-chip ${badgeStyle}`}>{badgeLabel}</span>
+        {item.kind !== "unanswered" && item.kind !== "matching" && item.a.supportUsage?.assisted && <span className="pmi-chip pmi-status-developing">{t("assistedBadge")}</span>}
+      </div>
+      <p className="text-sm mb-2 whitespace-pre-wrap">{matchingParsed ? matchingParsed.intro || q.stem : q.stem}</p>
+      {item.kind === "unanswered" && <p className="pmi-mono text-xs mb-2" style={{ color: "var(--ink-soft)" }}>{t("notAnsweredLabel")}</p>}
+      {item.kind !== "unanswered" && item.kind !== "matching" && (
+        <p className="pmi-mono text-xs mb-2" style={{ color: "var(--ink-soft)" }}>{t("confidenceShort")}: {item.a.confidence ?? t("notRecorded")}</p>
+      )}
+      {matchingParsed ? (
+        <div className="pmi-mono text-xs space-y-1 mb-2 mt-1">
+          {matchingParsed.statements.map((s, idx) => (
+            <div key={idx} className="flex items-start gap-2">
+              <span style={{ color: "var(--ink-mid)" }}>{s}</span>
+              <span className="font-semibold shrink-0" style={{ color: "var(--sage)" }}>→ {matchingParsed.correctMap.get(s)}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-1.5 mb-2">
+          {(q.choices || []).map((c) => {
+            const cid = normOpt(c.id);
+            const isCorrectChoice = correctIds.includes(cid);
+            const isSel = selectedIds.includes(cid);
+            const isWrongSel = isSel && !isCorrectChoice;
+            let stateCls = "";
+            if (isCorrectChoice) stateCls = "is-correct";
+            else if (isWrongSel) stateCls = "is-wrong";
+            return (
+              <div key={c.id} className={`pmi-choice w-full px-3 py-2.5 text-sm flex items-start gap-2 ${stateCls}`}>
+                <span className="pmi-choice-letter uppercase shrink-0">{c.id}.</span>
+                <span className="flex-1">{c.text}</span>
+                {isCorrectChoice && <Icon name="check" size={15} style={{ color: "var(--sage)" }} className="shrink-0" />}
+                {isWrongSel && <Icon name="x" size={15} style={{ color: "var(--flag)" }} className="shrink-0" />}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <p className="pmi-eyebrow mb-1">{t("explanationHeader")}</p>
+      <ExplanationText text={q.explanationShort} className="text-xs mb-2" color="var(--ink-mid)" />
+      {item.kind === "wrong" && q.domain && DOMAIN_MINDSET[lang][q.domain] && (
+        <p className="text-xs mb-2 flex gap-1.5" style={{ color: "var(--seal-fg)" }}>
+          <span className="shrink-0">💡</span>
+          <span>{DOMAIN_MINDSET[lang][q.domain]}</span>
+        </p>
+      )}
+      {viItem && (
+        <div className="pt-2 pmi-divider-dashed">
+          <button onClick={() => setViOpen((o) => !o)} className="pmi-focusable flex items-center gap-1.5 text-xs font-medium" style={{ color: "var(--sky)" }}>
+            <Icon name="globe" size={14} /> {t("viSupportHeader")} <Icon name={viOpen ? "chevronUp" : "chevronDown"} size={13} />
+          </button>
+          {viOpen && (
+            <div className="mt-2">
+              <p className="pmi-eyebrow mb-1">{t("viAnswerTranslation")}</p>
+              <p className="text-xs mb-1 font-medium" style={{ color: "var(--sage)" }}>{viItem.postAnswer.correctAnswerTextVi}</p>
+              <ExplanationText text={viItem.postAnswer.explanationShortVi} className="text-xs" color="var(--ink-mid)" />
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 /* ===================== Results Screen ===================== */
-function ResultsScreen({ sessionId, progress, onDone, onGap }) {
+function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel }) {
   const { t, lang } = useAppCtx();
   const [filter, setFilter] = useState("all");
   const [mindsetOpen, setMindsetOpen] = useState(false);
+  const [jumpOpen, setJumpOpen] = useState(false);
+  const [jumpValue, setJumpValue] = useState("");
+  const [jumpError, setJumpError] = useState(false);
   const entry = progress.completedQuizzes.find((c) => c.sessionId === sessionId);
   const sessAttempts = progress.attempts.filter((a) => a.sessionId === sessionId);
   const wrong = sessAttempts.filter((a) => a.gradeStatus === "graded" && !a.isCorrect);
@@ -2533,12 +2735,36 @@ function ResultsScreen({ sessionId, progress, onDone, onGap }) {
     ...(matchingQuestions.length ? [{ key: "matching", label: t("resultsFilterMatching"), count: matchingQuestions.length }] : []),
   ];
 
-  // Gộp thành 1 danh sách để review, mỗi mục biết trạng thái của chính nó (đúng/sai/chưa làm/ghép cặp)
-  let reviewItems = [];
-  if (filter === "all" || filter === "wrong") reviewItems.push(...wrong.map((a) => ({ kind: "wrong", a })));
-  if (filter === "all" || filter === "correct") reviewItems.push(...correctList.map((a) => ({ kind: "correct", a })));
-  if (filter === "all" || filter === "unanswered") reviewItems.push(...unansweredQuestions.map((q) => ({ kind: "unanswered", q })));
-  if (filter === "all" || filter === "matching") reviewItems.push(...matchingQuestions.map((q) => ({ kind: "matching", q })));
+  // Gộp toàn bộ (không lọc) để dựng lưới "đi nhanh tới câu", sắp theo questionNumber cho nhất quán.
+  const allItems = [
+    ...wrong.map((a) => ({ kind: "wrong", a })),
+    ...correctList.map((a) => ({ kind: "correct", a })),
+    ...unansweredQuestions.map((q) => ({ kind: "unanswered", q })),
+    ...matchingQuestions.map((q) => ({ kind: "matching", q })),
+  ];
+  function questionOf(item) {
+    return item.kind === "unanswered" || item.kind === "matching" ? item.q : QUESTION_INDEX.get(item.a.questionId);
+  }
+  allItems.sort((x, y) => (questionOf(x)?.questionNumber ?? 0) - (questionOf(y)?.questionNumber ?? 0));
+
+  const reviewItems = filter === "all" ? allItems : allItems.filter((item) => item.kind === filter);
+
+  function jumpToQuestion(num) {
+    const n = Number(num);
+    const target = allItems.find((item) => questionOf(item)?.questionNumber === n);
+    if (!target) {
+      setJumpError(true);
+      return;
+    }
+    setJumpError(false);
+    setFilter("all");
+    setJumpValue("");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.getElementById(`rev-q-${n}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  }
 
   return (
     <div className="pt-1 space-y-4 pb-4">
@@ -2583,67 +2809,58 @@ function ResultsScreen({ sessionId, progress, onDone, onGap }) {
         ))}
       </div>
 
+      <Card className="py-3">
+        <button onClick={() => setJumpOpen((o) => !o)} className="pmi-focusable w-full flex items-center justify-between">
+          <span className="pmi-eyebrow">{t("jumpHeader")}</span>
+          <Icon name={jumpOpen ? "chevronUp" : "chevronDown"} size={14} style={{ color: "var(--ink-soft)" }} />
+        </button>
+        {jumpOpen && (
+          <div className="mt-3">
+            <div className="flex gap-2 mb-3">
+              <input
+                type="number"
+                inputMode="numeric"
+                value={jumpValue}
+                onChange={(e) => { setJumpValue(e.target.value); setJumpError(false); }}
+                onKeyDown={(e) => { if (e.key === "Enter" && jumpValue) jumpToQuestion(jumpValue); }}
+                placeholder={t("jumpPlaceholder")}
+                className="pmi-mono text-sm px-3 py-2 rounded-lg flex-1 min-w-0"
+                style={{ background: "var(--paper)", border: `1px solid ${jumpError ? "var(--flag)" : "var(--line-strong)"}`, color: "var(--ink)" }}
+              />
+              <Button onClick={() => jumpValue && jumpToQuestion(jumpValue)} className="shrink-0">{t("jumpGoBtn")}</Button>
+            </div>
+            {jumpError && <p className="text-xs mb-3" style={{ color: "var(--flag)" }}>{t("jumpNotFound", { n: jumpValue })}</p>}
+            <div className="grid gap-1.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(34px, 1fr))" }}>
+              {allItems.map((item) => {
+                const q = questionOf(item);
+                if (!q) return null;
+                const cls = item.kind === "correct" ? "is-done" : item.kind === "wrong" ? "is-wrong" : item.kind === "matching" ? "is-visited" : "";
+                return (
+                  <button key={q.id} onClick={() => jumpToQuestion(q.questionNumber)} className={`pmi-bubble pmi-focusable h-8 ${cls}`}>
+                    {q.questionNumber}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="pmi-mono text-[10px] text-center mt-3" style={{ color: "var(--ink-soft)" }}>{t("jumpLegend")}</p>
+          </div>
+        )}
+      </Card>
+
       {reviewItems.length === 0 ? (
         <p className="text-sm text-center py-6" style={{ color: "var(--ink-soft)" }}>{t("resultsEmptyFilter")}</p>
       ) : (
         <div className="space-y-2">
           {reviewItems.map((item) => {
             const questionId = item.kind === "unanswered" || item.kind === "matching" ? item.q.id : item.a.questionId;
-            const q = item.kind === "unanswered" || item.kind === "matching" ? item.q : QUESTION_INDEX.get(questionId);
-            if (!q) return null;
-            const viItem = VI_ITEM_INDEX.get(questionId);
-            const badgeStyle = item.kind === "wrong" ? "pmi-status-critical" : item.kind === "correct" ? "pmi-status-ready" : item.kind === "matching" ? "pmi-status-developing" : "pmi-status-insufficient_data";
-            const badgeLabel = item.kind === "wrong" ? t("resultsFilterWrong") : item.kind === "correct" ? t("resultsFilterCorrect") : item.kind === "matching" ? t("resultsFilterMatching") : t("resultsFilterUnanswered");
-            const matchingParsed = item.kind === "matching" ? parseMatchingQuestion(q) : null;
-            return (
-              <Card key={questionId}>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className={`pmi-chip ${badgeStyle}`}>{badgeLabel}</span>
-                  {item.kind !== "unanswered" && item.kind !== "matching" && item.a.supportUsage?.assisted && <span className="pmi-chip pmi-status-developing">{t("assistedBadge")}</span>}
-                </div>
-                <p className="text-sm mb-2">{matchingParsed ? matchingParsed.intro || q.stem : q.stem}</p>
-                {item.kind === "unanswered" && <p className="pmi-mono text-xs mb-1" style={{ color: "var(--ink-soft)" }}>{t("notAnsweredLabel")}</p>}
-                {item.kind !== "unanswered" && item.kind !== "matching" && (
-                  <>
-                    <p className="pmi-mono text-xs mb-1" style={{ color: item.kind === "wrong" ? "var(--flag)" : "var(--sage)" }}>{t("yourAnswer")}: {item.a.selectedOptionIds.join(", ").toUpperCase() || "—"}</p>
-                    <p className="pmi-mono text-xs mb-1" style={{ color: "var(--ink-soft)" }}>{t("confidenceShort")}: {item.a.confidence ?? t("notRecorded")}</p>
-                  </>
-                )}
-                {matchingParsed ? (
-                  <div className="pmi-mono text-xs space-y-1 mb-2 mt-1">
-                    {matchingParsed.statements.map((s, idx) => (
-                      <div key={idx} className="flex items-start gap-2">
-                        <span style={{ color: "var(--ink-mid)" }}>{s}</span>
-                        <span className="font-semibold shrink-0" style={{ color: "var(--sage)" }}>→ {matchingParsed.correctMap.get(s)}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="pmi-mono text-xs mb-2" style={{ color: "var(--sage)" }}>{t("correctAnswerLabel")}: {(q.correctOptionIds || []).join(", ").toUpperCase() || "—"}</p>
-                )}
-                <ExplanationText shortText={q.explanationShort} className="text-xs mb-2" color="var(--ink-mid)" />
-                {item.kind === "wrong" && q.domain && DOMAIN_MINDSET[lang][q.domain] && (
-                  <p className="text-xs mb-2 flex gap-1.5" style={{ color: "var(--seal-fg)" }}>
-                    <span className="shrink-0">💡</span>
-                    <span>{DOMAIN_MINDSET[lang][q.domain]}</span>
-                  </p>
-                )}
-                {viItem && (
-                  <div className="pt-2 pmi-divider-dashed">
-                    <p className="pmi-eyebrow mb-1">{t("viAnswerTranslation")}</p>
-                    <p className="text-xs mb-1" style={{ color: "var(--sage)" }}>{viItem.postAnswer.correctAnswerTextVi}</p>
-                    <ExplanationText shortText={viItem.postAnswer.explanationShortVi} className="text-xs" color="var(--ink-mid)" />
-                  </div>
-                )}
-              </Card>
-            );
+            return <ReviewQuestionCard key={questionId} item={item} />;
           })}
         </div>
       )}
 
       <div className="flex gap-2">
         <Button variant="secondary" onClick={onGap} className="flex-1">{t("viewGapBtn")}</Button>
-        <Button onClick={onDone} className="flex-1">{t("backHomeBtn")}</Button>
+        <Button onClick={onDone} className="flex-1">{backLabel || t("backHomeBtn")}</Button>
       </div>
     </div>
   );
