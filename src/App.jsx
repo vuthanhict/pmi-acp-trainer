@@ -53,6 +53,7 @@ const UI_TEXT = {
     assistedConfirmOk: "Đồng ý, mở hỗ trợ",
     viSupportHeader: "Hỗ trợ tiếng Việt", viNoData: "Câu này chưa có bản dịch tiếng Việt (gói dữ liệu bị bỏ qua khi nhúng). Ứng dụng vẫn hoạt động bình thường bằng tiếng Anh.",
     viNeedsReview: "Câu này cần đối chiếu bản tiếng Anh", viTermsHeader: "Thuật ngữ liên quan", viNoTerms: "Không có thuật ngữ nào được gắn cho câu này.",
+    bilingualToggleOn: "Song ngữ: Bật", bilingualToggleOff: "Song ngữ EN/VI", viBlockLabel: "TIẾNG VIỆT",
     vocabExampleLabel: "Ví dụ", vocabHeader: "Ôn từ vựng", vocabSubtitle: "303 thẻ: thuật ngữ PMI-ACP/Agile, từ vựng/cụm từ tiếng Anh khó hoặc hay gặp trong đề thi (kể cả ngoài 1.684 câu hiện có), và cấu trúc câu quen thuộc — lật thẻ để xem nghĩa, ví dụ và tự đánh giá mức độ nhớ.",
     vocabFlip: "Lật thẻ", vocabKnow: "Đã thuộc", vocabDontKnow: "Chưa thuộc", vocabProgress: "Thẻ {n}/{total}", vocabRestart: "Ôn lại từ đầu",
     vocabDone: "Đã ôn hết bộ thẻ!", vocabDoneSummary: "Đã thuộc {known}/{total} — {unknown} thẻ sẽ ưu tiên xuất hiện lại ở vòng sau.",
@@ -153,6 +154,7 @@ const UI_TEXT = {
     assistedConfirmOk: "Yes, open support",
     viSupportHeader: "Vietnamese support", viNoData: "This question doesn't have a Vietnamese translation (its pack was skipped at build time). The app still works fine in English.",
     viNeedsReview: "This question needs cross-checking with the English source", viTermsHeader: "Related terms", viNoTerms: "No terms tagged for this question.",
+    bilingualToggleOn: "Bilingual: On", bilingualToggleOff: "Bilingual EN/VI", viBlockLabel: "VIETNAMESE",
     vocabExampleLabel: "Example", vocabHeader: "Vocabulary drill", vocabSubtitle: "303 cards: PMI-ACP/Agile terms, English vocabulary likely to show up in exam scenarios (even beyond these 1,684 questions), and recurring exam sentence patterns — flip each card to see the meaning, an example, and rate how well you know it.",
     vocabFlip: "Flip card", vocabKnow: "I know this", vocabDontKnow: "Still learning", vocabProgress: "Card {n}/{total}", vocabRestart: "Restart deck",
     vocabDone: "You've gone through the whole deck!", vocabDoneSummary: "{known}/{total} known — {unknown} cards will resurface first next round.",
@@ -1964,59 +1966,64 @@ function TermChip({ termId, onExpand, expandedId }) {
     </button>
   );
 }
-function ViSupportPanel({ question, viOn, expandedTerm, onExpandTerm, revealed, postOpen, onOpenPost }) {
-  const { t, lang } = useAppCtx();
-  const item = VI_ITEM_INDEX.get(question.id);
-  if (!viOn) return null;
-
+/* Nút bật/tắt song ngữ EN/VI — luôn đặt ngay cạnh nội dung nó tác động (đầu câu hỏi, hoặc đầu   */
+/* khối GIẢI THÍCH khi chưa bật từ trước) để rõ ràng thay vì chôn ở cuối card như thiết kế cũ.   */
+function BilingualToggle({ on, onClick, compact }) {
+  const { t } = useAppCtx();
   return (
-    <div className="mt-3 pt-3 pmi-divider-dashed">
-      {!item ? (
-        <p className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("viNoData")}</p>
-      ) : (
-        <>
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span className="pmi-chip pmi-status-needs_work">{VI_STATUS_LABEL[lang][item.quality?.status] || VI_STATUS_LABEL[lang].machine_draft}</span>
-            {item.quality?.needsManualReview && <span className="pmi-chip pmi-status-critical">{t("viNeedsReview")}</span>}
-          </div>
-          {item.quality?.needsManualReview && item.quality.warnings?.length > 0 && (
-            <ul className="text-[11px] list-disc pl-4 mb-3 space-y-0.5" style={{ color: "var(--flag)" }}>
-              {item.quality.warnings.map((w) => (
-                <li key={w}>{WARNING_LABEL[lang][w] || w}</li>
-              ))}
-            </ul>
-          )}
-
-          <p className="text-sm italic mb-2 whitespace-pre-wrap" style={{ color: "var(--ink)" }}>{item.preAnswer.stemVi}</p>
-
-          {(item.preAnswer.termIds || []).length > 0 && (
-            <div className="mb-3">
-              <p className="pmi-eyebrow mb-1.5">{t("viTermsHeader")}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {item.preAnswer.termIds.map((tid) => (
-                  <TermChip key={tid} termId={tid} onExpand={onExpandTerm} expandedId={expandedTerm} />
-                ))}
-              </div>
-              {expandedTerm && item.preAnswer.termIds.includes(expandedTerm) && <TermDefinitionCard termId={expandedTerm} />}
-            </div>
-          )}
-
-          {revealed && (
-            <div className="mt-3 pt-3 pmi-divider-dashed">
-              <button onClick={onOpenPost} className="pmi-focusable w-full flex items-center justify-between mb-2">
-                <span className="pmi-eyebrow">{t("viPostHeader")}</span>
-                <Icon name={postOpen ? "chevronUp" : "chevronDown"} size={14} style={{ color: "var(--ink-soft)" }} />
-              </button>
-              {postOpen && (
-                <div className="space-y-1.5">
-                  <p className="text-xs font-medium" style={{ color: "var(--sage)" }}>{item.postAnswer.correctAnswerTextVi}</p>
-                  <ExplanationText text={item.postAnswer.explanationShortVi} className="text-xs" color="var(--ink-mid)" />
-                </div>
-              )}
-            </div>
-          )}
-        </>
+    <button
+      onClick={onClick}
+      className={`pmi-focusable shrink-0 flex items-center gap-1.5 font-semibold rounded-full transition-colors ${compact ? "text-[11px] px-2 py-1" : "text-xs px-3 py-1.5"}`}
+      style={on ? { background: "var(--sky)", color: "#fff" } : { background: "var(--paper)", border: "1px solid var(--line-strong)", color: "var(--ink-mid)" }}
+    >
+      <Icon name="globe" size={compact ? 12 : 13} /> {on ? t("bilingualToggleOn") : t("bilingualToggleOff")}
+    </button>
+  );
+}
+/* Khối dịch tiếng Việt cho phần đề bài — hiện ngay dưới đề bài gốc (song ngữ thật sự) thay vì   */
+/* ẩn trong 1 panel riêng phải mở thêm 1 lần nữa. Dùng chung cho cả lúc làm bài và lúc xem lại.  */
+function BilingualStemBlock({ viItem, expandedTerm, onExpandTerm }) {
+  const { t, lang } = useAppCtx();
+  if (!viItem) return <p className="text-xs mt-2 mb-2" style={{ color: "var(--ink-soft)" }}>{t("viNoData")}</p>;
+  return (
+    <div className="mt-2 mb-3 p-3 rounded-lg" style={{ background: "var(--sky-tint)", border: "1px solid var(--sky)" }}>
+      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+        <span className="pmi-mono text-[10px] font-bold tracking-wide" style={{ color: "var(--sky)" }}>{t("viBlockLabel")}</span>
+        <span className="pmi-chip pmi-status-needs_work">{VI_STATUS_LABEL[lang][viItem.quality?.status] || VI_STATUS_LABEL[lang].machine_draft}</span>
+        {viItem.quality?.needsManualReview && <span className="pmi-chip pmi-status-critical">{t("viNeedsReview")}</span>}
+      </div>
+      {viItem.quality?.needsManualReview && viItem.quality.warnings?.length > 0 && (
+        <ul className="text-[11px] list-disc pl-4 mb-2 space-y-0.5" style={{ color: "var(--flag)" }}>
+          {viItem.quality.warnings.map((w) => (
+            <li key={w}>{WARNING_LABEL[lang][w] || w}</li>
+          ))}
+        </ul>
       )}
+      <p className="text-sm italic whitespace-pre-wrap" style={{ color: "var(--ink)" }}>{viItem.preAnswer.stemVi}</p>
+      {(viItem.preAnswer.termIds || []).length > 0 && (
+        <div className="mt-2.5">
+          <p className="pmi-eyebrow mb-1.5">{t("viTermsHeader")}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {viItem.preAnswer.termIds.map((tid) => (
+              <TermChip key={tid} termId={tid} onExpand={onExpandTerm} expandedId={expandedTerm} />
+            ))}
+          </div>
+          {expandedTerm && viItem.preAnswer.termIds.includes(expandedTerm) && <TermDefinitionCard termId={expandedTerm} />}
+        </div>
+      )}
+    </div>
+  );
+}
+/* Khối dịch tiếng Việt cho đáp án + giải thích — hiện tự động ngay dưới bản tiếng Anh một khi   */
+/* song ngữ đã bật (không cần bấm thêm 1 nút "mở" riêng như thiết kế cũ nữa).                    */
+function BilingualAnswerBlock({ viItem }) {
+  const { t } = useAppCtx();
+  if (!viItem) return null;
+  return (
+    <div className="mt-2 p-3 rounded-lg" style={{ background: "var(--sky-tint)", border: "1px solid var(--sky)" }}>
+      <p className="pmi-mono text-[10px] font-bold tracking-wide mb-1.5" style={{ color: "var(--sky)" }}>{t("viBlockLabel")}</p>
+      <p className="text-xs font-medium mb-1" style={{ color: "var(--sage)" }}>{viItem.postAnswer.correctAnswerTextVi}</p>
+      <ExplanationText text={viItem.postAnswer.explanationShortVi} className="text-xs" color="var(--ink-mid)" />
     </div>
   );
 }
@@ -2043,7 +2050,12 @@ function ChoiceViLine({ questionId, choiceId }) {
   if (!item) return null;
   const c = (item.preAnswer.choicesVi || []).find((x) => x.id.toLowerCase() === choiceId.toLowerCase());
   if (!c) return null;
-  return <span className="block text-xs italic mt-1" style={{ color: "var(--ink-mid)" }}>{c.textVi}</span>;
+  return (
+    <span className="flex items-start gap-1.5 mt-1.5 pt-1.5" style={{ borderTop: "1px dashed var(--line-strong)" }}>
+      <span className="pmi-mono text-[9px] font-bold shrink-0 mt-0.5" style={{ color: "var(--sky)" }}>VI</span>
+      <span className="italic text-xs" style={{ color: "var(--ink-mid)" }}>{c.textVi}</span>
+    </span>
+  );
 }
 
 /* Tự động cắt văn bản giải thích gốc (thường rất dài, có breakdown từng đáp án A/B/C/D) thành */
@@ -2162,7 +2174,6 @@ function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, onFinis
   const [revealed, setRevealed] = useState(false);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [viOn, setViOn] = useState(false);
-  const [viPostOpen, setViPostOpen] = useState(false);
   const [expandedTerm, setExpandedTerm] = useState(null);
   const [pendingHelp, setPendingHelp] = useState(null);
   const [showPalette, setShowPalette] = useState(false);
@@ -2204,7 +2215,6 @@ function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, onFinis
     setConfidence(existing ? existing.confidence : null);
     setRevealed(session.mode !== "exam" && !!existing && existing.gradeStatus !== "pending");
     setViOn(false);
-    setViPostOpen(false);
     setExpandedTerm(null);
     if (q && !visitedIds.includes(q.id)) onUpdateSession({ visitedQuestionIds: [...visitedIds, q.id] });
     function onVis() {
@@ -2295,7 +2305,8 @@ function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, onFinis
     setViOn(value);
     if (value && relevant) {
       const mem = getHelpMemory(q.id);
-      mem.translation = true;
+      if (revealed) mem.postTranslation = true;
+      else mem.translation = true;
       if (existing) onSaveAttempt({ ...existing, supportUsage: currentSupportUsageFor(mem) });
     }
   }
@@ -2332,16 +2343,6 @@ function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, onFinis
     else applyExpandTerm(pendingHelp.value, relevant);
     setPendingHelp(null);
   }
-  function handleOpenPost() {
-    const opening = !viPostOpen;
-    setViPostOpen(opening);
-    if (opening) {
-      const mem = getHelpMemory(q.id);
-      mem.postTranslation = true;
-      if (existing) onSaveAttempt({ ...existing, supportUsage: currentSupportUsageFor(mem) });
-    }
-  }
-
   if (!q) return <div className="pt-4 text-sm" style={{ color: "var(--ink-soft)" }}>—</div>;
 
   const answeredCount = session.answeredQuestionIds.length;
@@ -2413,8 +2414,12 @@ function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, onFinis
       ) : (
         <Card className="mb-3">
           {q.manualReview && <p className="text-xs mb-2 flex items-center gap-1" style={{ color: "var(--seal-fg)" }}><Icon name="warn" size={13} /> {t("manualReviewWarn")}</p>}
-          <p className="text-sm leading-relaxed mb-3 whitespace-pre-wrap">{q.stem}</p>
-          <div className="space-y-2">
+          <div className="flex justify-end mb-2">
+            <BilingualToggle on={viOn} onClick={() => requestViOn(!viOn)} compact />
+          </div>
+          <p className="text-sm leading-relaxed mb-1 whitespace-pre-wrap">{q.stem}</p>
+          {viOn && <BilingualStemBlock viItem={VI_ITEM_INDEX.get(q.id)} expandedTerm={expandedTerm} onExpandTerm={requestExpandTerm} />}
+          <div className="space-y-2 mt-3">
             {q.choices.map((c) => {
               const cid = normOpt(c.id);
               const isSel = selected.includes(cid);
@@ -2445,11 +2450,6 @@ function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, onFinis
               );
             })}
           </div>
-
-          <button onClick={() => requestViOn(!viOn)} className="pmi-focusable mt-3 flex items-center gap-1.5 text-xs font-medium" style={{ color: "var(--sky)" }}>
-            <Icon name="globe" size={14} /> {t("viSupportHeader")} <Icon name={viOn ? "chevronUp" : "chevronDown"} size={13} />
-          </button>
-          <ViSupportPanel question={q} viOn={viOn} expandedTerm={expandedTerm} onExpandTerm={requestExpandTerm} revealed={revealed} postOpen={viPostOpen} onOpenPost={handleOpenPost} />
         </Card>
       )}
 
@@ -2476,9 +2476,13 @@ function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, onFinis
 
       {!isMatching && revealed && (
         <Card className="mb-3">
-          <p className="pmi-eyebrow mb-1">{t("explanationHeader")}</p>
+          <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+            <p className="pmi-eyebrow">{t("explanationHeader")}</p>
+            {!viOn && <BilingualToggle on={false} onClick={() => requestViOn(true)} compact />}
+          </div>
           <p className="pmi-mono text-[11px] mb-2" style={{ color: "var(--ink-soft)" }}>{t("correctAnswerLabel")}: {(q.correctOptionIds || []).join(", ").toUpperCase() || "—"}</p>
           <ExplanationText text={q.explanationShort} />
+          {viOn && <BilingualAnswerBlock viItem={VI_ITEM_INDEX.get(q.id)} />}
         </Card>
       )}
 
@@ -2623,7 +2627,8 @@ function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, onFinis
 /* ===================== Review Question Card (dùng trong Results Screen) ===================== */
 function ReviewQuestionCard({ item }) {
   const { t, lang } = useAppCtx();
-  const [viOpen, setViOpen] = useState(false);
+  const [viOn, setViOn] = useState(false);
+  const [expandedTerm, setExpandedTerm] = useState(null);
   const questionId = item.kind === "unanswered" || item.kind === "matching" ? item.q.id : item.a.questionId;
   const q = item.kind === "unanswered" || item.kind === "matching" ? item.q : QUESTION_INDEX.get(questionId);
   if (!q) return null;
@@ -2640,7 +2645,11 @@ function ReviewQuestionCard({ item }) {
         <span className={`pmi-chip ${badgeStyle}`}>{badgeLabel}</span>
         {item.kind !== "unanswered" && item.kind !== "matching" && item.a.supportUsage?.assisted && <span className="pmi-chip pmi-status-developing">{t("assistedBadge")}</span>}
       </div>
-      <p className="text-sm mb-2 whitespace-pre-wrap">{matchingParsed ? matchingParsed.intro || q.stem : q.stem}</p>
+      <div className="flex justify-end mb-2">
+        <BilingualToggle on={viOn} onClick={() => setViOn((o) => !o)} compact />
+      </div>
+      <p className="text-sm mb-1 whitespace-pre-wrap">{matchingParsed ? matchingParsed.intro || q.stem : q.stem}</p>
+      {viOn && <BilingualStemBlock viItem={viItem} expandedTerm={expandedTerm} onExpandTerm={setExpandedTerm} />}
       {item.kind === "unanswered" && <p className="pmi-mono text-xs mb-2" style={{ color: "var(--ink-soft)" }}>{t("notAnsweredLabel")}</p>}
       {item.kind !== "unanswered" && item.kind !== "matching" && (
         <p className="pmi-mono text-xs mb-2" style={{ color: "var(--ink-soft)" }}>{t("confidenceShort")}: {item.a.confidence ?? t("notRecorded")}</p>
@@ -2667,7 +2676,10 @@ function ReviewQuestionCard({ item }) {
             return (
               <div key={c.id} className={`pmi-choice w-full px-3 py-2.5 text-sm flex items-start gap-2 ${stateCls}`}>
                 <span className="pmi-choice-letter uppercase shrink-0">{c.id}.</span>
-                <span className="flex-1">{c.text}</span>
+                <span className="flex-1">
+                  {c.text}
+                  {viOn && <ChoiceViLine questionId={questionId} choiceId={c.id} />}
+                </span>
                 {isCorrectChoice && <Icon name="check" size={15} style={{ color: "var(--sage)" }} className="shrink-0" />}
                 {isWrongSel && <Icon name="x" size={15} style={{ color: "var(--flag)" }} className="shrink-0" />}
               </div>
@@ -2675,27 +2687,17 @@ function ReviewQuestionCard({ item }) {
           })}
         </div>
       )}
-      <p className="pmi-eyebrow mb-1">{t("explanationHeader")}</p>
+      <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+        <p className="pmi-eyebrow">{t("explanationHeader")}</p>
+        {!viOn && <BilingualToggle on={false} onClick={() => setViOn(true)} compact />}
+      </div>
       <ExplanationText text={q.explanationShort} className="text-xs mb-2" color="var(--ink-mid)" />
+      {viOn && <BilingualAnswerBlock viItem={viItem} />}
       {item.kind === "wrong" && q.domain && DOMAIN_MINDSET[lang][q.domain] && (
-        <p className="text-xs mb-2 flex gap-1.5" style={{ color: "var(--seal-fg)" }}>
+        <p className="text-xs mt-2 flex gap-1.5" style={{ color: "var(--seal-fg)" }}>
           <span className="shrink-0">💡</span>
           <span>{DOMAIN_MINDSET[lang][q.domain]}</span>
         </p>
-      )}
-      {viItem && (
-        <div className="pt-2 pmi-divider-dashed">
-          <button onClick={() => setViOpen((o) => !o)} className="pmi-focusable flex items-center gap-1.5 text-xs font-medium" style={{ color: "var(--sky)" }}>
-            <Icon name="globe" size={14} /> {t("viSupportHeader")} <Icon name={viOpen ? "chevronUp" : "chevronDown"} size={13} />
-          </button>
-          {viOpen && (
-            <div className="mt-2">
-              <p className="pmi-eyebrow mb-1">{t("viAnswerTranslation")}</p>
-              <p className="text-xs mb-1 font-medium" style={{ color: "var(--sage)" }}>{viItem.postAnswer.correctAnswerTextVi}</p>
-              <ExplanationText text={viItem.postAnswer.explanationShortVi} className="text-xs" color="var(--ink-mid)" />
-            </div>
-          )}
-        </div>
       )}
     </Card>
   );
