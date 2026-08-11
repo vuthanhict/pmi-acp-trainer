@@ -4,9 +4,9 @@ import { useIsDesktop } from "../../hooks/useViewport.js";
 import { QUIZ_CATALOG } from "../../lib/embeddedData.js";
 import { DOMAIN_WEIGHTS } from "../../lib/gapEngine.js";
 import { GOAL_PRESETS, DEFAULT_GOAL_VALUE, READINESS_READY_BAR } from "../../lib/trackingEngine.js";
-import { buildStudyPlan } from "../../lib/studyPlan.js";
+import { buildStudyPlan, computeCatchUp, MIN_REDO_GAP_DAYS } from "../../lib/studyPlan.js";
 import { fmtDayKey, shiftDayKey, weekdayOfDayKey, diffDayKeys } from "../../lib/utils.js";
-import { Card, Button, ProgressBar, Icon, STATUS_RING_VAR } from "../../components/ui/primitives.jsx";
+import { Card, Button, ProgressBar, Icon, TierChip, STATUS_RING_VAR } from "../../components/ui/primitives.jsx";
 
 /* ===================== Tracking: hook + components ===================== */
 
@@ -447,22 +447,23 @@ export function MasteryTrendCard({ masteryTrend }) {
 // Tái dùng đúng 5 mức trạng thái đã có (STATUS_RING_VAR/pmi-status-*) thay vì bịa thêm bảng màu
 // riêng cho phase/risk — giữ đúng 1 ngôn ngữ thị giác xuyên suốt app (critical=đỏ, ready=xanh lá…).
 // "overdue" (phase và riskLevel) không xuất hiện ở đây — nhánh render riêng ở dưới thay thế
-// hoàn toàn khối badge/mốc/lịch khi ngày thi đã qua, nên 2 bảng màu này chỉ cần phủ 4 trạng thái
-// còn lại (xem nhánh `plan.phase === "overdue"` trong JSX bên dưới).
-const STUDY_PHASE_RING = { foundation: "needs_work", mock_exams: "developing", final_review: "developing", final_days: "ready" };
+// hoàn toàn khối badge/mốc/lịch khi ngày thi đã qua, nên 2 bảng màu này chỉ cần phủ các trạng
+// thái còn lại (xem nhánh `plan.phase === "overdue"` trong JSX bên dưới).
+const STUDY_PHASE_RING = { foundation: "needs_work", gap_fill: "needs_work", mock_exams: "developing", final_review: "developing", final_days: "ready" };
 const STUDY_RISK_RING = { ample: "ready", on_track: "developing", tight: "needs_work", insufficient: "critical" };
-const STUDY_SEGMENT_COLOR = { foundation: "var(--sky)", mock_exams: "var(--sage)", final_review: "var(--seal)", final_days: "var(--line-strong)" };
+const STUDY_SEGMENT_COLOR = { foundation: "var(--sky)", gap_fill: "var(--seal)", mock_exams: "var(--sage)", final_days: "var(--line-strong)" };
 
-export function ExamDateCard({ progress, tracking, gapProfile, onSetExamDate, onFillGap, onGoLibrary }) {
+export function ExamDateCard({ progress, tracking, gapProfile, onSetExamDate, onFillGap, onGoLibrary, style }) {
   const { t, lang } = useAppCtx();
   const [draft, setDraft] = useState(tracking.examDate || "");
+  const [showQuizPlan, setShowQuizPlan] = useState(false);
   const plan = useMemo(
     () => (tracking.examDate ? buildStudyPlan({ progress, gapProfile, tracking }) : null),
     [progress, gapProfile, tracking]
   );
 
   return (
-    <Card>
+    <Card style={style}>
       <div className="flex items-center justify-between mb-3">
         <span className="pmi-eyebrow">{t("examDateHeader")}</span>
         {tracking.examDate && (
@@ -495,32 +496,39 @@ export function ExamDateCard({ progress, tracking, gapProfile, onSetExamDate, on
               </div>
               <p className="text-xs mb-1" style={{ color: "var(--ink-mid)" }}>{t(`studyPhaseHint_${plan.phase}`)}</p>
               <p className="text-xs" style={{ color: "var(--ink-soft)" }}>
-                {plan.remainingWorkUnits > 0 ? t("studyDailyTarget", { n: plan.dailyQuestionTarget }) : t("studyDailyTargetDone")}
+                {plan.workloadQuestions > 0 ? t("studyDailyTarget", { n: plan.dailyQuestionTarget }) : t("studyDailyTargetDone")}
               </p>
-              {plan.remainingWorkUnits > 0 && (
-                <p className="text-xs mb-4" style={{ color: tracking.currentPace >= plan.dailyQuestionTarget ? "var(--sage)" : "var(--seal-fg)" }}>
+              {plan.workloadQuestions > 0 && (
+                <p className="text-xs mt-0.5" style={{ color: tracking.currentPace >= plan.dailyQuestionTarget ? "var(--sage)" : "var(--seal-fg)" }}>
                   {t("studyCurrentPace", { n: tracking.currentPace })}
                 </p>
               )}
-              {plan.remainingWorkUnits === 0 && <div className="mb-4" />}
+              {/* Giải thích rõ con số ~X câu/ngày từ đâu ra — tổng khối lượng, không phải phỏng đoán. */}
+              <p className="text-[11px] mt-1.5 mb-4" style={{ color: "var(--ink-soft)" }}>
+                {t("studyWorkloadExplain", {
+                  total: plan.totalCoreQuestions, coreTotal: plan.coreTotal,
+                  unseen: plan.unseenCoreQuestions, workload: plan.workloadQuestions,
+                })}
+              </p>
 
               <p className="pmi-eyebrow mb-2">{t("studyMilestonesHeader")}</p>
               <ul className="space-y-2 mb-3">
                 {plan.milestones.map((m) => (
                   <li key={m.id} className="flex items-start gap-2 text-xs">
-                    <span className="shrink-0 mt-0.5" style={{ color: m.done ? "var(--sage)" : "var(--ink-soft)" }}>
+                    <span className="shrink-0 mt-0.5" style={{ color: m.done ? "var(--sage)" : m.overdue ? "var(--flag)" : "var(--ink-soft)" }}>
                       <Icon name={m.done ? "check" : "x"} size={12} />
                     </span>
-                    <span style={{ color: "var(--ink-mid)" }}>
+                    <span style={{ color: m.overdue ? "var(--flag)" : "var(--ink-mid)" }}>
                       {t(`studyMilestone_${m.id}`, { current: m.current, target: m.target, date: m.dueDate ? fmtDayKey(m.dueDate, lang) : "" })}
+                      {m.overdue && ` — ${t("studyMilestoneOverdue")}`}
                     </span>
                   </li>
                 ))}
               </ul>
 
-              {(plan.untouchedCoreCount > 0 || plan.criticalCount > 0) && (
+              {(plan.firstPassRemaining > 0 || plan.criticalCount > 0) && (
                 <div className="flex gap-2 mb-4">
-                  {plan.untouchedCoreCount > 0 && <Button variant="secondary" onClick={onGoLibrary} className="flex-1">{t("libraryBtn")}</Button>}
+                  {plan.firstPassRemaining > 0 && <Button variant="secondary" onClick={onGoLibrary} className="flex-1">{t("libraryBtn")}</Button>}
                   {plan.criticalCount > 0 && <Button variant="secondary" onClick={onFillGap} className="flex-1">{t("practiceGapBtn")}</Button>}
                 </div>
               )}
@@ -531,7 +539,7 @@ export function ExamDateCard({ progress, tracking, gapProfile, onSetExamDate, on
                   <div key={s.key} style={{ width: `${(s.days / Math.max(1, plan.daysLeft)) * 100}%`, background: STUDY_SEGMENT_COLOR[s.key] }} />
                 ))}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 mb-4">
                 {plan.segments.map((s) => (
                   <div key={s.key} className="flex items-center justify-between text-[11px]" style={{ color: "var(--ink-soft)" }}>
                     <span className="flex items-center gap-1.5">
@@ -542,6 +550,31 @@ export function ExamDateCard({ progress, tracking, gapProfile, onSetExamDate, on
                   </div>
                 ))}
               </div>
+
+              <button onClick={() => setShowQuizPlan((v) => !v)} className="pmi-focusable text-xs font-medium flex items-center gap-1" style={{ color: "var(--ink)" }}>
+                <Icon name={showQuizPlan ? "chevronUp" : "chevronDown"} size={13} />
+                {t("studyQuizPlanToggle")}
+              </button>
+              {showQuizPlan && (
+                <div className="mt-2 space-y-1.5">
+                  <p className="text-[11px]" style={{ color: "var(--ink-soft)" }}>{t("studyQuizPlanExplain", { n: MIN_REDO_GAP_DAYS })}</p>
+                  {plan.quizPassPlan.map((q) => (
+                    <div key={q.quizIndex} className="flex items-center justify-between gap-2 text-xs py-1" style={{ borderBottom: "1px solid var(--line)" }}>
+                      <div className="min-w-0 flex items-center gap-1.5">
+                        <TierChip tier={q.tier} />
+                        <span className="truncate">{q.quizName}</span>
+                      </div>
+                      <span className="pmi-mono text-[11px] shrink-0" style={{ color: q.status === "done" ? "var(--sage)" : "var(--ink-soft)" }}>
+                        {q.status === "done"
+                          ? t("studyQuizPassDone")
+                          : q.status === "first_pass"
+                            ? t("studyQuizPassFirst", { done: q.gradableCount - q.unseenInQuiz, target: q.gradableCount })
+                            : t("studyQuizPassExamMode", { date: fmtDayKey(q.earliestExamModeDate, lang) })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </>
@@ -564,36 +597,111 @@ export function ExamDateCard({ progress, tracking, gapProfile, onSetExamDate, on
   );
 }
 
-/* ---------- Bản tóm tắt lộ trình cho màn Hôm nay ---------- */
-// Chỉ hiện khi đã đặt ngày thi — bản đầy đủ (mốc bắt buộc + lịch dự kiến) nằm ở ExamDateCard
-// trong tab "Nhịp luyện" của màn Tiến độ; ở đây chỉ cần đủ để biết "hôm nay có đang ổn không".
-export function StudyPlanBanner({ progress, tracking, gapProfile, onOpenPlan }) {
-  const { t } = useAppCtx();
+/* ---------- Trọng tâm HÔM NAY theo lộ trình thi ---------- */
+// Chỉ hiện khi đã đặt ngày thi — thay hẳn cho DailyGoalCard trong trạng thái đó (xem TodayScreen):
+// người học không tự chọn số câu/ngày nữa, mục tiêu LUÔN bám theo lộ trình thi (đồng bộ vào
+// progress.tracking.dailyGoal ở effect trong App.jsx nên StreakBadge/goalMet vẫn hoạt động y hệt
+// trước). Đây là câu trả lời trực tiếp cho "hôm nay phải làm gì": mục tiêu (đã cộng dồn phần
+// thiếu hôm qua — xem computeCatchUp), và MỘT hành động cụ thể để bấm vào làm ngay.
+const TODAY_ACTION_ICON = { first_pass: "play", exam_mode: "target", gap_fill: "flag", wait_cooldown: "clock", final_review: "seal", rest: "moon" };
+// Trần số câu cho MỘT phiên "Luyện tập ngay" — dù mục tiêu hôm nay có cao (lộ trình gấp), phiên
+// luyện vẫn phải đủ ngắn để ngồi một mạch làm hết; còn thiếu thì bấm lại sau khi nộp bài. Đây là
+// phần trả lời trực tiếp cho việc tránh phải nộp bài dở dang vì không đủ 3-4 tiếng liền.
+const MAX_CHUNK_SIZE = 40;
+// Phiên "làm thêm" khi đã đạt mục tiêu hôm nay — nhỏ, không bắt buộc, chỉ để tận dụng lúc rảnh.
+const BONUS_CHUNK_SIZE = 10;
+
+export function TodayFocusCard({ progress, tracking, gapProfile, onStart, onStartTodayPractice, onQuickPractice, onOpenPlan }) {
+  const { t, lang } = useAppCtx();
   const plan = useMemo(
     () => (tracking.examDate ? buildStudyPlan({ progress, gapProfile, tracking }) : null),
     [progress, gapProfile, tracking]
   );
+  const catchUp = useMemo(
+    () => (tracking.examDate ? computeCatchUp({ progress, tracking }) : null),
+    [progress, tracking]
+  );
   if (!plan?.hasExamDate) return null;
 
+  const { done, target, ratio, goalMet, todayRow, streak } = tracking;
+  const action = plan.todayAction;
+  const accuracy = todayRow && todayRow.answered ? Math.round((todayRow.correct / todayRow.answered) * 100) : 0;
+  const chunkSize = Math.min(MAX_CHUNK_SIZE, goalMet ? BONUS_CHUNK_SIZE : Math.max(1, (target || 0) - done));
+
   return (
-    <Card onClick={onOpenPlan}>
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="pmi-eyebrow mb-1">{t("examDateHeader")}</p>
-          <p className="text-sm font-medium">
-            {plan.daysLeft >= 0 ? t("examDateCountdown", { n: plan.daysLeft }) : t("examDatePassed")}
-            {plan.phase !== "overdue" && <span style={{ color: "var(--ink-soft)" }}> · {t(`studyPhase_${plan.phase}`)}</span>}
-          </p>
-          {plan.phase !== "overdue" && (
-            <p className="text-xs mt-0.5" style={{ color: "var(--ink-soft)" }}>
-              {plan.remainingWorkUnits > 0 ? t("studyDailyTarget", { n: plan.dailyQuestionTarget }) : t("studyDailyTargetDone")}
-            </p>
-          )}
-        </div>
-        {plan.phase !== "overdue" && (
-          <span className={`pmi-chip shrink-0 pmi-status-${STUDY_RISK_RING[plan.riskLevel]}`}>{t(`studyRisk_${plan.riskLevel}`)}</span>
-        )}
+    <Card style={goalMet ? { borderColor: "var(--sage)" } : undefined}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="pmi-eyebrow">{t("todayFocusHeader")}</span>
+        <button onClick={onOpenPlan} className="pmi-focusable text-xs font-medium" style={{ color: "var(--ink-mid)" }}>{t("viewFullPlanBtn")}</button>
       </div>
+
+      {plan.phase === "overdue" ? (
+        <p className="text-sm" style={{ color: "var(--flag)" }}>{t("studyOverdueMessage")}</p>
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className={`pmi-chip pmi-status-${STUDY_PHASE_RING[plan.phase]}`}>{t(`studyPhase_${plan.phase}`)}</span>
+              <span className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("examDateCountdown", { n: plan.daysLeft })}</span>
+            </div>
+            <StreakBadge streak={streak} />
+          </div>
+
+          {plan.workloadQuestions > 0 && target > 0 && (
+            <>
+              <p className="pmi-display font-semibold text-3xl mb-1" style={goalMet ? { color: "var(--sage)" } : undefined}>
+                {done}<span className="text-base font-normal" style={{ color: "var(--ink-soft)" }}> / {target} {t("questionsShort")}</span>
+              </p>
+              <ProgressBar value={ratio} className="mb-1" />
+              <p className="pmi-mono text-[11px] mb-2" style={{ color: "var(--ink-soft)" }}>
+                {todayRow
+                  ? t("goalTodayStats", { c: todayRow.correct, a: todayRow.answered, p: accuracy, m: todayRow.minutes })
+                  : t("goalTodayEmpty")}
+              </p>
+            </>
+          )}
+
+          {catchUp && catchUp.shortfall > 0 ? (
+            <p className="text-xs mb-1" style={{ color: "var(--seal-fg)" }}>
+              {t("todayCatchUp", { done: catchUp.yesterdayDone, target: catchUp.yesterdayTarget, shortfall: catchUp.shortfall })}
+            </p>
+          ) : catchUp?.surplus > 0 ? (
+            <p className="text-xs mb-1" style={{ color: "var(--sage)" }}>{t("todayCatchUpSurplus", { n: catchUp.surplus })}</p>
+          ) : catchUp?.yesterdayTarget > 0 ? (
+            <p className="text-xs mb-1" style={{ color: "var(--sage)" }}>{t("todayCatchUpMet")}</p>
+          ) : null}
+
+          {action && (
+            <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--line)" }}>
+              <p className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                <Icon name={TODAY_ACTION_ICON[action.type]} size={14} />
+                {action.type === "wait_cooldown"
+                  ? t("todayAction_wait_cooldown", { quizName: action.quizName, date: fmtDayKey(action.availableDate, lang) })
+                  : t(`todayAction_${action.type}`, { quizName: action.quizName, n: action.criticalCount })}
+              </p>
+              {action.type === "first_pass" && (() => {
+                const n = Math.min(chunkSize, action.unseenInQuiz);
+                return (
+                  <>
+                    <Button onClick={() => onStartTodayPractice(action.quizIndex, n)} className="w-full">
+                      {goalMet ? t("startPracticeExtraBtn", { n }) : t("startPracticeBtn", { n })}
+                    </Button>
+                    <p className="text-[11px] mt-1.5" style={{ color: "var(--ink-soft)" }}>{t("todayChunkExplain")}</p>
+                  </>
+                );
+              })()}
+              {action.type === "exam_mode" && (
+                <>
+                  <Button onClick={() => onStart(action.quizIndex, "exam")} className="w-full">{t("startExamBtn")}</Button>
+                  <p className="text-[11px] mt-1.5" style={{ color: "var(--ink-soft)" }}>{t("todayExamModeExplain")}</p>
+                </>
+              )}
+              {action.type === "gap_fill" && <Button onClick={() => onQuickPractice(20)} className="w-full">{t("practiceGapBtn")}</Button>}
+              {action.type === "wait_cooldown" && <Button variant="secondary" onClick={() => onQuickPractice(20)} className="w-full">{t("practiceGapBtn")}</Button>}
+            </div>
+          )}
+        </>
+      )}
     </Card>
   );
 }

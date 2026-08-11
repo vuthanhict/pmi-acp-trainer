@@ -55,7 +55,7 @@ export function ProgressScreen({ progress, gapProfile, tracking, onFillGap, onGo
 
       {tab === "rhythm" && (
         <div className={isDesktop ? "grid grid-cols-2 gap-4 items-start" : "space-y-4"}>
-          <Card style={isDesktop ? { gridColumn: "span 2" } : undefined}>
+          <Card>
             <p className="pmi-eyebrow mb-3">{t("heatmapHeader")}</p>
             <Heatmap tracking={tracking} />
           </Card>
@@ -69,11 +69,18 @@ export function ProgressScreen({ progress, gapProfile, tracking, onFillGap, onGo
               <span>{t("streakFreezeLeft", { n: tracking.streak.freezesLeft })}</span>
             </div>
             <p className="text-xs mb-3" style={{ color: "var(--ink-soft)" }}>{t("streakFreezeExplain")}</p>
-            <GoalPicker goal={tracking.goal} onSave={onSetGoal} onCancel={null} />
+            {tracking.examDate ? (
+              <p className="text-xs" style={{ color: "var(--ink-mid)" }}>{t("goalLockedByPlan")}</p>
+            ) : (
+              <GoalPicker goal={tracking.goal} onSave={onSetGoal} onCancel={null} />
+            )}
           </Card>
+          {/* Chiếm trọn chiều rộng — bảng "số lượt cần làm từng đề" bên trong cần đủ không gian
+              để hiện tên đề không bị cắt ngắn. */}
           <ExamDateCard
             progress={progress} tracking={tracking} gapProfile={gapProfile}
             onSetExamDate={onSetExamDate} onFillGap={onFillGap} onGoLibrary={onGoLibrary}
+            style={isDesktop ? { gridColumn: "span 2" } : undefined}
           />
         </div>
       )}

@@ -4,10 +4,10 @@ import { QUIZ_CATALOG } from "../../lib/embeddedData.js";
 import { recommendNextQuiz } from "../../lib/recommend.js";
 import { fmtPct } from "../../lib/utils.js";
 import { Card, Button, DomainRing, ProgressBar, StatusChip, TierChip } from "../../components/ui/primitives.jsx";
-import { DailyGoalCard, StudyPlanBanner } from "../progress/trackingWidgets.jsx";
+import { DailyGoalCard, TodayFocusCard } from "../progress/trackingWidgets.jsx";
 
 /* ===================== Today Screen ===================== */
-export function TodayScreen({ progress, gapProfile, tracking, onResume, onStart, onGoLibrary, onGoGap, onGoFillGap, onSetGoal, onQuickPractice }) {
+export function TodayScreen({ progress, gapProfile, tracking, onResume, onStart, onStartTodayPractice, onGoLibrary, onGoGap, onGoFillGap, onSetGoal, onQuickPractice }) {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
   const rec = recommendNextQuiz(progress);
@@ -16,13 +16,18 @@ export function TodayScreen({ progress, gapProfile, tracking, onResume, onStart,
 
   return (
     <div className="space-y-4 pt-1">
-      {/* Mục tiêu hôm nay đứng TRÊN mọi thứ khác: đây là thứ biến app từ công cụ chẩn đoán
-          thành công cụ giữ nhịp. Một chạm là vào bài, không bắt chọn task trước. */}
-      <DailyGoalCard tracking={tracking} onSetGoal={onSetGoal} onPractice={onQuickPractice} />
-
-      {/* Tóm tắt lộ trình theo ngày thi — chỉ hiện khi đã đặt ngày thi, bấm vào để xem đầy đủ
-          mốc bắt buộc + lịch dự kiến ở tab "Nhịp luyện" của màn Tiến độ. */}
-      <StudyPlanBanner progress={progress} tracking={tracking} gapProfile={gapProfile} onOpenPlan={onGoGap} />
+      {/* Đã đặt ngày thi thì lộ trình LÀ mục tiêu hằng ngày — TodayFocusCard thay hẳn cho
+          DailyGoalCard (không còn chọn tay 10/20/30/50 nữa, số câu luôn bám theo lộ trình, xem
+          effect đồng bộ dailyGoal trong App.jsx). Chưa đặt ngày thi thì vẫn dùng mục tiêu tự chọn
+          như trước — TodayFocusCard tự ẩn (trả null) khi không có ngày thi. */}
+      {tracking.examDate ? (
+        <TodayFocusCard
+          progress={progress} tracking={tracking} gapProfile={gapProfile}
+          onStart={onStart} onStartTodayPractice={onStartTodayPractice} onQuickPractice={onQuickPractice} onOpenPlan={onGoGap}
+        />
+      ) : (
+        <DailyGoalCard tracking={tracking} onSetGoal={onSetGoal} onPractice={onQuickPractice} />
+      )}
 
       {/* Hero: 4 Domain Rings — con số mastery thật của app, không phải trang trí */}
       <Card className="flex items-center justify-around py-5">

@@ -20,6 +20,7 @@ import { AppCtx } from "./context/AppContext.jsx";
 import { QUIZ_CATALOG, QUESTION_INDEX, QUESTIONS_BY_QUIZ, initEmbeddedData } from "./lib/embeddedData.js";
 import { calculateGapProfile, gradeAttempt } from "./lib/gapEngine.js";
 import { buildGapPracticeQuestionIds, compactGapSnapshots } from "./lib/trackingEngine.js";
+import { buildStudyPlan } from "./lib/studyPlan.js";
 import {
   defaultProgress, ensureSupportUsage, migrateProgress, mergeProgressData, loadProgressFromStorage, saveProgressToStorage,
 } from "./lib/storage.js";
@@ -273,6 +274,22 @@ function App() {
   const gapProfile = useMemo(() => calculateGapProfile({ attempts: progress.attempts }), [progress.attempts, loaded]);
   const tracking = useTracking(progress, gapProfile);
 
+  // Đồng bộ mục tiêu hằng ngày theo lộ trình thi khi đã đặt ngày thi — người học không còn tự
+  // chọn số câu/ngày nữa (xem TodayFocusCard thay DailyGoalCard), số này LUÔN bám sát
+  // dailyQuestionTarget của lộ trình: tự tăng nếu hôm trước thiếu, tự giảm nếu hôm trước làm dư
+  // (xem studyPlan.js). Đặt ở effect riêng thay vì trong useTracking để buildStudyPlan (có
+  // milestones/segments/quizPassPlan, tính hơi tốn hơn các số liệu tracking khác) không phải
+  // chạy lại ở MỌI nơi dùng useTracking — chỉ effect này cần, và chỉ ghi khi giá trị thực sự đổi.
+  useEffect(() => {
+    if (!loaded || !tracking.examDate) return;
+    const plan = buildStudyPlan({ progress, gapProfile, tracking });
+    if (!plan.hasExamDate || plan.phase === "overdue") return;
+    const desired = { type: "questions", value: plan.dailyQuestionTarget };
+    const current = progress.tracking?.dailyGoal;
+    if (current?.type === desired.type && current?.value === desired.value) return;
+    persist((prev) => ({ ...prev, tracking: { ...prev.tracking, dailyGoal: desired } }));
+  }, [loaded, tracking, gapProfile, progress, persist]);
+
   function startQuizSession(quizIndex, mode) {
     const cat = QUIZ_CATALOG.find((c) => c.quizIndex === quizIndex);
     const questions = QUESTIONS_BY_QUIZ.get(quizIndex) || [];
@@ -287,6 +304,35 @@ function App() {
       flaggedQuestionIds: [],
       visitedQuestionIds: [],
       questionIds: questions.map((q) => q.id),
+      assistedWarningAcknowledged: false,
+    };
+    persist((prev) => ({ ...prev, activeSession: session }));
+    setView("quiz");
+  }
+
+  /** Hành động "Luyện tập ngay" của TRỌNG TÂM HÔM NAY khi lộ trình đang ở giai đoạn làm lần đầu:
+      trích đúng `size` câu CHƯA LÀM của đề (giữ nguyên thứ tự gốc) thay vì mở nguyên cả đề —
+      tránh tình trạng vào một phiên 100-150 câu mà không có 3-4 tiếng liền để ngồi làm hết. Vẫn
+      giữ đúng quizIndex nên kết quả tính đúng vào tiến độ phủ nội dung của đề đó dù chia làm
+      nhiều buổi khác ngày (xem computeQuizWorkload trong studyPlan.js — coverage tính theo từng
+      câu đã trả lời, không theo số phiên). */
+  function startTodayPracticeSession(quizIndex, size) {
+    const cat = QUIZ_CATALOG.find((c) => c.quizIndex === quizIndex);
+    const answeredIds = new Set(progress.attempts.map((a) => a.questionId));
+    const unseen = (QUESTIONS_BY_QUIZ.get(quizIndex) || []).filter((q) => !q.manualReview && !answeredIds.has(q.id));
+    const picked = unseen.slice(0, Math.max(1, size));
+    if (!picked.length) return;
+    const session = {
+      sessionId: uid(`session-${quizIndex}-chunk`),
+      quizIndex,
+      quizName: cat?.quizName || "",
+      mode: "practice",
+      startedAt: isoNow(),
+      currentQuestionNumber: 1,
+      answeredQuestionIds: [],
+      flaggedQuestionIds: [],
+      visitedQuestionIds: [],
+      questionIds: picked.map((q) => q.id),
       assistedWarningAcknowledged: false,
     };
     persist((prev) => ({ ...prev, activeSession: session }));
@@ -558,7 +604,8 @@ function App() {
                     gapProfile={gapProfile}
                     tracking={tracking}
                     onResume={resumeSession}
-                    onStart={(qi) => startQuizSession(qi, "exam")}
+                    onStart={(qi, mode) => startQuizSession(qi, mode || "exam")}
+                    onStartTodayPractice={startTodayPracticeSession}
                     onGoLibrary={() => setView("library")}
                     onGoGap={() => setView("gap")}
                     onGoFillGap={() => setView("fillgap")}
