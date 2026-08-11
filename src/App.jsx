@@ -415,8 +415,12 @@ function App() {
   if (!loaded) {
     return (
       <>
-        <div className={`pmi-app ${theme === "dark" ? "dark" : ""} min-h-screen flex items-center justify-center`} style={{ color: "var(--ink-soft)" }}>
-          <span className="pmi-mono text-sm">···</span>
+        <div className={`pmi-app ${theme === "dark" ? "dark" : ""} min-h-screen flex flex-col items-center justify-center gap-3.5`} style={{ color: "var(--ink-soft)" }}>
+          <span
+            className="inline-block rounded-full"
+            style={{ width: 26, height: 26, border: "2.5px solid var(--ink-soft)", borderTopColor: "var(--ink)", opacity: 0.6, animation: "pmi-spin 0.8s linear infinite" }}
+          />
+          <p className="text-sm">Đang tải dữ liệu…</p>
         </div>
       </>
     );

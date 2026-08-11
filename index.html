@@ -13,9 +13,35 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="PMI-ACP Daily Trainer" />
     <meta name="twitter:description" content="Luyện thi PMI-ACP với 1.470 câu hỏi, 12 đề thi thử, phân tích GAP thông minh và hỗ trợ tiếng Việt." />
+    <style>
+      /* Khung tải tĩnh, hiện ngay khi HTML parse xong — trước khi bundle React tải/chạy xong và
+         giải nén bộ dữ liệu đề thi nhúng sẵn. React sẽ ghi đè toàn bộ nội dung #root khi mount
+         nên khối này tự biến mất, không cần dọn dẹp thủ công. */
+      :root { --boot-ink: #16233F; --boot-ink-soft: #939AA6; --boot-paper: #EFF1EA; }
+      @media (prefers-color-scheme: dark) {
+        :root { --boot-ink: #EBEEE7; --boot-ink-soft: #6C7688; --boot-paper: #10141D; }
+      }
+      html, body { background: var(--boot-paper); }
+      #app-boot {
+        min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 14px; font-family: -apple-system, 'Segoe UI', sans-serif; color: var(--boot-ink-soft);
+      }
+      #app-boot .boot-spinner {
+        width: 26px; height: 26px; border-radius: 50%;
+        border: 2.5px solid var(--boot-ink-soft); border-top-color: var(--boot-ink);
+        opacity: 0.6; animation: boot-spin 0.8s linear infinite;
+      }
+      #app-boot .boot-text { font-size: 13px; letter-spacing: 0.01em; }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="app-boot">
+        <div class="boot-spinner"></div>
+        <p class="boot-text">Đang tải dữ liệu…</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
