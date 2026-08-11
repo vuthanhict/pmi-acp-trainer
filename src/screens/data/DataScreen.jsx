@@ -15,7 +15,7 @@ const DRIVE_ERROR_I18N_KEY = {
 /* ===================== Data & Backup Screen ===================== */
 export function DataScreen({
   progress, persist, showToast, theme, lang, setTheme, setLang,
-  driveConnected, driveBusy, driveError, driveAutoBackup, driveLastSync,
+  driveConnected, driveBusy, driveError, driveAutoBackup, driveLastSync, driveFileMeta,
   driveConnectNow, driveBackupNow, driveRestoreNow, driveToggleAuto, driveDisconnectNow,
 }) {
   const { t } = useAppCtx();
@@ -122,6 +122,17 @@ export function DataScreen({
           </div>
         )}
         <p className="pmi-mono text-[11px] mt-2" style={{ color: "var(--ink-soft)" }}>{t("driveLastSyncLabel", { t: driveLastSync ? fmtDate(driveLastSync, lang) : t("driveNeverSynced") })}</p>
+        {driveConnected && driveFileMeta && (
+          <p className="text-[11px] mt-1 flex items-center gap-1" style={{ color: "var(--ink-soft)" }}>
+            <Icon name="link" size={11} />
+            {t("driveFileLabel")} <span style={{ color: "var(--ink-mid)" }}>{driveFileMeta.name}</span>
+            {driveFileMeta.webViewLink && (
+              <a href={driveFileMeta.webViewLink} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: "var(--ink-mid)" }}>
+                {t("driveOpenFileLink")}
+              </a>
+            )}
+          </p>
+        )}
         {driveError && (
           <p className="text-xs mt-2" style={{ color: "var(--flag)" }}>
             {t("driveErrorLabel")}: {t(DRIVE_ERROR_I18N_KEY[driveError] || driveError)}

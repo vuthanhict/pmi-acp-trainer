@@ -79,6 +79,7 @@ export function Icon({ name, size = 18, className = "" }) {
     seal: <><circle cx="12" cy="9" r="6" /><path d="M9 14.5L7 22l5-3 5 3-2-7.5" /></>,
     sidebar: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /></>,
     cloud: <path d="M7 18a4.5 4.5 0 01-.5-8.98A5.5 5.5 0 0117 8.5a4 4 0 01-1 7.5H7z" />,
+    link: <><path d="M9 15l6-6" /><path d="M13.5 4.5l1-1a3.5 3.5 0 015 5l-2 2a3.5 3.5 0 01-5 0" /><path d="M10.5 19.5l-1 1a3.5 3.5 0 01-5-5l2-2a3.5 3.5 0 015 0" /></>,
     flame: <path d="M12 22a6 6 0 006-6c0-4-3-5-3-9 0 0-3 1.5-3 5 0-1.5-1-3-2-3.5C8 10 6 12 6 16a6 6 0 006 6z" />,
     calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></>,
     trend: <><path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" /></>,

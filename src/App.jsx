@@ -14,7 +14,7 @@ import { DataScreen } from "./screens/data/DataScreen.jsx";
 import { QuizRunner } from "./screens/quiz/QuizRunner.jsx";
 import { ResultsScreen } from "./screens/results/ResultsScreen.jsx";
 import { VocabScreen } from "./screens/vocab/VocabScreen.jsx";
-import { connectDrive, disconnectDrive, isDriveConnected, uploadBackupToDrive, downloadBackupFromDrive } from "./googleDrive.js";
+import { connectDrive, disconnectDrive, isDriveConnected, uploadBackupToDrive, downloadBackupFromDrive, getBackupFileMeta } from "./googleDrive.js";
 import { UI_TEXT, fmtStr } from "./i18n/text.js";
 import { AppCtx } from "./context/AppContext.jsx";
 import { QUIZ_CATALOG, QUESTION_INDEX, QUESTIONS_BY_QUIZ, initEmbeddedData } from "./lib/embeddedData.js";
@@ -59,7 +59,13 @@ function App() {
   const [driveError, setDriveError] = useState(null);
   const [driveAutoBackup, setDriveAutoBackup] = useState(() => localStorage.getItem(DRIVE_AUTO_KEY) === "1");
   const [driveLastSync, setDriveLastSync] = useState(() => localStorage.getItem(DRIVE_LAST_SYNC_KEY) || null);
+  const [driveFileMeta, setDriveFileMeta] = useState(null);
   const toastTimer = useRef(null);
+  // Bản mới nhất của `progress`, đọc được ngay trong các hàm async (pull/merge Drive) mà không
+  // phải đợi qua một lượt re-render — setState functional-updater không đảm bảo chạy đồng bộ
+  // trước dòng code kế tiếp trong một hàm async, còn ref thì luôn phản ánh đúng giá trị hiện tại.
+  const progressRef = useRef(progress);
+  useEffect(() => { progressRef.current = progress; }, [progress]);
 
   const theme = progress.settings?.theme || "light";
   const lang = progress.settings?.uiLanguage || "vi";
@@ -100,6 +106,34 @@ function App() {
     setProgress((prev) => (typeof updater === "function" ? updater(prev) : updater));
   }, []);
 
+  // Gộp bản trên Drive vào progress cục bộ (union theo attempt/completedQuiz, giữ SRS tốt hơn —
+  // xem mergeProgressData) rồi lưu lại nếu có dữ liệu mới. Dùng chung cho: kết nối (thủ công lẫn
+  // đăng nhập ngầm lúc mở app), sao lưu tự động, và nút "Khôi phục từ Drive".
+  // `syncSettings=false` (mặc định) bỏ qua settings (theme/ngôn ngữ/sidebar) của bản trên Drive —
+  // các lượt gộp tự động chạy ngầm (mỗi lần autosave, mỗi lần mở app) không được phép âm thầm đổi
+  // giao diện đang dùng chỉ vì một thiết bị khác từng lưu theme khác. Chỉ bật true ở nút "Khôi
+  // phục từ Drive" — nơi người dùng chủ động bấm để lấy lại TOÀN BỘ trạng thái, kể cả settings.
+  const pullAndMergeFromDrive = useCallback(async ({ syncSettings = false } = {}) => {
+    const data = await downloadBackupFromDrive();
+    if (!data) return null; // chưa có file backup nào trên Drive, phân biệt với "có nhưng đã đồng bộ đủ" (0)
+    const dataForMerge = syncSettings ? data : { ...data, settings: undefined };
+    const { merged, addedCount } = mergeProgressData(progressRef.current, dataForMerge);
+    if (addedCount > 0) {
+      progressRef.current = merged;
+      persist(merged);
+    }
+    return addedCount;
+  }, [persist]);
+
+  const refreshDriveFileMeta = useCallback(async () => {
+    try {
+      const meta = await getBackupFileMeta();
+      setDriveFileMeta(meta);
+    } catch (e) {
+      // Không chặn luồng sao lưu/khôi phục chính nếu riêng việc lấy metadata để hiển thị thất bại.
+    }
+  }, []);
+
   // Ghi xuống storage (debounce) mỗi khi progress thực sự thay đổi — tách riêng khỏi việc cập nhật
   // state để nhiều lệnh persist() gọi liên tiếp trong cùng 1 lượt xử lý (vd: lưu câu trả lời rồi
   // cập nhật session ngay sau đó) không còn ghi đè lẫn nhau như khi dùng persist(next) trực tiếp.
@@ -115,17 +149,23 @@ function App() {
       }
       if (driveAutoBackup && isDriveConnected()) {
         try {
-          await uploadBackupToDrive(progress);
+          // Kéo bản trên Drive về gộp TRƯỚC khi đẩy lên — nếu chỉ ghi đè thẳng progress cục bộ
+          // (như trước đây), thiết bị B tự động sao lưu sẽ xoá mất mọi thay đổi thiết bị A vừa
+          // đẩy lên vì upload là ghi đè toàn bộ file, không phải patch. Gộp trước khi đẩy biến
+          // "sao lưu tự động" từ ghi-đè-một-chiều thành đồng bộ hai chiều thật sự.
+          await pullAndMergeFromDrive();
+          await uploadBackupToDrive({ ...progressRef.current, updatedAt: isoNow() });
           const now = isoNow();
           setDriveLastSync(now);
           localStorage.setItem(DRIVE_LAST_SYNC_KEY, now);
+          refreshDriveFileMeta();
         } catch (e) {
           setDriveConnectedState(false);
         }
       }
     }, 150);
     return () => clearTimeout(saveTimerRef.current);
-  }, [progress, loaded, driveAutoBackup]);
+  }, [progress, loaded, driveAutoBackup, pullAndMergeFromDrive, refreshDriveFileMeta]);
 
   const showToast = useCallback((text) => {
     setToast(text);
@@ -133,29 +173,56 @@ function App() {
     toastTimer.current = setTimeout(() => setToast(""), 1600);
   }, []);
 
+  // Đăng nhập ngầm ngay khi mở app nếu người dùng đã bật "Tự động sao lưu" ở phiên trước — nếu
+  // không có bước này, access token (chỉ sống trong bộ nhớ) luôn mất sau khi tải lại trang, và
+  // "tự động" trên thực tế đòi người dùng bấm "Kết nối" lại mỗi lần mở app. prompt rỗng (không
+  // interactive) chỉ thành công lặng lẽ khi trình duyệt còn phiên Google + đã từng cấp quyền —
+  // thất bại thì bỏ qua êm, không hiện lỗi để tránh làm phiền lúc mới mở app.
+  useEffect(() => {
+    if (!loaded || !driveAutoBackup || isDriveConnected()) return;
+    (async () => {
+      try {
+        await connectDrive({ interactive: false });
+        setDriveConnectedState(true);
+        const addedCount = await pullAndMergeFromDrive();
+        if (addedCount > 0) showToast(`+${addedCount}`);
+        refreshDriveFileMeta();
+      } catch (e) {
+        // im lặng — người dùng tự bấm "Kết nối" trong màn Dữ liệu khi cần.
+      }
+    })();
+  }, [loaded, driveAutoBackup, pullAndMergeFromDrive, refreshDriveFileMeta, showToast]);
+
   const driveConnectNow = useCallback(async () => {
     setDriveError(null);
     setDriveBusy(true);
     try {
       await connectDrive({ interactive: true });
       setDriveConnectedState(true);
+      // Kéo ngay dữ liệu từ Drive về sau khi kết nối — đây là lúc thiết bị này thực sự "gặp"
+      // tiến trình từ các thiết bị khác lần đầu, không cần đợi người dùng tự bấm "Khôi phục".
+      const addedCount = await pullAndMergeFromDrive();
+      if (addedCount > 0) showToast(`+${addedCount}`);
+      refreshDriveFileMeta();
     } catch (e) {
       setDriveError(String(e?.message || e));
     } finally {
       setDriveBusy(false);
     }
-  }, []);
+  }, [pullAndMergeFromDrive, refreshDriveFileMeta, showToast]);
 
   const driveBackupNow = useCallback(async () => {
     setDriveError(null);
     setDriveBusy(true);
     try {
       if (!isDriveConnected()) await connectDrive({ interactive: true });
-      await uploadBackupToDrive(progress);
       setDriveConnectedState(true);
+      await pullAndMergeFromDrive();
+      await uploadBackupToDrive({ ...progressRef.current, updatedAt: isoNow() });
       const now = isoNow();
       setDriveLastSync(now);
       localStorage.setItem(DRIVE_LAST_SYNC_KEY, now);
+      await refreshDriveFileMeta();
       showToast(t("driveBackupDone"));
     } catch (e) {
       setDriveConnectedState(false);
@@ -163,32 +230,27 @@ function App() {
     } finally {
       setDriveBusy(false);
     }
-  }, [progress, t, showToast]);
+  }, [pullAndMergeFromDrive, refreshDriveFileMeta, t, showToast]);
 
   const driveRestoreNow = useCallback(async () => {
     setDriveError(null);
     setDriveBusy(true);
     try {
       if (!isDriveConnected()) await connectDrive({ interactive: true });
-      const data = await downloadBackupFromDrive();
       setDriveConnectedState(true);
+      const addedCount = await pullAndMergeFromDrive({ syncSettings: true });
       const now = isoNow();
       setDriveLastSync(now);
       localStorage.setItem(DRIVE_LAST_SYNC_KEY, now);
-      if (!data) {
-        showToast(t("driveNoBackup"));
-      } else {
-        const { merged, addedCount } = mergeProgressData(progress, data);
-        persist(merged);
-        showToast(`+${addedCount}`);
-      }
+      showToast(addedCount === null ? t("driveNoBackup") : `+${addedCount}`);
+      await refreshDriveFileMeta();
     } catch (e) {
       setDriveConnectedState(false);
       setDriveError(String(e?.message || e));
     } finally {
       setDriveBusy(false);
     }
-  }, [progress, persist, t, showToast]);
+  }, [pullAndMergeFromDrive, refreshDriveFileMeta, t, showToast]);
 
   const driveToggleAuto = useCallback(() => {
     setDriveAutoBackup((prev) => {
@@ -201,6 +263,7 @@ function App() {
   const driveDisconnectNow = useCallback(() => {
     disconnectDrive();
     setDriveConnectedState(false);
+    setDriveFileMeta(null);
   }, []);
 
   // `loaded` PHẢI nằm trong deps: lần render đầu tiên chạy khi QUESTION_INDEX còn rỗng (dữ liệu
@@ -535,7 +598,7 @@ function App() {
                 {view === "data" && (
                   <DataScreen
                     progress={progress} persist={persist} showToast={showToast} theme={theme} lang={lang} setTheme={setTheme} setLang={setLang}
-                    driveConnected={driveConnectedState} driveBusy={driveBusy} driveError={driveError} driveAutoBackup={driveAutoBackup} driveLastSync={driveLastSync}
+                    driveConnected={driveConnectedState} driveBusy={driveBusy} driveError={driveError} driveAutoBackup={driveAutoBackup} driveLastSync={driveLastSync} driveFileMeta={driveFileMeta}
                     driveConnectNow={driveConnectNow} driveBackupNow={driveBackupNow} driveRestoreNow={driveRestoreNow} driveToggleAuto={driveToggleAuto} driveDisconnectNow={driveDisconnectNow}
                   />
                 )}

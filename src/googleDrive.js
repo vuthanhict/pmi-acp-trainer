@@ -81,11 +81,20 @@ export async function connectDrive({ interactive = true } = {}) {
   });
 }
 
+// Xoá cache fileId khi ngắt kết nối: fileId cache theo trình duyệt, KHÔNG theo tài khoản Google.
+// Nếu người dùng đổi sang tài khoản Google khác ở lần kết nối sau, id cũ (thuộc file của tài
+// khoản trước) sẽ vô nghĩa — driveFetch tới nó luôn trả 404 vì scope drive.file chỉ thấy file
+// do app tạo/mở trong TÀI KHOẢN ĐANG ĐĂNG NHẬP. Xoá cache buộc lần sau tìm/tạo lại đúng file.
+export function clearCachedBackupFileId() {
+  localStorage.removeItem(DRIVE_FILE_ID_KEY);
+}
+
 export function disconnectDrive() {
   if (currentToken?.access_token && window.google?.accounts?.oauth2) {
     window.google.accounts.oauth2.revoke(currentToken.access_token, () => {});
   }
   currentToken = null;
+  clearCachedBackupFileId();
 }
 
 async function driveFetch(url, options = {}) {
@@ -96,28 +105,67 @@ async function driveFetch(url, options = {}) {
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`drive-http-${res.status}: ${text.slice(0, 200)}`);
+    const err = new Error(`drive-http-${res.status}: ${text.slice(0, 200)}`);
+    err.status = res.status;
+    throw err;
   }
   return res;
 }
 
-async function findBackupFileId() {
-  const cached = localStorage.getItem(DRIVE_FILE_ID_KEY);
-  if (cached) return cached;
+async function findBackupFileId({ forceRefresh = false } = {}) {
+  if (!forceRefresh) {
+    const cached = localStorage.getItem(DRIVE_FILE_ID_KEY);
+    if (cached) return cached;
+  }
   const q = encodeURIComponent(`name='${BACKUP_FILE_NAME}' and trashed=false`);
-  const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&spaces=drive`);
+  // orderBy=modifiedTime desc: phòng trường hợp hiếm gặp có 2 file trùng tên (vd. race condition
+  // giữa 2 thiết bị cùng tạo file mới gần như đồng thời trước khi lượt kéo-về-trước-khi-đẩy được
+  // thêm vào) — luôn lấy đúng bản được sửa gần nhất thay vì phụ thuộc thứ tự trả về không đảm bảo
+  // của API khi không sắp xếp.
+  const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime)&spaces=drive&orderBy=modifiedTime desc`);
   const data = await res.json();
   const file = data.files?.[0];
   if (file) {
     localStorage.setItem(DRIVE_FILE_ID_KEY, file.id);
     return file.id;
   }
+  localStorage.removeItem(DRIVE_FILE_ID_KEY);
   return null;
+}
+
+/** Trả về metadata của file backup (tên + link mở trực tiếp trên Drive) để UI hiển thị,
+    giúp người dùng xác nhận đúng file đang được đồng bộ thay vì chỉ tin vào "Đã kết nối". */
+export async function getBackupFileMeta() {
+  let fileId = await findBackupFileId();
+  if (!fileId) return null;
+  try {
+    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,name,webViewLink,modifiedTime`);
+    return await res.json();
+  } catch (e) {
+    if (e.status !== 404) throw e;
+    localStorage.removeItem(DRIVE_FILE_ID_KEY);
+    return null;
+  }
 }
 
 export async function uploadBackupToDrive(progressObj) {
   const body = JSON.stringify(progressObj);
-  const fileId = await findBackupFileId();
+  let fileId = await findBackupFileId();
+  if (fileId) {
+    try {
+      await driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+      return fileId;
+    } catch (e) {
+      if (e.status !== 404) throw e;
+      // File đã bị xoá trên Drive, hoặc id cache thuộc tài khoản trước đó — tìm/tạo lại thay vì
+      // lỗi vĩnh viễn (nếu không tự phục hồi, mọi lần sao lưu sau đó sẽ luôn thất bại).
+      fileId = await findBackupFileId({ forceRefresh: true });
+    }
+  }
   if (fileId) {
     await driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
       method: "PATCH",
@@ -140,8 +188,16 @@ export async function uploadBackupToDrive(progressObj) {
 }
 
 export async function downloadBackupFromDrive() {
-  const fileId = await findBackupFileId();
+  let fileId = await findBackupFileId();
   if (!fileId) return null;
-  const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
-  return res.json();
+  try {
+    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+    return await res.json();
+  } catch (e) {
+    if (e.status !== 404) throw e;
+    fileId = await findBackupFileId({ forceRefresh: true });
+    if (!fileId) return null;
+    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+    return res.json();
+  }
 }
