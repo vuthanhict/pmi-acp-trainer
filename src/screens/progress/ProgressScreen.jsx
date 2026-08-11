@@ -8,7 +8,7 @@ import {
 } from "./trackingWidgets.jsx";
 
 /* ===================== Progress Screen (Tổng quan / Nhịp luyện / GAP) ===================== */
-export function ProgressScreen({ progress, gapProfile, tracking, onFillGap, onSetGoal, onSetExamDate }) {
+export function ProgressScreen({ progress, gapProfile, tracking, onFillGap, onGoLibrary, onSetGoal, onSetExamDate }) {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
   const [tab, setTab] = useState("overview");
@@ -71,7 +71,10 @@ export function ProgressScreen({ progress, gapProfile, tracking, onFillGap, onSe
             <p className="text-xs mb-3" style={{ color: "var(--ink-soft)" }}>{t("streakFreezeExplain")}</p>
             <GoalPicker goal={tracking.goal} onSave={onSetGoal} onCancel={null} />
           </Card>
-          <ExamDateCard tracking={tracking} gapProfile={gapProfile} onSetExamDate={onSetExamDate} />
+          <ExamDateCard
+            progress={progress} tracking={tracking} gapProfile={gapProfile}
+            onSetExamDate={onSetExamDate} onFillGap={onFillGap} onGoLibrary={onGoLibrary}
+          />
         </div>
       )}
 

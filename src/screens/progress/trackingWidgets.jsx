@@ -4,6 +4,7 @@ import { useIsDesktop } from "../../hooks/useViewport.js";
 import { QUIZ_CATALOG } from "../../lib/embeddedData.js";
 import { DOMAIN_WEIGHTS } from "../../lib/gapEngine.js";
 import { GOAL_PRESETS, DEFAULT_GOAL_VALUE, READINESS_READY_BAR } from "../../lib/trackingEngine.js";
+import { buildStudyPlan } from "../../lib/studyPlan.js";
 import { fmtDayKey, shiftDayKey, weekdayOfDayKey, diffDayKeys } from "../../lib/utils.js";
 import { Card, Button, ProgressBar, Icon, STATUS_RING_VAR } from "../../components/ui/primitives.jsx";
 
@@ -442,15 +443,23 @@ export function MasteryTrendCard({ masteryTrend }) {
   );
 }
 
-/* ---------- Ngày thi + nhịp cần thiết ---------- */
-export function ExamDateCard({ tracking, gapProfile, onSetExamDate }) {
-  const { t, lang } = useAppCtx();
-  const { examDateInfo } = tracking;
-  const [draft, setDraft] = useState(tracking.examDate || "");
+/* ---------- Ngày thi + lộ trình luyện thi ---------- */
+// Tái dùng đúng 5 mức trạng thái đã có (STATUS_RING_VAR/pmi-status-*) thay vì bịa thêm bảng màu
+// riêng cho phase/risk — giữ đúng 1 ngôn ngữ thị giác xuyên suốt app (critical=đỏ, ready=xanh lá…).
+// "overdue" (phase và riskLevel) không xuất hiện ở đây — nhánh render riêng ở dưới thay thế
+// hoàn toàn khối badge/mốc/lịch khi ngày thi đã qua, nên 2 bảng màu này chỉ cần phủ 4 trạng thái
+// còn lại (xem nhánh `plan.phase === "overdue"` trong JSX bên dưới).
+const STUDY_PHASE_RING = { foundation: "needs_work", mock_exams: "developing", final_review: "developing", final_days: "ready" };
+const STUDY_RISK_RING = { ample: "ready", on_track: "developing", tight: "needs_work", insufficient: "critical" };
+const STUDY_SEGMENT_COLOR = { foundation: "var(--sky)", mock_exams: "var(--sage)", final_review: "var(--seal)", final_days: "var(--line-strong)" };
 
-  const untouched = gapProfile.tasks.filter((tk) => tk.attempts === 0).length;
-  // Ước lượng thô nhưng đủ dùng: mỗi task chưa đụng cần ~5 câu để có bằng chứng tối thiểu.
-  const questionsNeeded = untouched * 5;
+export function ExamDateCard({ progress, tracking, gapProfile, onSetExamDate, onFillGap, onGoLibrary }) {
+  const { t, lang } = useAppCtx();
+  const [draft, setDraft] = useState(tracking.examDate || "");
+  const plan = useMemo(
+    () => (tracking.examDate ? buildStudyPlan({ progress, gapProfile, tracking }) : null),
+    [progress, gapProfile, tracking]
+  );
 
   return (
     <Card>
@@ -463,23 +472,77 @@ export function ExamDateCard({ tracking, gapProfile, onSetExamDate }) {
         )}
       </div>
 
-      {tracking.examDate ? (
+      {plan?.hasExamDate ? (
         <>
           <p className="pmi-display font-semibold text-2xl mb-1">
-            {examDateInfo.daysLeft >= 0 ? t("examDateCountdown", { n: examDateInfo.daysLeft }) : t("examDatePassed")}
+            {plan.daysLeft >= 0 ? t("examDateCountdown", { n: plan.daysLeft }) : t("examDatePassed")}
           </p>
           <p className="pmi-mono text-[11px] mb-3" style={{ color: "var(--ink-soft)" }}>{fmtDayKey(tracking.examDate, lang)}</p>
-          {examDateInfo.daysLeft > 0 && untouched > 0 && (
-            <p className="text-xs" style={{ color: "var(--ink-mid)" }}>
-              {t("examDatePace", { n: untouched, q: Math.ceil(questionsNeeded / examDateInfo.daysLeft) })}
-            </p>
-          )}
-          {examDateInfo.daysLeft > 0 && (
-            <p className="text-xs mt-1.5" style={{ color: examDateInfo.paceOk ? "var(--sage)" : "var(--seal-fg)" }}>
-              {examDateInfo.paceOk
-                ? t("examDatePaceOk", { q: examDateInfo.currentPace })
-                : t("examDatePaceLow", { cur: examDateInfo.currentPace, need: Math.ceil(questionsNeeded / examDateInfo.daysLeft) })}
-            </p>
+
+          {plan.phase === "overdue" ? (
+            <>
+              <p className="text-sm mb-3" style={{ color: "var(--flag)" }}>{t("studyOverdueMessage")}</p>
+              <div className="flex gap-2">
+                <input type="date" value={draft} min={tracking.today} onChange={(e) => setDraft(e.target.value)} className="pmi-input flex-1 px-3 py-2 text-sm" />
+                <Button onClick={() => draft && onSetExamDate(draft)} disabled={!draft}>{t("examDateSetBtn")}</Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                <span className={`pmi-chip pmi-status-${STUDY_PHASE_RING[plan.phase]}`}>{t(`studyPhase_${plan.phase}`)}</span>
+                <span className={`pmi-chip pmi-status-${STUDY_RISK_RING[plan.riskLevel]}`}>{t(`studyRisk_${plan.riskLevel}`)}</span>
+              </div>
+              <p className="text-xs mb-1" style={{ color: "var(--ink-mid)" }}>{t(`studyPhaseHint_${plan.phase}`)}</p>
+              <p className="text-xs" style={{ color: "var(--ink-soft)" }}>
+                {plan.remainingWorkUnits > 0 ? t("studyDailyTarget", { n: plan.dailyQuestionTarget }) : t("studyDailyTargetDone")}
+              </p>
+              {plan.remainingWorkUnits > 0 && (
+                <p className="text-xs mb-4" style={{ color: tracking.currentPace >= plan.dailyQuestionTarget ? "var(--sage)" : "var(--seal-fg)" }}>
+                  {t("studyCurrentPace", { n: tracking.currentPace })}
+                </p>
+              )}
+              {plan.remainingWorkUnits === 0 && <div className="mb-4" />}
+
+              <p className="pmi-eyebrow mb-2">{t("studyMilestonesHeader")}</p>
+              <ul className="space-y-2 mb-3">
+                {plan.milestones.map((m) => (
+                  <li key={m.id} className="flex items-start gap-2 text-xs">
+                    <span className="shrink-0 mt-0.5" style={{ color: m.done ? "var(--sage)" : "var(--ink-soft)" }}>
+                      <Icon name={m.done ? "check" : "x"} size={12} />
+                    </span>
+                    <span style={{ color: "var(--ink-mid)" }}>
+                      {t(`studyMilestone_${m.id}`, { current: m.current, target: m.target, date: m.dueDate ? fmtDayKey(m.dueDate, lang) : "" })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              {(plan.untouchedCoreCount > 0 || plan.criticalCount > 0) && (
+                <div className="flex gap-2 mb-4">
+                  {plan.untouchedCoreCount > 0 && <Button variant="secondary" onClick={onGoLibrary} className="flex-1">{t("libraryBtn")}</Button>}
+                  {plan.criticalCount > 0 && <Button variant="secondary" onClick={onFillGap} className="flex-1">{t("practiceGapBtn")}</Button>}
+                </div>
+              )}
+
+              <p className="pmi-eyebrow mb-2">{t("studyTimelineHeader")}</p>
+              <div className="flex h-2 rounded-full overflow-hidden mb-2" style={{ background: "var(--line)" }}>
+                {plan.segments.map((s) => (
+                  <div key={s.key} style={{ width: `${(s.days / Math.max(1, plan.daysLeft)) * 100}%`, background: STUDY_SEGMENT_COLOR[s.key] }} />
+                ))}
+              </div>
+              <div className="space-y-1">
+                {plan.segments.map((s) => (
+                  <div key={s.key} className="flex items-center justify-between text-[11px]" style={{ color: "var(--ink-soft)" }}>
+                    <span className="flex items-center gap-1.5">
+                      <span style={{ width: 7, height: 7, borderRadius: 999, background: STUDY_SEGMENT_COLOR[s.key], display: "inline-block" }} />
+                      {t(`studySegment_${s.key}`)}
+                    </span>
+                    <span className="pmi-mono">{fmtDayKey(s.startDate, lang)} → {fmtDayKey(s.endDate, lang)}</span>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </>
       ) : (
@@ -497,6 +560,40 @@ export function ExamDateCard({ tracking, gapProfile, onSetExamDate }) {
           </div>
         </>
       )}
+    </Card>
+  );
+}
+
+/* ---------- Bản tóm tắt lộ trình cho màn Hôm nay ---------- */
+// Chỉ hiện khi đã đặt ngày thi — bản đầy đủ (mốc bắt buộc + lịch dự kiến) nằm ở ExamDateCard
+// trong tab "Nhịp luyện" của màn Tiến độ; ở đây chỉ cần đủ để biết "hôm nay có đang ổn không".
+export function StudyPlanBanner({ progress, tracking, gapProfile, onOpenPlan }) {
+  const { t } = useAppCtx();
+  const plan = useMemo(
+    () => (tracking.examDate ? buildStudyPlan({ progress, gapProfile, tracking }) : null),
+    [progress, gapProfile, tracking]
+  );
+  if (!plan?.hasExamDate) return null;
+
+  return (
+    <Card onClick={onOpenPlan}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="pmi-eyebrow mb-1">{t("examDateHeader")}</p>
+          <p className="text-sm font-medium">
+            {plan.daysLeft >= 0 ? t("examDateCountdown", { n: plan.daysLeft }) : t("examDatePassed")}
+            {plan.phase !== "overdue" && <span style={{ color: "var(--ink-soft)" }}> · {t(`studyPhase_${plan.phase}`)}</span>}
+          </p>
+          {plan.phase !== "overdue" && (
+            <p className="text-xs mt-0.5" style={{ color: "var(--ink-soft)" }}>
+              {plan.remainingWorkUnits > 0 ? t("studyDailyTarget", { n: plan.dailyQuestionTarget }) : t("studyDailyTargetDone")}
+            </p>
+          )}
+        </div>
+        {plan.phase !== "overdue" && (
+          <span className={`pmi-chip shrink-0 pmi-status-${STUDY_RISK_RING[plan.riskLevel]}`}>{t(`studyRisk_${plan.riskLevel}`)}</span>
+        )}
+      </div>
     </Card>
   );
 }

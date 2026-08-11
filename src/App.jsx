@@ -588,6 +588,7 @@ function App() {
                     gapProfile={gapProfile}
                     tracking={tracking}
                     onFillGap={() => setView("fillgap")}
+                    onGoLibrary={() => setView("library")}
                     onSetGoal={setDailyGoal}
                     onSetExamDate={setExamDate}
                   />

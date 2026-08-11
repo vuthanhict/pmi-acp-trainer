@@ -1,6 +1,6 @@
 /* ===================== Tracking: hook ===================== */
 import { useMemo } from "react";
-import { DEFAULT_TZ, clamp, shiftDayKey, diffDayKeys, todayKey } from "../lib/utils.js";
+import { DEFAULT_TZ, clamp, shiftDayKey, todayKey } from "../lib/utils.js";
 import { buildDailyHistory, computeStreak, goalTargetCount, buildAccuracyTrend, buildMasteryTrend, computeReadiness } from "../lib/trackingEngine.js";
 
 /** Tính lại toàn bộ số liệu tracking từ attempts. Không đọc/ghi bản sao tổng hợp nào. */
@@ -22,20 +22,9 @@ export function useTracking(progress, gapProfile) {
     const currentPace = Math.round(last14 / 14);
 
     const examDate = progress.tracking?.examDate || null;
-    const daysLeft = examDate ? diffDayKeys(examDate, today) : null;
-    // ~5 câu/task là mức tối thiểu để gap engine coi là "có bằng chứng" (evidence dùng
-    // ngưỡng 8 câu phân biệt + 2 phiên; 5 là mốc thực dụng để thoát insufficient_data).
-    const untouchedTasks = gapProfile.tasks.filter((tk) => tk.attempts === 0).length;
-    const questionsNeeded = untouchedTasks * 5;
-    const examDateInfo = {
-      daysLeft,
-      currentPace,
-      paceOk: daysLeft && daysLeft > 0 ? currentPace * daysLeft >= questionsNeeded : false,
-      questionsNeeded,
-    };
 
     return {
-      tz, today, history, todayRow, streak, goal, target, examDate, examDateInfo, currentPace,
+      tz, today, history, todayRow, streak, goal, target, examDate, currentPace,
       done,
       remaining: target ? Math.max(0, target - done) : 0,
       ratio: target ? clamp(done / target) : 0,
