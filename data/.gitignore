@@ -10,4 +10,7 @@ vi-enrichment.json
 candidates.txt
 candidates-a1.txt
 
+# Kết quả quét thẻ nghi vấn lệch nghĩa, sinh lại bằng: node tools/scanSuspiciousTerms.mjs
+suspicious-terms.txt
+
 # Các file .psv là NGUỒN soạn tay — luôn commit, không bỏ qua.
