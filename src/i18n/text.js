@@ -10,7 +10,7 @@ export const UI_TEXT = {
   vi: {
     appTitle: "PMI-ACP Daily Trainer",
     appSubtitle: "1.684 câu · 14 đề · GAP thông minh · Hỗ trợ tiếng Việt",
-    navToday: "Hôm nay", navLibrary: "Thư viện", navHistory: "Lịch sử", navGap: "Tiến độ", navGlossary: "Từ điển", navVocab: "Ôn từ vựng", navData: "Dữ liệu",
+    navToday: "Hôm nay", navLibrary: "Thư viện", navHistory: "Lịch sử", navGap: "Tiến độ", navMindset: "Mindset", navGlossary: "Từ điển", navVocab: "Ôn từ vựng", navData: "Dữ liệu",
     publishBanner: "Trình duyệt đang chặn lưu trữ cục bộ (chế độ ẩn danh hoặc cài đặt riêng tư) — tiến trình sẽ không được lưu giữa các phiên. Hãy dùng \"Xuất backup\" ở mục Dữ liệu để lưu thủ công.",
     savedToast: "Đã tự động lưu",
 
@@ -125,6 +125,11 @@ export const UI_TEXT = {
     // Glossary
     glossaryTitle: "Từ điển thuật ngữ", glossarySearchPlaceholder: "Tìm thuật ngữ tiếng Anh hoặc tiếng Việt...",
     glossaryAllCategories: "Tất cả", glossaryCount: "{n} thuật ngữ", glossaryNoResults: "Không tìm thấy thuật ngữ phù hợp.",
+
+    mindsetGuideHeader: "CẨM NANG ACP MINDSET",
+    mindsetGuideSubtitle: "Tổng hợp từ PMI-ACP Examination Content Outline chính thức, kỹ thuật \"từ khóa → hành động đúng\" và kinh nghiệm thi thật từ cộng đồng — đọc để nắm tư duy, không phải để học thuộc.",
+    mindsetSearchPlaceholder: "Tìm theo từ khóa (vd: xung đột, backlog, MVP...)",
+    mindsetNoResults: "Không tìm thấy nội dung phù hợp.",
 
     // Tracking — mục tiêu hằng ngày
     goalHeaderToday: "MỤC TIÊU HÔM NAY",
@@ -250,7 +255,7 @@ export const UI_TEXT = {
   en: {
     appTitle: "PMI-ACP Daily Trainer",
     appSubtitle: "1,684 questions · 14 exams · Smart GAP · Vietnamese support",
-    navToday: "Today", navLibrary: "Library", navHistory: "History", navGap: "Progress", navGlossary: "Glossary", navVocab: "Vocab drill", navData: "Data",
+    navToday: "Today", navLibrary: "Library", navHistory: "History", navGap: "Progress", navMindset: "Mindset", navGlossary: "Glossary", navVocab: "Vocab drill", navData: "Data",
     publishBanner: "This browser is blocking local storage (private/incognito mode or privacy settings) — progress won't persist between sessions. Use \"Export backup\" under Data to save manually.",
     savedToast: "Auto-saved",
 
@@ -357,6 +362,13 @@ export const UI_TEXT = {
 
     glossaryTitle: "Glossary", glossarySearchPlaceholder: "Search English or Vietnamese term...",
     glossaryAllCategories: "All", glossaryCount: "{n} terms", glossaryNoResults: "No matching terms found.",
+
+    // Content nội dung bên trong (mindsetGuide.js) vẫn tiếng Việt bất kể ngôn ngữ giao diện — đây
+    // là tài liệu ôn tập được biên soạn tiếng Việt có chủ đích, không phải cặp bản dịch song ngữ.
+    mindsetGuideHeader: "ACP MINDSET GUIDE",
+    mindsetGuideSubtitle: "Summarized from the official PMI-ACP Examination Content Outline, the \"trigger word → best action\" technique, and real exam lessons learned from the community. Content is written in Vietnamese.",
+    mindsetSearchPlaceholder: "Search by keyword (e.g. conflict, backlog, MVP...)",
+    mindsetNoResults: "No matching content found.",
 
     goalHeaderToday: "TODAY'S GOAL",
     goalSetupTitle: "Set a daily practice goal",

@@ -11,6 +11,7 @@ import { LibraryScreen } from "./screens/library/LibraryScreen.jsx";
 import { MistakeReviewScreen } from "./screens/library/MistakeReviewScreen.jsx";
 import { HistoryScreen } from "./screens/history/HistoryScreen.jsx";
 import { GlossaryScreen } from "./screens/glossary/GlossaryScreen.jsx";
+import { MindsetGuideScreen } from "./screens/mindset/MindsetGuideScreen.jsx";
 import { DataScreen } from "./screens/data/DataScreen.jsx";
 import { QuizRunner } from "./screens/quiz/QuizRunner.jsx";
 import { ResultsScreen } from "./screens/results/ResultsScreen.jsx";
@@ -40,6 +41,7 @@ const NAV_ITEMS = [
   { key: "library", icon: "book", labelKey: "navLibrary" },
   { key: "history", icon: "clock", labelKey: "navHistory" },
   { key: "gap", icon: "target", labelKey: "navGap" },
+  { key: "mindset", icon: "compass", labelKey: "navMindset" },
   { key: "glossary", icon: "languages", labelKey: "navGlossary" },
   { key: "vocab", icon: "seal", labelKey: "navVocab" },
   { key: "data", icon: "database", labelKey: "navData" },
@@ -660,6 +662,7 @@ function App() {
                   />
                 )}
                 {view === "fillgap" && <FillGapScreen progress={progress} gapProfile={gapProfile} onStart={(ids, size) => startFillGapSession(ids, size)} onBack={() => setView("gap")} />}
+                {view === "mindset" && <MindsetGuideScreen />}
                 {view === "glossary" && <GlossaryScreen />}
                 {view === "vocab" && <VocabScreen vocabSrs={progress.vocabSrs} vocabSaved={progress.vocabSaved} onUpdateVocabSrs={updateVocabSrs} onToggleVocabSaved={toggleVocabSaved} />}
                 {view === "data" && (

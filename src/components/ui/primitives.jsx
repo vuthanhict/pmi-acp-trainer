@@ -90,6 +90,7 @@ export function Icon({ name, size = 18, className = "" }) {
     star: <path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3z" />,
     // Bản tô đặc — dùng khi thẻ đã được lưu, để phân biệt bằng cả hình khối chứ không chỉ bằng màu.
     starFilled: <path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3z" fill="currentColor" />,
+    compass: <><circle cx="12" cy="12" r="9" /><path d="M14.8 9.2L11 11l-1.8 3.8L13 13l1.8-3.8z" /></>,
   };
   return <svg {...common}>{paths[name]}</svg>;
 }
