@@ -57,7 +57,7 @@ export function segmentText(text, terms) {
     }
     if (hit) {
       if (plainFrom < i) segments.push({ text: src.slice(plainFrom, i) });
-      segments.push({ text: src.slice(i, hit.end), termId: hit.termId });
+      segments.push({ text: src.slice(i, hit.end), termId: hit.termId, start: i, end: hit.end });
       i = hit.end;
       plainFrom = i;
     } else {
@@ -66,4 +66,42 @@ export function segmentText(text, terms) {
   }
   if (plainFrom < src.length) segments.push({ text: src.slice(plainFrom) });
   return segments;
+}
+
+/* Trích câu chứa vị trí [start,end) trong text — dùng để hiển thị "trong câu này từ được dùng
+   thế nào" ngay trong ngữ cảnh thật của câu hỏi, thay vì chỉ có ví dụ chung của thẻ từ vựng.
+   Ranh giới câu: dấu .!? theo sau bởi khoảng trắng/hết chuỗi, hoặc dấu xuống dòng. Không dùng
+   regex toàn cục để tránh phải lo lastIndex — quét thủ công, đơn giản và dễ kiểm chứng đúng. */
+export function sentenceAround(text, start, end) {
+  const src = text || "";
+  if (!src) return "";
+  let from = 0;
+  for (let i = start - 1; i >= 0; i--) {
+    const ch = src[i];
+    if (ch === "\n") { from = i + 1; break; }
+    if ((ch === "." || ch === "!" || ch === "?") && (i + 1 >= src.length || /\s/.test(src[i + 1]))) {
+      from = i + 1;
+      break;
+    }
+  }
+  let to = src.length;
+  for (let i = end; i < src.length; i++) {
+    const ch = src[i];
+    if (ch === "\n") { to = i; break; }
+    if (ch === "." || ch === "!" || ch === "?") { to = i + 1; break; }
+  }
+  return src.slice(from, to).trim();
+}
+
+/* Tìm bề mặt THẬT của 1 thẻ trong 1 đoạn văn bản tiếng Anh cho trước (vd đề bài của câu hỏi) —
+   dùng chung logic khớp dài-nhất-thắng của segmentText() để đồng nhất với phần gạch chân trong
+   đề. Nơi cần: các chip thuật ngữ ở khối "Song ngữ" (BilingualWidgets.jsx) hiện lấy cố định
+   sourceTerms[0] làm nhãn, y hệt lỗi "Thus hiện thành therefore" — chip phải hiện đúng từ THẬT SỰ
+   xuất hiện trong câu hỏi đó, không phải headword chuẩn của thẻ. Trả về null nếu không tìm thấy
+   (vd thẻ được gắn từ phần giải thích/đáp án chứ không có trong đề bài). */
+export function firstSurfaceMatch(text, term) {
+  if (!term) return null;
+  const segments = segmentText(text, [term]);
+  const hit = segments.find((s) => s.termId === term.id);
+  return hit ? hit.text : null;
 }

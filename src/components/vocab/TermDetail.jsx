@@ -12,9 +12,14 @@ export const POS_LABEL_KEY = {
 };
 
 /* Phần ruột của một thẻ từ vựng — dùng chung cho bảng từ vựng cả câu và popup tra nhanh một từ,
-   để hai nơi không bao giờ hiển thị lệch nhau. */
-export function TermDetailBody({ term }) {
+   để hai nơi không bao giờ hiển thị lệch nhau.
+   `contextSentence`: câu THẬT trích từ chính câu hỏi đang xem, chứa từ vừa chạm (xem
+   sentenceAround() trong inlineVocab.js) — chỉ popup tra nhanh trong đề mới có, bảng từ vựng liệt
+   kê cả câu thì không gắn với 1 vị trí chạm cụ thể nên không truyền prop này. Bỏ qua nếu trùng
+   với exampleEn (thẻ tự dùng đúng câu đề làm ví dụ) để khỏi lặp lại hai lần. */
+export function TermDetailBody({ term, contextSentence }) {
   const { t } = useAppCtx();
+  const showContext = contextSentence && contextSentence.trim().toLowerCase() !== (term.exampleEn || "").trim().toLowerCase();
   return (
     <div className="space-y-1.5 text-xs">
       {term.senseEn && (
@@ -24,6 +29,12 @@ export function TermDetailBody({ term }) {
         </p>
       )}
       <p style={{ color: "var(--ink)" }}>{term.definitionVi}</p>
+      {showContext && (
+        <p className="flex items-start gap-1" style={{ color: "var(--ink)" }}>
+          <span className="pmi-mono not-italic text-[10px] mr-1 shrink-0" style={{ color: "var(--accent)" }}>{t("vocabInContextLabel")}</span>
+          <span className="flex-1">“{contextSentence}”</span>
+        </p>
+      )}
       {term.exampleEn && (
         <p className="italic flex items-start gap-1" style={{ color: "var(--ink-soft)" }}>
           <span className="pmi-mono not-italic text-[10px] mr-1 shrink-0" style={{ color: "var(--sky)" }}>{t("vocabExampleLabel")}</span>
@@ -35,16 +46,22 @@ export function TermDetailBody({ term }) {
   );
 }
 
-/* Dòng tiêu đề: từ gốc + IPA + từ loại + nút nghe + nút lưu. */
-export function TermDetailHeader({ term, saved, onToggleSave, onClose }) {
+/* Dòng tiêu đề: từ gốc + IPA + từ loại + nút nghe + nút lưu.
+   `tappedSurface`: biến thể CHÍNH XÁC người dùng vừa chạm trong đề (vd "Thus"), có thể khác
+   headword chuẩn của thẻ (vd "therefore") khi thẻ gộp nhiều từ đồng nghĩa/biến thể. Ưu tiên hiển
+   thị đúng từ đã chạm để người học không tưởng nhầm mình vừa tra một từ khác — IPA chỉ hiện khi
+   nó thực sự là headword chuẩn, vì ta không có phiên âm riêng cho từng biến thể. */
+export function TermDetailHeader({ term, tappedSurface, saved, onToggleSave, onClose }) {
   const { t } = useAppCtx();
-  const head = termHeadword(term);
+  const canonicalHead = termHeadword(term);
+  const head = tappedSurface || canonicalHead;
+  const isCanonical = head.toLowerCase() === canonicalHead.toLowerCase();
   return (
     <div className="flex items-start gap-2">
       <div className="min-w-0 flex-1">
         <span className="flex items-baseline gap-2 flex-wrap">
           <span className="pmi-display font-semibold text-sm">{head}</span>
-          {term.ipa && <span className="pmi-mono text-[11px]" style={{ color: "var(--sky)" }}>{term.ipa}</span>}
+          {term.ipa && isCanonical && <span className="pmi-mono text-[11px]" style={{ color: "var(--sky)" }}>{term.ipa}</span>}
           {term.pos && (
             <span className="pmi-mono text-[10px] italic" style={{ color: "var(--ink-soft)" }}>
               {t(POS_LABEL_KEY[term.pos] || "posOther")}
@@ -82,7 +99,7 @@ const GAP = 8;
    - Màn hình lớn: thẻ nổi neo ngay cạnh từ vừa chạm, đúng chỗ mắt đang nhìn.
    `extraAction` dùng cho nút "Chọn đáp án này" khi người dùng lỡ chạm vào từ nằm trong một đáp án
    chưa chọn — biến cú chạm nhầm thành một thao tác có ích thay vì bắt họ đóng popup rồi chạm lại. */
-export function TermPopover({ termId, anchorRect, saved, onToggleSave, onClose, extraAction }) {
+export function TermPopover({ termId, tappedSurface, contextSentence, anchorRect, saved, onToggleSave, onClose, extraAction }) {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
   const cardRef = useRef(null);
@@ -105,9 +122,9 @@ export function TermPopover({ termId, anchorRect, saved, onToggleSave, onClose, 
 
   const body = (
     <>
-      <TermDetailHeader term={term} saved={saved} onToggleSave={onToggleSave} onClose={onClose} />
+      <TermDetailHeader term={term} tappedSurface={tappedSurface} saved={saved} onToggleSave={onToggleSave} onClose={onClose} />
       <div className="mt-2">
-        <TermDetailBody term={term} />
+        <TermDetailBody term={term} contextSentence={contextSentence} />
       </div>
       {extraAction && (
         <button

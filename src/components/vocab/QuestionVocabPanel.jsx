@@ -3,6 +3,7 @@ import { useAppCtx } from "../../context/AppContext.jsx";
 import { useIsDesktop } from "../../hooks/useViewport.js";
 import { questionVocab, VOCAB_GROUPS } from "../../lib/questionVocab.js";
 import { termHeadword } from "../../lib/vocabSrs.js";
+import { firstSurfaceMatch } from "../../lib/inlineVocab.js";
 import { Icon } from "../ui/primitives.jsx";
 import { SpeakButton } from "./SpeakButton.jsx";
 import { TermDetailBody, POS_LABEL_KEY } from "./TermDetail.jsx";
@@ -27,10 +28,15 @@ function summaryLine(term, head) {
   return term.definitionVi || term.senseEn || "";
 }
 
-function VocabRow({ term, saved, onToggleSave }) {
+/* `searchText`: toàn bộ văn bản tiếng Anh của câu hỏi (đề + đáp án + có thể cả giải thích) — dùng
+   tìm bề mặt THẬT của thẻ trong câu này, tránh lặp lại lỗi "Thus hiện thành therefore" nhưng lần
+   này ở bảng liệt kê thay vì popup. Rơi về headword chuẩn nếu không tìm thấy (thẻ hiếm khi được
+   gắn thủ công/qua enrichment cũ mà không khớp string trực tiếp). */
+function VocabRow({ term, searchText, saved, onToggleSave }) {
   const { t } = useAppCtx();
   const [open, setOpen] = useState(false);
-  const head = termHeadword(term);
+  const head = firstSurfaceMatch(searchText, term) || termHeadword(term);
+  const isCanonical = head.toLowerCase() === termHeadword(term).toLowerCase();
   return (
     <div className="rounded-lg" style={{ border: "1px solid var(--line)", background: "var(--paper)" }}>
       <div className="flex items-start gap-2 px-3 py-2.5">
@@ -41,7 +47,7 @@ function VocabRow({ term, saved, onToggleSave }) {
         >
           <span className="flex items-baseline gap-2 flex-wrap">
             <span className="pmi-display font-semibold text-sm">{head}</span>
-            {term.ipa && <span className="pmi-mono text-[11px]" style={{ color: "var(--sky)" }}>{term.ipa}</span>}
+            {term.ipa && isCanonical && <span className="pmi-mono text-[11px]" style={{ color: "var(--sky)" }}>{term.ipa}</span>}
             {term.pos && (
               <span className="pmi-mono text-[10px] italic" style={{ color: "var(--ink-soft)" }}>
                 {t(POS_LABEL_KEY[term.pos] || "posOther")}
@@ -75,7 +81,7 @@ function VocabRow({ term, saved, onToggleSave }) {
   );
 }
 
-function VocabGroups({ groups, savedIds, onToggleSave }) {
+function VocabGroups({ groups, searchText, savedIds, onToggleSave }) {
   const { t } = useAppCtx();
   const present = VOCAB_GROUPS.filter((g) => groups[g].length > 0);
   const [openGroup, setOpenGroup] = useState(present[0] || null);
@@ -98,7 +104,7 @@ function VocabGroups({ groups, savedIds, onToggleSave }) {
             {isOpen && (
               <div className="space-y-1.5 mt-1">
                 {groups[g].map((term) => (
-                  <VocabRow key={term.id} term={term} saved={savedIds.has(term.id)} onToggleSave={onToggleSave} />
+                  <VocabRow key={term.id} term={term} searchText={searchText} saved={savedIds.has(term.id)} onToggleSave={onToggleSave} />
                 ))}
               </div>
             )}
@@ -126,12 +132,25 @@ export function VocabPanelButton({ questionId, includePost, onClick, compact }) 
   );
 }
 
+/* Ghép toàn bộ văn bản tiếng Anh của câu hỏi thành 1 chuỗi để dò bề mặt thật của từng thẻ —
+   cùng phạm vi pre/post với chính lúc build chỉ mục (xem tools/buildVocab.mjs: pre = đề + đáp
+   án, post = giải thích + đáp án đúng). */
+function questionSearchText(question, includePost) {
+  if (!question) return "";
+  const pre = [question.stem, ...(question.choices || []).map((c) => c.text)].join("\n");
+  if (!includePost) return pre;
+  return [pre, question.explanationShort, question.correctAnswerText].filter(Boolean).join("\n");
+}
+
 /* Bảng từ vựng — bottom sheet trên mobile, hộp thoại giữa màn hình trên desktop, cùng khuôn với
-   các overlay khác của app (palette câu hỏi, xác nhận nộp bài). */
-export function VocabPanelSheet({ questionId, includePost, savedIds, onToggleSave, onClose }) {
+   các overlay khác của app (palette câu hỏi, xác nhận nộp bài).
+   `question`: object câu hỏi tiếng Anh gốc (q.stem/choices/...) — dùng để mỗi dòng trong bảng
+   hiện đúng bề mặt THẬT xuất hiện trong câu này, tránh lặp lại lỗi "Thus hiện thành therefore". */
+export function VocabPanelSheet({ questionId, question, includePost, savedIds, onToggleSave, onClose }) {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
   const groups = useMemo(() => questionVocab(questionId, includePost), [questionId, includePost]);
+  const searchText = useMemo(() => questionSearchText(question, includePost), [question, includePost]);
   return (
     <div
       className={`fixed inset-0 flex ${isDesktop ? "items-center" : "items-end"} justify-center z-50`}
@@ -153,7 +172,7 @@ export function VocabPanelSheet({ questionId, includePost, savedIds, onToggleSav
           </button>
         </div>
         <div className="px-4 py-3 overflow-y-auto">
-          <VocabGroups groups={groups} savedIds={savedIds} onToggleSave={onToggleSave} />
+          <VocabGroups groups={groups} searchText={searchText} savedIds={savedIds} onToggleSave={onToggleSave} />
         </div>
       </div>
     </div>

@@ -46,6 +46,8 @@ export function ReviewQuestionCard({ item, savedVocabIds, onToggleVocabSaved }) 
       {inlineTerm && (
         <TermPopover
           termId={inlineTerm.termId}
+          tappedSurface={inlineTerm.surface}
+          contextSentence={inlineTerm.context}
           anchorRect={inlineTerm.rect}
           saved={savedVocabIds?.has(inlineTerm.termId)}
           onToggleSave={(termId) => onToggleVocabSaved(termId, questionId, q.quizIndex)}
@@ -55,6 +57,7 @@ export function ReviewQuestionCard({ item, savedVocabIds, onToggleVocabSaved }) 
       {vocabOpen && (
         <VocabPanelSheet
           questionId={questionId}
+          question={q}
           includePost
           savedIds={savedVocabIds}
           onToggleSave={(termId) => onToggleVocabSaved(termId, questionId, q.quizIndex)}
@@ -66,10 +69,17 @@ export function ReviewQuestionCard({ item, savedVocabIds, onToggleVocabSaved }) 
           text={matchingParsed ? matchingParsed.intro || q.stem : q.stem}
           terms={inlineTerms}
           activeTermId={inlineTerm?.termId}
-          onPickTerm={(id, rect) => setInlineTerm({ termId: id, rect })}
+          onPickTerm={(id, rect, surface, context) => setInlineTerm({ termId: id, rect, surface, context })}
         />
       </p>
-      {viOn && <BilingualStemBlock viItem={viItem} expandedTerm={expandedTerm} onExpandTerm={setExpandedTerm} />}
+      {viOn && (
+        <BilingualStemBlock
+          viItem={viItem}
+          stemText={matchingParsed ? matchingParsed.intro || q.stem : q.stem}
+          expandedTerm={expandedTerm}
+          onExpandTerm={setExpandedTerm}
+        />
+      )}
       {item.kind === "unanswered" && <p className="pmi-mono text-xs mb-2" style={{ color: "var(--ink-soft)" }}>{t("notAnsweredLabel")}</p>}
       {item.kind !== "unanswered" && item.kind !== "matching" && (
         <p className="pmi-mono text-xs mb-2" style={{ color: "var(--ink-soft)" }}>{t("confidenceShort")}: {item.a.confidence ?? t("notRecorded")}</p>
@@ -101,7 +111,7 @@ export function ReviewQuestionCard({ item, savedVocabIds, onToggleVocabSaved }) 
                     text={c.text}
                     terms={inlineTerms}
                     activeTermId={inlineTerm?.termId}
-                    onPickTerm={(id, rect) => setInlineTerm({ termId: id, rect })}
+                    onPickTerm={(id, rect, surface, context) => setInlineTerm({ termId: id, rect, surface, context })}
                   />
                   {viOn && <ChoiceViLine questionId={questionId} choiceId={c.id} />}
                 </span>

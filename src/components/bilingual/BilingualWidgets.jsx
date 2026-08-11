@@ -4,6 +4,7 @@ import { Icon } from "../ui/primitives.jsx";
 import { SpeakButton } from "../vocab/SpeakButton.jsx";
 import { RATE_SENTENCE } from "../../lib/speech.js";
 import { VI_TERM_INDEX, VI_ITEM_INDEX } from "../../lib/embeddedData.js";
+import { firstSurfaceMatch } from "../../lib/inlineVocab.js";
 
 /* ===================== Vietnamese support (inline) ===================== */
 export const WARNING_LABEL = {
@@ -22,10 +23,12 @@ export const VI_STATUS_LABEL = {
   vi: { machine_draft: "Bản dịch hỗ trợ — chưa duyệt thủ công", reviewed: "Bản dịch đã được review", approved: "Bản dịch đã được duyệt" },
   en: { machine_draft: "Assisted translation — not manually reviewed", reviewed: "Translation reviewed", approved: "Translation approved" },
 };
-export function TermChip({ termId, onExpand, expandedId }) {
+/* `stemText`: đề bài tiếng Anh gốc của câu hỏi — dùng để tìm bề mặt THẬT của thẻ trong câu này,
+   tránh lặp lại lỗi "Thus hiện thành therefore" (chip từng luôn hiện cố định sourceTerms[0]). */
+export function TermChip({ termId, stemText, onExpand, expandedId }) {
   const term = VI_TERM_INDEX.get(termId);
   if (!term) return null;
-  const en = (term.sourceTerms && term.sourceTerms[0]) || term.termVi;
+  const en = firstSurfaceMatch(stemText, term) || (term.sourceTerms && term.sourceTerms[0]) || term.termVi;
   const isOpen = expandedId === termId;
   return (
     <button
@@ -53,7 +56,7 @@ export function BilingualToggle({ on, onClick, compact }) {
 }
 /* Khối dịch tiếng Việt cho phần đề bài — hiện ngay dưới đề bài gốc (song ngữ thật sự) thay vì   */
 /* ẩn trong 1 panel riêng phải mở thêm 1 lần nữa. Dùng chung cho cả lúc làm bài và lúc xem lại.  */
-export function BilingualStemBlock({ viItem, expandedTerm, onExpandTerm }) {
+export function BilingualStemBlock({ viItem, stemText, expandedTerm, onExpandTerm }) {
   const { t, lang } = useAppCtx();
   if (!viItem) return <p className="text-xs mt-2 mb-2" style={{ color: "var(--ink-soft)" }}>{t("viNoData")}</p>;
   return (
@@ -76,10 +79,12 @@ export function BilingualStemBlock({ viItem, expandedTerm, onExpandTerm }) {
           <p className="pmi-eyebrow mb-1.5">{t("viTermsHeader")}</p>
           <div className="flex flex-wrap gap-1.5">
             {viItem.preAnswer.termIds.map((tid) => (
-              <TermChip key={tid} termId={tid} onExpand={onExpandTerm} expandedId={expandedTerm} />
+              <TermChip key={tid} termId={tid} stemText={stemText} onExpand={onExpandTerm} expandedId={expandedTerm} />
             ))}
           </div>
-          {expandedTerm && viItem.preAnswer.termIds.includes(expandedTerm) && <TermDefinitionCard termId={expandedTerm} />}
+          {expandedTerm && viItem.preAnswer.termIds.includes(expandedTerm) && (
+            <TermDefinitionCard termId={expandedTerm} stemText={stemText} />
+          )}
         </div>
       )}
     </div>
@@ -101,16 +106,18 @@ export function BilingualAnswerBlock({ viItem }) {
     </div>
   );
 }
-export function TermDefinitionCard({ termId }) {
+export function TermDefinitionCard({ termId, stemText }) {
   const { t: tt } = useAppCtx();
   const t = VI_TERM_INDEX.get(termId);
   if (!t) return null;
-  const en = (t.sourceTerms && t.sourceTerms[0]) || t.termVi;
+  const canonicalEn = (t.sourceTerms && t.sourceTerms[0]) || t.termVi;
+  const en = firstSurfaceMatch(stemText, t) || canonicalEn;
+  const isCanonical = en.toLowerCase() === canonicalEn.toLowerCase();
   return (
     <div className="mt-2 text-xs pl-2" style={{ borderLeft: "2px solid var(--line-strong)" }}>
       <p className="font-semibold flex items-center gap-1">
         <span>{en}</span>
-        {t.ipa && <span className="pmi-mono font-normal text-[10px]" style={{ color: "var(--sky)" }}>{t.ipa}</span>}
+        {t.ipa && isCanonical && <span className="pmi-mono font-normal text-[10px]" style={{ color: "var(--sky)" }}>{t.ipa}</span>}
         <SpeakButton text={en} size={13} title={tt("speakWord")} />
       </p>
       <p className="mt-0.5" style={{ color: "var(--ink-mid)" }}>{t.definitionVi}</p>

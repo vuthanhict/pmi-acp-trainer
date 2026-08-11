@@ -533,14 +533,14 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
   }
   /* Chạm vào một từ trong đề. Dùng chung luật ghi nhận trợ giúp với bảng từ vựng: cùng là tra
      nghĩa tiếng Anh, nên không thể chỗ này tính chỗ kia không. */
-  function pickInlineTerm(termId, rect, fromChoiceId) {
+  function pickInlineTerm(termId, rect, fromChoiceId, surface, context) {
     const relevant = !answeredThisQuestion;
     if (relevant) {
       const mem = getHelpMemory(q.id);
       mem.vocab = true;
       if (existing) onSaveAttempt({ ...existing, supportUsage: currentSupportUsageFor(mem) });
     }
-    setInlineTerm({ termId, rect, fromChoiceId });
+    setInlineTerm({ termId, rect, fromChoiceId, surface, context });
   }
   function toggleVocabSaved(termId) {
     onToggleVocabSaved(termId, q.id, q.quizIndex);
@@ -631,10 +631,10 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
               text={q.stem}
               terms={inlineTerms}
               activeTermId={inlineTerm?.termId}
-              onPickTerm={(id, rect) => pickInlineTerm(id, rect, null)}
+              onPickTerm={(id, rect, surface, context) => pickInlineTerm(id, rect, null, surface, context)}
             />
           </p>
-          {viOn && <BilingualStemBlock viItem={VI_ITEM_INDEX.get(q.id)} expandedTerm={expandedTerm} onExpandTerm={requestExpandTerm} />}
+          {viOn && <BilingualStemBlock viItem={VI_ITEM_INDEX.get(q.id)} stemText={q.stem} expandedTerm={expandedTerm} onExpandTerm={requestExpandTerm} />}
           <div className="space-y-2 mt-3">
             {q.choices.map((c) => {
               const cid = normOpt(c.id);
@@ -661,7 +661,7 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
                       text={c.text}
                       terms={inlineTerms}
                       activeTermId={inlineTerm?.termId}
-                      onPickTerm={(id, rect) => pickInlineTerm(id, rect, cid)}
+                      onPickTerm={(id, rect, surface, context) => pickInlineTerm(id, rect, cid, surface, context)}
                     />
                     {viOn && <ChoiceViLine questionId={q.id} choiceId={c.id} />}
                   </span>
@@ -808,6 +808,8 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
       {inlineTerm && (
         <TermPopover
           termId={inlineTerm.termId}
+          tappedSurface={inlineTerm.surface}
+          contextSentence={inlineTerm.context}
           anchorRect={inlineTerm.rect}
           saved={savedVocabIds.has(inlineTerm.termId)}
           onToggleSave={toggleVocabSaved}
@@ -828,6 +830,7 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
       {vocabOpen && (
         <VocabPanelSheet
           questionId={q.id}
+          question={q}
           includePost={revealed}
           savedIds={savedVocabIds}
           onToggleSave={toggleVocabSaved}

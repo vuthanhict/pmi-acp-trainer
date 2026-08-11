@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { segmentText } from "../../lib/inlineVocab.js";
+import { segmentText, sentenceAround } from "../../lib/inlineVocab.js";
 
 /* Hiển thị một đoạn văn bản tiếng Anh trong đề, với các từ/cụm có thẻ từ vựng được gạch chân
    chấm và chạm được. Gạch chân CHẤM MỜ chứ không tô nền: một câu có thể có 35 từ được nhận diện,
@@ -20,12 +20,12 @@ export function InlineVocabText({ text, terms, onPickTerm, activeTermId }) {
             key={i}
             role="button"
             tabIndex={0}
-            onClick={(e) => { e.stopPropagation(); onPickTerm(seg.termId, e.currentTarget.getBoundingClientRect()); }}
+            onClick={(e) => { e.stopPropagation(); onPickTerm(seg.termId, e.currentTarget.getBoundingClientRect(), seg.text, sentenceAround(text, seg.start, seg.end)); }}
             onKeyDown={(e) => {
               if (e.key !== "Enter" && e.key !== " ") return;
               e.preventDefault();
               e.stopPropagation();
-              onPickTerm(seg.termId, e.currentTarget.getBoundingClientRect());
+              onPickTerm(seg.termId, e.currentTarget.getBoundingClientRect(), seg.text, sentenceAround(text, seg.start, seg.end));
             }}
             className="pmi-focusable cursor-pointer"
             style={{
