@@ -25,6 +25,7 @@ import {
 } from "./lib/storage.js";
 import { recommendNextQuiz } from "./lib/recommend.js";
 import { uid, isoNow, setsEqual } from "./lib/utils.js";
+import { primeVoices } from "./lib/speech.js";
 
 
 
@@ -63,6 +64,10 @@ function App() {
   const theme = progress.settings?.theme || "light";
   const lang = progress.settings?.uiLanguage || "vi";
   const t = useCallback((key, vars) => fmtStr((UI_TEXT[lang] && UI_TEXT[lang][key]) ?? key, vars), [lang]);
+
+  // Danh sách giọng đọc nạp bất đồng bộ trên Chrome — gọi sớm để lần bấm nút phát âm đầu tiên
+  // đã có sẵn giọng tiếng Anh, thay vì rơi về giọng mặc định theo ngôn ngữ hệ thống.
+  useEffect(() => { primeVoices(); }, []);
 
   useEffect(() => {
     (async () => {
@@ -235,6 +240,17 @@ function App() {
   }
   function updateVocabSrs(nextMap) {
     persist((prev) => ({ ...prev, vocabSrs: nextMap }));
+  }
+  /** Lưu/bỏ lưu một thẻ từ vựng ngay trong lúc làm bài hoặc xem lại. Ghi kèm câu hỏi nguồn để
+      màn "Ôn từ vựng" cho biết thẻ này đến từ đâu. Bỏ lưu KHÔNG xóa tiến độ ôn (vocabSrs) —
+      người học có thể lưu lại sau mà không mất số lần đã ôn. */
+  function toggleVocabSaved(termId, questionId, quizIndex) {
+    persist((prev) => {
+      const saved = { ...(prev.vocabSaved || {}) };
+      if (saved[termId]) delete saved[termId];
+      else saved[termId] = { savedAt: isoNow(), questionId, quizIndex: quizIndex ?? null };
+      return { ...prev, vocabSaved: saved };
+    });
   }
   /** Nút "Làm tiếp N câu" ở màn Hôm nay: tự chọn câu theo GAP, vào bài ngay trong một chạm. */
   function startQuickPractice(size) {
@@ -494,9 +510,11 @@ function App() {
                     onFinish={(grade) => finishSession(progress.activeSession, grade)}
                     onExit={() => setView("today")}
                     showToast={showToast}
+                    vocabSaved={progress.vocabSaved}
+                    onToggleVocabSaved={toggleVocabSaved}
                   />
                 )}
-                {view === "results" && <ResultsScreen sessionId={lastSessionId} progress={progress} onDone={() => setView(resultsReturnView)} onGap={() => setView("gap")} backLabel={resultsReturnView === "history" ? t("historyBackToHistory") : null} />}
+                {view === "results" && <ResultsScreen sessionId={lastSessionId} progress={progress} onDone={() => setView(resultsReturnView)} onGap={() => setView("gap")} backLabel={resultsReturnView === "history" ? t("historyBackToHistory") : null} onToggleVocabSaved={toggleVocabSaved} />}
                 {view === "gap" && (
                   <ProgressScreen
                     progress={progress}
@@ -509,7 +527,7 @@ function App() {
                 )}
                 {view === "fillgap" && <FillGapScreen progress={progress} gapProfile={gapProfile} onStart={(ids, size) => startFillGapSession(ids, size)} onBack={() => setView("gap")} />}
                 {view === "glossary" && <GlossaryScreen />}
-                {view === "vocab" && <VocabScreen vocabSrs={progress.vocabSrs} onUpdateVocabSrs={updateVocabSrs} />}
+                {view === "vocab" && <VocabScreen vocabSrs={progress.vocabSrs} vocabSaved={progress.vocabSaved} onUpdateVocabSrs={updateVocabSrs} onToggleVocabSaved={toggleVocabSaved} />}
                 {view === "data" && (
                   <DataScreen
                     progress={progress} persist={persist} showToast={showToast} theme={theme} lang={lang} setTheme={setTheme} setLang={setLang}

@@ -1,0 +1,359 @@
+# Phiên âm + từ loại + nghĩa tiếng Anh ngắn cho 303 thẻ termbase sẵn có.
+# Định dạng:  id | ipa | pos | senseEn
+# pos: n = noun, v = verb, adj = adjective, adv = adverb, phr = phrase, abbr = abbreviation
+# IPA theo giọng Mỹ (General American). Cụm nhiều từ ghi phiên âm cả cụm.
+
+## artifact
+product-backlog | /ˈprɑːdʌkt ˈbæklɑːɡ/ | n | the ordered list of everything that might be needed in the product
+sprint-backlog | /sprɪnt ˈbæklɑːɡ/ | n | the work a team selects for one sprint, plus its plan for delivering it
+epic | /ˈepɪk/ | n | a large body of work that is broken down into smaller stories
+theme | /θiːm/ | n | a group of related work items sharing a common goal
+kanban-board | /ˈkɑːnbɑːn bɔːrd/ | n | a visual board showing work items moving through workflow columns
+
+## cadence
+sprint | /sprɪnt/ | n | a short, fixed-length period in which a team delivers a usable increment
+iteration | /ˌɪtəˈreɪʃn/ | n | one repeated cycle of building, reviewing and improving the product
+release-planning | /rɪˈliːs ˈplænɪŋ/ | n | planning which features go into which upcoming release
+cadence | /ˈkeɪdns/ | n | the steady, repeating rhythm at which events or deliveries happen
+
+## communication
+information-radiator | /ˌɪnfərˈmeɪʃn ˈreɪdieɪtər/ | n | a large visible display that broadcasts progress to anyone passing by
+osmotic-communication | /ɑːzˈmɑːtɪk kəˌmjuːnɪˈkeɪʃn/ | n | information absorbed passively by overhearing others nearby
+active-listening | /ˈæktɪv ˈlɪsnɪŋ/ | n | listening with full attention and reflecting back what was said
+communication-channels | /kəˌmjuːnɪˈkeɪʃn ˈtʃænlz/ | n | the distinct paths along which information flows between people
+stakeholder-engagement | /ˈsteɪkhoʊldər ɪnˈɡeɪdʒmənt/ | n | actively involving affected parties throughout the work
+stakeholder-analysis | /ˈsteɪkhoʊldər əˈnæləsɪs/ | n | identifying stakeholders and assessing their interest and influence
+knowledge-sharing | /ˈnɑːlɪdʒ ˈʃerɪŋ/ | n | deliberately spreading what people know across the team
+tacit-knowledge | /ˈtæsɪt ˈnɑːlɪdʒ/ | n | know-how held in people's heads that is hard to write down
+explicit-knowledge | /ɪkˈsplɪsɪt ˈnɑːlɪdʒ/ | n | knowledge that has been written down and can be passed on directly
+
+## delivery
+increment | /ˈɪŋkrəmənt/ | n | a working, usable piece of product added in one cycle
+impediment | /ɪmˈpedɪmənt/ | n | anything blocking or slowing the team's progress
+
+## engineering
+pair-programming | /per ˈproʊɡræmɪŋ/ | n | two developers working together at one workstation
+tdd | /ˌtest ˈdrɪvn dɪˈveləpmənt/ | n | writing the test before writing the code that makes it pass
+atdd | /əkˈseptəns ˌtest ˈdrɪvn dɪˈveləpmənt/ | n | defining acceptance tests with the customer before development starts
+bdd | /bɪˈheɪvjər ˌdrɪvn dɪˈveləpmənt/ | n | describing behaviour in plain language that doubles as an automated test
+continuous-integration | /kənˈtɪnjuəs ˌɪntɪˈɡreɪʃn/ | n | merging and automatically testing everyone's code many times a day
+refactoring | /riːˈfæktərɪŋ/ | n | improving code structure without changing what it does
+technical-debt | /ˈteknɪkl det/ | n | the future cost of choosing a quick solution over a clean one
+continuous-delivery | /kənˈtɪnjuəs dɪˈlɪvəri/ | n | keeping software always in a state where it can be released
+feature-toggle | /ˈfiːtʃər ˈtɑːɡl/ | n | a switch that turns a feature on or off without redeploying
+collective-code-ownership | /kəˈlektɪv koʊd ˈoʊnərʃɪp/ | n | any team member may change any part of the codebase
+coding-standards | /ˈkoʊdɪŋ ˈstændərdz/ | n | agreed rules for how code should be written and formatted
+devops | /ˈdevɑːps/ | n | merging development and operations so releases are frequent and reliable
+mob-programming | /mɑːb ˈproʊɡræmɪŋ/ | n | the whole team working on one item at one computer
+unit-testing | /ˈjuːnɪt ˈtestɪŋ/ | n | automated tests that check one small piece of code in isolation
+test-automation | /test ˌɔːtəˈmeɪʃn/ | n | running tests by script instead of by hand
+
+## estimation
+story-point | /ˈstɔːri pɔɪnt/ | n | a relative unit expressing how big a piece of work is
+planning-poker | /ˈplænɪŋ ˈpoʊkər/ | n | estimating by revealing cards simultaneously, then discussing differences
+affinity-estimation | /əˈfɪnəti ˌestɪˈmeɪʃn/ | n | quickly sorting many items into size groups by similarity
+cone-of-uncertainty | /koʊn əv ʌnˈsɜːrtnti/ | n | the idea that estimates get more accurate as the work proceeds
+capacity-planning | /kəˈpæsəti ˈplænɪŋ/ | n | working out how much a team can realistically take on
+ideal-time | /aɪˈdiːəl taɪm/ | n | how long work would take with no interruptions at all
+monte-carlo-forecasting | /ˌmɑːnti ˈkɑːrloʊ ˈfɔːrkæstɪŋ/ | n | forecasting outcomes by running many randomised simulations
+wideband-delphi | /ˈwaɪdbænd ˈdelfaɪ/ | n | repeated anonymous estimating rounds until experts converge
+t-shirt-sizing | /ˈtiː ʃɜːrt ˈsaɪzɪŋ/ | n | sizing work roughly as S, M, L or XL instead of in numbers
+
+## event
+retrospective | /ˌretrəˈspektɪv/ | n | a regular meeting where the team inspects and improves how it works
+daily-standup | /ˈdeɪli ˈstændʌp/ | n | a short daily meeting to sync on progress and surface blockers
+sprint-review | /sprɪnt rɪˈvjuː/ | n | a session where the team shows the increment and gathers feedback
+sprint-planning | /sprɪnt ˈplænɪŋ/ | n | the meeting where the team decides what to build this sprint and how
+scrum-of-scrums | /skrʌm əv skrʌmz/ | n | a coordination meeting between representatives of several teams
+sprint-demo | /sprɪnt ˈdemoʊ/ | n | showing working software to stakeholders at the end of a cycle
+sprint-goal | /sprɪnt ɡoʊl/ | n | the single objective the sprint is meant to achieve
+
+## exam-phrase
+phrase-which-of-the-following | /wɪtʃ əv ðə ˈfɑːloʊɪŋ/ | phr | introduces a list from which you must pick one
+phrase-best-way | /ðə best weɪ tuː/ | phr | asks for the single most effective option, not merely a correct one
+phrase-most-likely | /moʊst ˈlaɪkli/ | phr | asks which outcome or action has the highest probability
+phrase-in-order-to | /ɪn ˈɔːrdər tuː/ | phr | signals the purpose or goal of an action
+phrase-as-a-result | /əz ə rɪˈzʌlt əv/ | phr | signals a consequence caused by what came before
+phrase-due-to | /duː tuː/ | phr | signals the cause or reason for something
+phrase-prior-to | /ˈpraɪər tuː/ | phr | before something else happens; a formal way of saying "before"
+phrase-with-respect-to | /wɪð rɪˈspekt tuː/ | phr | concerning, or in relation to, a particular subject
+phrase-in-the-context-of | /ɪn ðə ˈkɑːntekst əv/ | phr | within the specific situation being described
+phrase-on-behalf-of | /ɑːn bɪˈhæf əv/ | phr | acting for someone else or representing their interests
+phrase-in-accordance-with | /ɪn əˈkɔːrdns wɪð/ | phr | following a rule, standard or agreement exactly
+phrase-at-this-point | /ət ðɪs pɔɪnt/ | phr | at this particular stage of the situation
+phrase-going-forward | /ˈɡoʊɪŋ ˈfɔːrwərd/ | phr | from now on, in the future
+phrase-responsible-for | /ɪz rɪˈspɑːnsəbl fɔːr/ | phr | has the duty to do or take care of something
+phrase-regardless-of | /rɪˈɡɑːrdləs əv/ | phr | without being affected by; no matter what
+phrase-in-light-of | /ɪn laɪt əv/ | phr | taking new information into account
+phrase-given-that | /ˈɡɪvn ðæt/ | phr | since this fact is true; introduces a premise you must accept
+phrase-so-that | /soʊ ðæt/ | phr | introduces the intended result of an action
+phrase-rather-than | /ˈræðər ðæn/ | phr | instead of; marks a deliberate choice between two options
+phrase-instead-of | /ɪnˈsted əv/ | phr | in place of something else
+
+## facilitation
+fist-of-five | /fɪst əv faɪv/ | n | voting with zero to five fingers to show level of agreement
+dot-voting | /dɑːt ˈvoʊtɪŋ/ | n | prioritising by letting people place a limited number of dots on options
+conflict-resolution-modes | /ˈkɑːnflɪkt ˌrezəˈluːʃn moʊdz/ | n | the five recognised styles for handling conflict
+brainstorming | /ˈbreɪnstɔːrmɪŋ/ | n | generating many ideas quickly without judging them
+facilitation | /fəˌsɪlɪˈteɪʃn/ | n | guiding a group's process so it reaches its own decisions
+affinity-diagram | /əˈfɪnəti ˈdaɪəɡræm/ | n | grouping many ideas into natural clusters
+parking-lot | /ˈpɑːrkɪŋ lɑːt/ | n | a visible list of off-topic issues saved for later
+
+## finance
+roi | /rɪˈtɜːrn ɑːn ɪnˈvestmənt/ | n | the gain from an investment relative to its cost
+npv | /net ˈprezənt ˈvæljuː/ | n | today's value of future cash flows minus the investment
+cost-of-delay | /kɔːst əv dɪˈleɪ/ | n | the money lost for every unit of time a feature is late
+fixed-price-contract | /fɪkst praɪs/ | n | an agreement where the price is set in advance and does not change
+
+## flow
+wip-limit | /ˈwɪp ˈlɪmɪt/ | n | a cap on how many items may be in progress at once
+little-law | /ˈlɪtlz lɔː/ | n | the rule that cycle time equals work in progress divided by throughput
+flow-efficiency | /floʊ ɪˈfɪʃnsi/ | n | the share of total elapsed time in which work was actually being done
+pull-system | /pʊl ˈsɪstəm/ | n | new work is started only when capacity frees up
+
+## framework
+kanban | /ˈkɑːnbɑːn/ | n | a method for visualising work, limiting WIP and improving flow
+xp | /ɪkˈstriːm ˈproʊɡræmɪŋ/ | n | an agile method built on tight engineering practices and fast feedback
+less | /les/ | n | a framework for scaling Scrum to many teams on one product
+hybrid-approach | /ˈhaɪbrɪd əˈproʊtʃ/ | n | deliberately mixing predictive and adaptive ways of working
+scrumban | /ˈskrʌmbæn/ | n | a blend of Scrum's structure with Kanban's flow control
+scrum | /skrʌm/ | n | a lightweight framework of fixed roles, events and artifacts
+safe | /skeɪld ˈædʒaɪl ˈfreɪmwɜːrk/ | n | a framework for coordinating agile work at enterprise scale
+dsdm | /ˌdiː es diː ˈem/ | n | an agile method that fixes time and cost and varies scope
+feature-driven-development | /ˈfiːtʃər ˌdrɪvn dɪˈveləpmənt/ | n | an agile method organised around a list of small client-valued features
+disciplined-agile | /ˈdɪsəplɪnd ˈædʒaɪl/ | n | a toolkit that helps a team choose its own way of working
+
+## leadership
+servant-leadership | /ˈsɜːrvənt ˈliːdərʃɪp/ | n | leading by serving the team's needs and removing its obstacles
+situational-leadership | /ˌsɪtʃuˈeɪʃənl ˈliːdərʃɪp/ | n | adjusting your leadership style to each person's readiness
+emotional-intelligence | /ɪˈmoʊʃənl ɪnˈtelɪdʒəns/ | n | recognising and managing emotions, in yourself and in others
+adaptive-leadership | /əˈdæptɪv ˈliːdərʃɪp/ | n | leading change by helping people adapt rather than by giving answers
+coaching | /ˈkoʊtʃɪŋ/ | n | helping someone find their own answers through questions
+mentoring | /ˈmentərɪŋ/ | n | guiding someone less experienced by sharing your own experience
+
+## metric
+velocity | /vəˈlɑːsəti/ | n | how many story points a team completes per iteration
+burndown-chart | /ˈbɜːrndaʊn tʃɑːrt/ | n | a chart showing remaining work falling towards zero over time
+burnup-chart | /ˈbɜːrnʌp tʃɑːrt/ | n | a chart showing completed work rising towards a (possibly moving) scope line
+cumulative-flow | /ˈkjuːmjələtɪv floʊ ˈdaɪəɡræm/ | n | a stacked area chart revealing bottlenecks and growing queues
+cycle-time | /ˈsaɪkl taɪm/ | n | how long an item takes from the moment work starts to when it is done
+lead-time | /ˈliːd taɪm/ | n | how long an item takes from request to delivery
+throughput | /ˈθruːpʊt/ | n | how many items are finished per unit of time
+evm | /ɜːrnd ˈvæljuː ˈmænɪdʒmənt/ | n | measuring progress by comparing planned, earned and actual value
+cpi | /kɔːst pərˈfɔːrməns ˈɪndeks/ | n | earned value divided by actual cost; above 1 means under budget
+spi | /ˈskedʒuːl pərˈfɔːrməns ˈɪndeks/ | n | earned value divided by planned value; above 1 means ahead of schedule
+net-promoter-score | /net prəˈmoʊtər skɔːr/ | n | a loyalty measure based on how likely customers are to recommend you
+variance-analysis | /ˈveriəns əˈnæləsɪs/ | n | examining the gap between what was planned and what happened
+
+## mindset
+agile | /ˈædʒaɪl/ | adj | able to move and change direction quickly and easily
+kaizen | /ˈkaɪzen/ | n | continuous improvement through many small changes
+sustainable-pace | /səˈsteɪnəbl peɪs/ | n | a workload the team can keep up indefinitely without burning out
+real-options | /ˈriːəl ˈɑːpʃnz/ | n | treating decisions as options that are worth keeping open until they expire
+last-responsible-moment | /læst rɪˈspɑːnsəbl ˈmoʊmənt/ | n | the latest point at which a decision can still be made without harm
+psychological-safety | /ˌsaɪkəˈlɑːdʒɪkl ˈseɪfti/ | n | a shared belief that speaking up will not be punished
+shu-ha-ri | /ˌʃuː hɑː ˈriː/ | n | the three stages of mastery: follow, adapt, then transcend the rules
+agile-manifesto | /ˈædʒaɪl ˌmænɪˈfestoʊ/ | n | the 2001 statement of four agile values and twelve principles
+continuous-improvement | /kənˈtɪnjuəs ɪmˈpruːvmənt/ | n | steadily making small betterments rather than waiting for a big fix
+systems-thinking | /ˈsɪstəmz ˈθɪŋkɪŋ/ | n | looking at how parts interact rather than optimising one part alone
+cynefin-framework | /ˈkʌnɪvɪn/ | n | a sense-making model sorting situations as clear, complicated, complex or chaotic
+muda | /ˈmuːdə/ | n | waste; any activity that consumes resources without adding value
+lean | /liːn/ | n | maximising value while systematically eliminating waste
+transparency | /trænsˈpærənsi/ | n | making the real state of the work visible to everyone
+inspection | /ɪnˈspekʃn/ | n | frequently examining artifacts and progress to detect problems early
+adaptation | /ˌædæpˈteɪʃn/ | n | adjusting the process or product as soon as inspection reveals a problem
+empirical-process-control | /ɪmˈpɪrɪkl ˈprɑːses kənˈtroʊl/ | n | steering by observation and evidence rather than by up-front prediction
+agile-principles | /ˈædʒaɪl ˈprɪnsəplz/ | n | the twelve statements that expand on the agile values
+
+## people
+stakeholder | /ˈsteɪkhoʊldər/ | n | anyone who affects, or is affected by, the project
+
+## practice
+backlog-refinement | /ˈbæklɑːɡ rɪˈfaɪnmənt/ | n | ongoing work to clarify, split and re-order backlog items
+timebox | /ˈtaɪmbɑːks/ | n | a fixed maximum period allotted to an activity
+spike | /spaɪk/ | n | a short time-boxed investigation to answer a technical or design question
+rolling-wave-planning | /ˈroʊlɪŋ weɪv ˈplænɪŋ/ | n | planning near-term work in detail and later work only roughly
+agile-contract | /ˈædʒaɪl ˈkɑːntrækt/ | n | an agreement designed to allow scope to change as learning happens
+value-stream-mapping | /ˈvæljuː striːm ˈmæpɪŋ/ | n | drawing every step from request to delivery to expose waste
+progressive-elaboration | /prəˈɡresɪv ɪˌlæbəˈreɪʃn/ | n | adding detail to plans gradually as more becomes known
+lessons-learned | /ˈlesnz lɜːrnd/ | n | knowledge captured from experience so it can be reused
+story-mapping | /ˈstɔːri ˈmæpɪŋ/ | n | arranging stories along a user's journey to see scope and slice releases
+swarming | /ˈswɔːrmɪŋ/ | n | the whole team converging on one item to finish it fast
+adaptive-planning | /əˈdæptɪv ˈplænɪŋ/ | n | replanning continuously as feedback arrives
+feedback-loop | /ˈfiːdbæk luːp/ | n | a cycle in which output is observed and used to adjust the next input
+iterative-development | /ˈɪtərətɪv dɪˈveləpmənt/ | n | building in repeated cycles, refining the product each time
+
+## prioritization
+moscow | /ˈmɑːskaʊ/ | n | sorting requirements into Must, Should, Could and Won't have
+kano | /ˈkɑːnoʊ ˈmɑːdl/ | n | a model classifying features by how they affect customer satisfaction
+wsjf | /ˈweɪtɪd ˈʃɔːrtɪst dʒɑːb fɜːrst/ | n | prioritising by cost of delay divided by job size
+
+## product
+mvp | /ˈmɪnɪməm ˈvaɪəbl ˈprɑːdʌkt/ | n | the smallest version that delivers value and produces learning
+mmf | /ˈmɪnɪməm ˈmɑːrkɪtəbl ˈfiːtʃər/ | n | the smallest feature chunk that customers would actually pay for
+product-vision | /ˈprɑːdʌkt ˈvɪʒn/ | n | a short statement of what the product is for and for whom
+roadmap | /ˈroʊdmæp/ | n | a high-level view of what is intended over the coming months
+persona | /pərˈsoʊnə/ | n | a fictional but research-based profile of a typical user
+prototype | /ˈproʊtətaɪp/ | n | an early model built to test an idea before building it properly
+
+## quality
+acceptance-criteria | /əkˈseptəns kraɪˈtɪriən/ | n | the conditions a story must meet to be accepted
+definition-of-done | /ˌdefɪˈnɪʃn əv dʌn/ | n | the shared checklist every increment must satisfy before it counts as finished
+definition-of-ready | /ˌdefɪˈnɪʃn əv ˈredi/ | n | the agreed conditions an item must meet before the team will start it
+escaped-defect | /ɪˈskeɪpt ˈdiːfekt/ | n | a bug that reached production without being caught
+acceptance-test | /əkˈseptəns test/ | n | a test proving the feature meets the customer's stated need
+exploratory-testing | /ɪkˈsplɔːrətɔːri ˈtestɪŋ/ | n | testing where design and execution happen together, guided by what you find
+
+## requirement
+user-story | /ˈjuːzər ˈstɔːri/ | n | a short description of a need from the user's point of view
+non-functional-requirement | /nɑːn ˈfʌŋkʃənl rɪˈkwaɪərmənt/ | n | a quality constraint such as speed, security or usability
+invest-criteria | /ɪnˈvest/ | n | six qualities of a good story: independent, negotiable, valuable, estimable, small, testable
+
+## risk
+risk-adjusted-backlog | /rɪsk əˈdʒʌstɪd ˈbæklɑːɡ/ | n | a backlog that also contains items for reducing risk
+fishbone-diagram | /ˈfɪʃboʊn ˈdaɪəɡræm/ | n | a diagram that sorts possible causes of a problem into categories
+five-whys | /faɪv waɪz/ | n | asking "why" repeatedly until the underlying cause appears
+root-cause-analysis | /ruːt kɔːz əˈnæləsɪs/ | n | finding the real origin of a problem rather than treating its symptoms
+premortem | /ˌpriːˈmɔːrtəm/ | n | imagining the project has already failed, then listing why
+risk-register | /rɪsk ˈredʒɪstər/ | n | a living list of risks with their likelihood, impact and response
+risk-burndown-chart | /rɪsk ˈbɜːrndaʊn tʃɑːrt/ | n | a chart tracking total risk exposure falling over time
+escalation | /ˌeskəˈleɪʃn/ | n | raising an issue to a higher level of authority for a decision
+
+## role
+agile-coach | /ˈædʒaɪl koʊtʃ/ | n | someone who helps teams and organisations improve how they work
+scrum-master | /skrʌm ˈmæstər/ | n | the person accountable for the team's effectiveness and for removing impediments
+product-owner | /ˈprɑːdʌkt ˈoʊnər/ | n | the person accountable for maximising the product's value
+release-train-engineer | /rɪˈliːs treɪn ˌendʒɪˈnɪr/ | n | the servant leader who facilitates delivery across many teams
+
+## team
+agile-team | /ˈædʒaɪl tiːm/ | n | a small, cross-functional group that delivers value together
+working-agreement | /ˈwɜːrkɪŋ əˈɡriːmənt/ | n | the team's own written rules for how it will work together
+team-charter | /tiːm ˈtʃɑːrtər/ | n | a document capturing the team's purpose, values and ground rules
+cross-functional | /krɔːs ˈfʌŋkʃənl/ | adj | having all the skills needed to finish the work inside one team
+self-organizing | /self ˈɔːrɡənaɪzɪŋ/ | adj | deciding for itself how to do the work, without being told
+t-shaped-skills | /ˈtiː ʃeɪpt skɪlz/ | n | deep expertise in one area plus useful breadth across others
+tuckman-stages | /ˈtʌkmən/ | n | the forming, storming, norming, performing model of team development
+co-location | /ˌkoʊ loʊˈkeɪʃn/ | n | having the whole team physically together in one space
+distributed-team | /dɪˈstrɪbjuːtɪd tiːm/ | n | a team whose members work from different locations
+scrum-team | /skrʌm tiːm/ | n | the product owner, scrum master and developers together
+whole-team | /hoʊl tiːm/ | n | the principle that quality and delivery are everyone's responsibility
+
+## value
+value-stream | /ˈvæljuː striːm/ | n | every step taken to turn a request into delivered value
+
+## vocabulary
+vocab-practitioner | /prækˈtɪʃənər/ | n | someone who actively does a job or applies a discipline
+vocab-scenario | /səˈnærioʊ/ | n | a described situation, real or imagined
+vocab-sponsor | /ˈspɑːnsər/ | n | the person who funds and champions the project
+vocab-bottleneck | /ˈbɑːtlnek/ | n | the point where flow is most restricted and work piles up
+vocab-deliverable | /dɪˈlɪvərəbl/ | n | any tangible output the project must produce
+vocab-ensure | /ɪnˈʃʊr/ | v | to make certain that something happens
+vocab-documentation | /ˌdɑːkjumenˈteɪʃn/ | n | written material that records or explains something
+vocab-constraint | /kənˈstreɪnt/ | n | a limit you must work within
+vocab-flexibility | /ˌfleksəˈbɪləti/ | n | the ability to change easily when circumstances change
+vocab-compliance | /kəmˈplaɪəns/ | n | acting in line with rules, laws or standards
+vocab-consensus | /kənˈsensəs/ | n | general agreement that everyone can live with
+vocab-alignment | /əˈlaɪnmənt/ | n | the state of everyone pulling in the same direction
+vocab-viable | /ˈvaɪəbl/ | adj | able to work successfully in practice
+vocab-empower | /ɪmˈpaʊər/ | v | to give someone the authority to act on their own
+vocab-accommodate | /əˈkɑːmədeɪt/ | v | to make room for, or adjust to, someone's needs
+vocab-mitigate | /ˈmɪtɪɡeɪt/ | v | to make something bad less severe
+vocab-hinder | /ˈhɪndər/ | v | to make progress difficult or slow
+vocab-accountability | /əˌkaʊntəˈbɪləti/ | n | being answerable for an outcome
+vocab-adhere | /ədˈhɪr/ | v | to follow a rule or agreement faithfully
+vocab-autonomy | /ɔːˈtɑːnəmi/ | n | the freedom to decide how to do your own work
+vocab-iteratively | /ˈɪtərətɪvli/ | adv | by repeating a cycle and improving each time
+vocab-intrinsic | /ɪnˈtrɪnzɪk/ | adj | coming from inside a person or thing, not imposed from outside
+vocab-morale | /məˈræl/ | n | the level of confidence and enthusiasm in a group
+vocab-streamline | /ˈstriːmlaɪn/ | v | to simplify a process so it runs more efficiently
+vocab-cohesion | /koʊˈhiːʒn/ | n | how well the members of a group stick together
+vocab-delegate | /ˈdelɪɡeɪt/ | v | to give a task or authority to someone else
+vocab-circumstances | /ˈsɜːrkəmstænsəz/ | n | the conditions surrounding a situation
+vocab-turnover | /ˈtɜːrnoʊvər/ | n | the rate at which people leave and are replaced
+vocab-tangible | /ˈtændʒəbl/ | adj | real and concrete enough to be seen or measured
+vocab-quantitative | /ˈkwɑːntəteɪtɪv/ | adj | expressed in numbers rather than in descriptions
+vocab-subsequent | /ˈsʌbsɪkwənt/ | adj | coming after something else in time
+vocab-contingency | /kənˈtɪndʒənsi/ | n | a reserve or plan kept for something that may not happen
+vocab-undermine | /ˌʌndərˈmaɪn/ | v | to weaken something gradually, often indirectly
+vocab-proactive | /ˌproʊˈæktɪv/ | adj | acting in advance rather than waiting to react
+vocab-disruptive | /dɪsˈrʌptɪv/ | adj | causing interruption, or overturning an established way of doing things
+vocab-ambiguous | /æmˈbɪɡjuəs/ | adj | open to more than one interpretation
+vocab-preliminary | /prɪˈlɪmɪneri/ | adj | coming first, before the main or final version
+vocab-unforeseen | /ˌʌnfɔːrˈsiːn/ | adj | not predicted or expected
+vocab-leverage | /ˈlevərɪdʒ/ | v | to use something you already have to maximum advantage
+vocab-threshold | /ˈθreʃhoʊld/ | n | the level at which something starts to take effect
+vocab-vague | /veɪɡ/ | adj | not clearly or precisely stated
+vocab-feasible | /ˈfiːzəbl/ | adj | possible to do in practice
+vocab-granular | /ˈɡrænjələr/ | adj | broken down into small, detailed pieces
+vocab-inherent | /ɪnˈhɪrənt/ | adj | existing as a natural, inseparable part of something
+vocab-arbitrary | /ˈɑːrbɪtreri/ | adj | decided by personal whim rather than by reason or rule
+vocab-robust | /roʊˈbʌst/ | adj | strong enough to cope with difficult conditions
+vocab-expedite | /ˈekspədaɪt/ | v | to make something happen sooner than normal
+vocab-holistic | /hoʊˈlɪstɪk/ | adj | dealing with the whole rather than with separate parts
+vocab-skeptical | /ˈskeptɪkl/ | adj | not easily convinced; having doubts
+vocab-discern | /dɪˈsɜːrn/ | v | to recognise or distinguish something that is not obvious
+vocab-nuance | /ˈnuːɑːns/ | n | a subtle difference in meaning or tone
+vocab-benchmark | /ˈbentʃmɑːrk/ | n | a reference point against which you compare performance
+vocab-synergy | /ˈsɪnərdʒi/ | n | combined effort producing more than the sum of its parts
+vocab-circumvent | /ˌsɜːrkəmˈvent/ | v | to find a way around a rule or obstacle
+vocab-discretionary | /dɪˈskreʃəneri/ | adj | left to someone's own judgement rather than fixed by rule
+vocab-attrition | /əˈtrɪʃn/ | n | gradual loss of people over time
+vocab-explicit | /ɪkˈsplɪsɪt/ | adj | stated clearly and directly, leaving nothing implied
+vocab-justify | /ˈdʒʌstɪfaɪ/ | v | to show that something is reasonable or right
+vocab-warrant | /ˈwɔːrənt/ | v | to be serious enough to deserve a particular response
+vocab-reconcile | /ˈrekənsaɪl/ | v | to make two conflicting things agree with each other
+vocab-pragmatic | /præɡˈmætɪk/ | adj | dealing with things practically rather than theoretically
+vocab-deviation | /ˌdiːviˈeɪʃn/ | n | a departure from the expected standard or plan
+vocab-presume | /prɪˈzuːm/ | v | to assume something is true without proof
+vocab-precedence | /ˈpresɪdəns/ | n | the right to come before something else in importance
+vocab-anomaly | /əˈnɑːməli/ | n | something that departs from what is normal
+vocab-onboarding | /ˈɑːnbɔːrdɪŋ/ | n | the process of integrating a new person into a team
+vocab-address-v | /əˈdres/ | v | to deal with a problem or matter directly
+vocab-resolve | /rɪˈzɑːlv/ | v | to settle a problem or dispute completely
+vocab-discrepancy | /dɪsˈkrepənsi/ | n | a difference between things that should match
+vocab-scope-creep | /skoʊp kriːp/ | n | uncontrolled growth of scope without matching adjustments
+vocab-gold-plating | /ɡoʊld ˈpleɪtɪŋ/ | n | adding extra features nobody asked for
+vocab-workaround | /ˈwɜːrkəraʊnd/ | n | a temporary way around a problem you cannot yet fix
+vocab-red-flag | /red flæɡ/ | n | a warning sign that something is wrong
+vocab-single-point-of-failure | /ˈsɪŋɡl pɔɪnt əv ˈfeɪljər/ | n | one element whose failure would stop everything
+vocab-low-hanging-fruit | /loʊ ˈhæŋɪŋ fruːt/ | n | the easiest gains, available with little effort
+vocab-quick-win | /kwɪk wɪn/ | n | a small success achieved fast to build momentum
+vocab-pilot | /ˈpaɪlət ˈproʊɡræm/ | n | a small trial run before committing fully
+vocab-rollout | /ˈroʊlaʊt/ | n | the staged release of something to its users
+vocab-legacy-system | /ˈleɡəsi ˈsɪstəm/ | n | an old system still in use that is hard to change
+vocab-vendor-lock-in | /ˈvendər ˈlɑːk ɪn/ | n | being trapped with one supplier because switching costs too much
+vocab-procurement | /prəˈkjʊrmənt/ | n | the process of buying goods and services from outside
+vocab-outsourcing | /ˈaʊtsɔːrsɪŋ/ | n | paying an external company to do work you would otherwise do
+vocab-subcontractor | /ˈsʌbkəntræktər/ | n | a company hired by the main contractor to do part of the work
+vocab-conflict-of-interest | /ˈkɑːnflɪkt əv ˈɪntrəst/ | n | a situation where personal gain could bias a decision
+vocab-due-diligence | /duː ˈdɪlɪdʒəns/ | n | the careful investigation expected before a commitment
+vocab-governance | /ˈɡʌvərnəns/ | n | the rules and structures by which decisions are made and controlled
+vocab-steering-committee | /ˈstɪrɪŋ kəˈmɪti/ | n | a senior group that gives direction and approves major decisions
+vocab-portfolio | /pɔːrtˈfoʊlioʊ/ | n | the whole collection of projects and programmes an organisation runs
+vocab-pmo | /ˌpiː em ˈoʊ/ | n | the office that standardises and supports project practice
+vocab-burnout | /ˈbɜːrnaʊt/ | n | exhaustion caused by prolonged excessive work
+vocab-async | /eɪˈsɪŋkrənəs/ | adj | not happening at the same time; not requiring people to be present together
+vocab-groupthink | /ˈɡruːpθɪŋk/ | n | poor decisions caused by a group's desire for harmony
+vocab-devils-advocate | /ˈdevlz ˈædvəkət/ | n | someone who argues the opposing case to test an idea
+vocab-veto | /ˈviːtoʊ/ | n | the power to reject a decision single-handedly
+vocab-matrix-organization | /ˈmeɪtrɪks ˌɔːrɡənəˈzeɪʃn/ | n | a structure where people report to both a function and a project
+vocab-functional-manager | /ˈfʌŋkʃənl ˈmænɪdʒər/ | n | the manager of a department or discipline, not of the project
+vocab-resource-contention | /ˈriːsɔːrs kənˈtenʃn/ | n | competition between efforts for the same limited people or equipment
+vocab-context-switching | /ˈkɑːntekst ˈswɪtʃɪŋ/ | n | the productivity loss caused by jumping between different tasks
+vocab-knowledge-transfer | /ˈnɑːlɪdʒ ˈtrænsfɜːr/ | n | deliberately passing know-how from one person to another
+vocab-handover | /ˈhændoʊvər/ | n | the point at which responsibility passes to someone else
+vocab-exit-criteria | /ˈeɡzɪt kraɪˈtɪriə/ | n | the conditions that must be met before a phase can end
+vocab-go-no-go | /ˈɡoʊ noʊ ˈɡoʊ/ | n | a decision point where you either proceed or stop
+vocab-pivot | /ˈpɪvət/ | v | to change direction sharply while keeping what you have learned
+vocab-validate | /ˈvælɪdeɪt/ | v | to confirm that you built the right thing
+vocab-verify | /ˈverɪfaɪ/ | v | to confirm that you built the thing right
+vocab-assumption | /əˈsʌmpʃn/ | n | something taken as true without proof
+vocab-dependency | /dɪˈpendənsi/ | n | a relationship where one item cannot proceed until another does
+vocab-critical-path | /ˈkrɪtɪkl pæθ/ | n | the longest chain of dependent tasks, which sets the finish date
+vocab-buffer | /ˈbʌfər/ | n | spare time or resource kept to absorb variation
+vocab-baseline | /ˈbeɪslaɪn/ | n | the approved reference version against which change is measured
+vocab-corrective-action | /kəˈrektɪv ˈækʃn/ | n | a step taken to bring performance back in line with the plan
+vocab-postmortem | /ˌpoʊstˈmɔːrtəm/ | n | a review held after the work to learn from what happened
+vocab-mura-muri | /ˈmʊrə/ | n | unevenness in flow, which creates waste
+vocab-just-in-time | /ˌdʒʌst ɪn ˈtaɪm/ | adj | produced or delivered exactly when needed, not before
+vocab-value-added | /ˈvæljuː ˈædɪd/ | adj | contributing something the customer would actually pay for

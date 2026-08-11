@@ -7,16 +7,25 @@ import { shuffleArray } from "../../lib/utils.js";
 import { Card, Button } from "../../components/ui/primitives.jsx";
 import { VocabFlashcardCard, VocabChoiceCard, VocabTypeCard } from "./vocabCards.jsx";
 
-export function VocabScreen({ vocabSrs, onUpdateVocabSrs }) {
+/* Ba phạm vi ôn: thẻ đến hạn (mặc định), bộ tự lưu khi làm bài, và toàn bộ termbase.
+   "saved" tách riêng vì đó là những thẻ người học CHỦ ĐỘNG đánh dấu là mình chưa biết — ưu tiên
+   cao hơn nhiều so với 736 thẻ chung. */
+function poolForScope(scope, srsMap, savedMap, now) {
+  if (scope === "saved") return VI_TERM_LIST.filter((tm) => savedMap[tm.id]);
+  if (scope === "due") return VI_TERM_LIST.filter((tm) => isSrsDue(srsMap[tm.id], now));
+  return VI_TERM_LIST;
+}
+
+export function VocabScreen({ vocabSrs, vocabSaved, onUpdateVocabSrs, onToggleVocabSaved }) {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
   const srsMap = vocabSrs || {};
+  const savedMap = vocabSaved || {};
   const [mode, setMode] = useState("flashcard");
-  const [scope, setScope] = useState("due");
-  const [deck, setDeck] = useState(() => {
-    const now = Date.now();
-    return shuffleArray(VI_TERM_LIST.filter((tm) => isSrsDue(srsMap[tm.id], now)));
-  });
+  // Nếu người học đã lưu thẻ nào từ lúc làm bài thì mở thẳng vào bộ đó — đó là thứ họ chủ động
+  // đánh dấu là chưa biết, gần như luôn là thứ họ muốn ôn trước.
+  const [scope, setScope] = useState(() => (Object.keys(savedMap).length ? "saved" : "due"));
+  const [deck, setDeck] = useState(() => shuffleArray(poolForScope(Object.keys(savedMap).length ? "saved" : "due", srsMap, savedMap, Date.now())));
   const [index, setIndex] = useState(0);
   const [sessionStats, setSessionStats] = useState({ correct: 0, incorrect: 0 });
 
@@ -24,13 +33,12 @@ export function VocabScreen({ vocabSrs, onUpdateVocabSrs }) {
     const now = Date.now();
     return VI_TERM_LIST.filter((tm) => isSrsDue(srsMap[tm.id], now)).length;
   }, [srsMap]);
+  const savedCount = useMemo(() => Object.keys(savedMap).length, [savedMap]);
 
   function restart(nextMode = mode, nextScope = scope) {
     setMode(nextMode);
     setScope(nextScope);
-    const now = Date.now();
-    const pool = nextScope === "due" ? VI_TERM_LIST.filter((tm) => isSrsDue(srsMap[tm.id], now)) : VI_TERM_LIST;
-    setDeck(shuffleArray(pool));
+    setDeck(shuffleArray(poolForScope(nextScope, srsMap, savedMap, Date.now())));
     setIndex(0);
     setSessionStats({ correct: 0, incorrect: 0 });
   }
@@ -73,8 +81,12 @@ export function VocabScreen({ vocabSrs, onUpdateVocabSrs }) {
         ))}
       </div>
 
-      <div className="flex gap-1.5">
-        {[{ key: "due", label: t("vocabScopeDue", { n: dueCount }) }, { key: "all", label: t("vocabScopeAll") }].map((f) => (
+      <div className="flex gap-1.5 flex-wrap">
+        {[
+          { key: "due", label: t("vocabScopeDue", { n: dueCount }) },
+          { key: "saved", label: t("vocabScopeSaved", { n: savedCount }) },
+          { key: "all", label: t("vocabScopeAll") },
+        ].map((f) => (
           <button
             key={f.key}
             onClick={() => restart(mode, f.key)}
@@ -92,8 +104,8 @@ export function VocabScreen({ vocabSrs, onUpdateVocabSrs }) {
 
       {deck.length === 0 ? (
         <Card className="text-center py-8">
-          <p className="pmi-display font-semibold text-base mb-2">{t("vocabAllCaughtUp")}</p>
-          <p className="text-sm mb-4" style={{ color: "var(--ink-mid)" }}>{t("vocabAllCaughtUpBody")}</p>
+          <p className="pmi-display font-semibold text-base mb-2">{t(scope === "saved" ? "vocabSavedEmpty" : "vocabAllCaughtUp")}</p>
+          <p className="text-sm mb-4" style={{ color: "var(--ink-mid)" }}>{t(scope === "saved" ? "vocabSavedEmptyBody" : "vocabAllCaughtUpBody")}</p>
           <Button onClick={() => restart(mode, "all")} className={isDesktop ? "w-auto" : "w-full"}>{t("vocabScopeAll")}</Button>
         </Card>
       ) : finished ? (
@@ -109,7 +121,13 @@ export function VocabScreen({ vocabSrs, onUpdateVocabSrs }) {
       ) : mode === "type" ? (
         <VocabTypeCard key={current.id} tm={current} onGrade={grade} />
       ) : (
-        <VocabFlashcardCard key={current.id} tm={current} onGrade={grade} />
+        <VocabFlashcardCard
+          key={current.id}
+          tm={current}
+          onGrade={grade}
+          saved={!!savedMap[current.id]}
+          onToggleSave={() => onToggleVocabSaved(current.id, null, null)}
+        />
       )}
     </div>
   );

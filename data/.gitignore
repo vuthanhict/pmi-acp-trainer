@@ -1,0 +1,13 @@
+# Bản giải nén từ src/lib/embeddedData.js — sinh lại bất cứ lúc nào bằng
+#   node tools/extractEmbedded.mjs
+# nên không commit (tổng ~5,8MB, và luôn có thể suy ra từ nguồn).
+quiz-embed.json
+vi-termbase.json
+vi-enrichment.json
+
+# Kết quả quét tần suất từ, sinh lại bằng: node tools/candidateWords.mjs > data/candidates.txt
+# (hoặc node tools/candidateWordsA1.mjs > data/candidates-a1.txt cho mốc lọc A1)
+candidates.txt
+candidates-a1.txt
+
+# Các file .psv là NGUỒN soạn tay — luôn commit, không bỏ qua.

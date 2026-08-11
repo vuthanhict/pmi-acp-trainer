@@ -29,7 +29,7 @@ export function DataScreen({
     downloadJson(`pmi-acp-progress-${Date.now()}.json`, {
       schemaVersion: progress.schemaVersion, settings: progress.settings, attempts: progress.attempts,
       completedQuizzes: progress.completedQuizzes, activeSession: progress.activeSession, gapSnapshots: progress.gapSnapshots,
-      tracking: progress.tracking, vocabSrs: progress.vocabSrs,
+      tracking: progress.tracking, vocabSrs: progress.vocabSrs, vocabSaved: progress.vocabSaved,
     });
     showToast(t("exportProgress"));
   }
@@ -79,6 +79,9 @@ export function DataScreen({
       <Card>
         <p className="pmi-eyebrow mb-1">{t("overview")}</p>
         <p className="text-xs" style={{ color: "var(--ink-mid)" }}>{t("attemptsCount", { n: progress.attempts.length, m: progress.completedQuizzes.length })}</p>
+        <p className="text-xs mt-0.5" style={{ color: "var(--ink-mid)" }}>
+          {t("vocabDataCount", { saved: Object.keys(progress.vocabSaved || {}).length, drilled: Object.keys(progress.vocabSrs || {}).length })}
+        </p>
         <p className="pmi-mono text-xs mt-1" style={{ color: "var(--ink-soft)" }}>{t("lastUpdated", { t: fmtDate(progress.updatedAt, lang) })}</p>
       </Card>
 

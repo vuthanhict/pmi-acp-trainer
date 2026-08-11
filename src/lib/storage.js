@@ -9,6 +9,11 @@ export const DEFAULT_SUPPORT_USAGE = {
   translationOpenedBeforeAnswer: false,
   terminologyOpenedBeforeAnswer: false,
   postAnswerTranslationOpened: false,
+  // Mở bảng từ vựng của câu TRƯỚC khi trả lời. Ghi nhận riêng, KHÔNG gộp vào `assisted` ở chế độ
+  // Practice/Fill-gap: tra nghĩa một từ tiếng Anh không phải là gợi ý nội dung, và nếu phạt điểm
+  // thì người học sẽ né tính năng — đúng ngược lại mục đích của nó. Ở chế độ Exam thì có tính,
+  // vì thi thật không có từ điển (xem vocabCountsAsAssisted trong QuizRunner).
+  vocabOpenedBeforeAnswer: false,
   assisted: false,
 };
 
@@ -77,7 +82,7 @@ const storage = {
 };
 
 const PROGRESS_KEY = "progress";
-export const PROGRESS_SCHEMA_VERSION = 4;
+export const PROGRESS_SCHEMA_VERSION = 5;
 
 export function defaultProgress() {
   return {
@@ -95,6 +100,11 @@ export function defaultProgress() {
     // Trước schema v4, dữ liệu này nằm ở localStorage riêng (VOCAB_SRS_KEY), không đồng bộ
     // được qua export/import/Drive — migrateProgress() sẽ gộp dữ liệu cũ vào đây một lần.
     vocabSrs: {},
+    // Bộ thẻ người dùng TỰ LƯU khi đang làm bài — key theo termId, value ghi lại lưu lúc nào và
+    // lưu từ câu nào. Tách riêng khỏi vocabSrs vì hai thứ trả lời hai câu hỏi khác nhau: "tôi
+    // muốn học thẻ này" (saved) và "tôi đã thuộc tới đâu" (srs). Một thẻ có thể có srs mà chưa
+    // từng được lưu (ôn ở màn Ôn từ vựng), hoặc được lưu mà chưa ôn lần nào.
+    vocabSaved: {},
     settings: { theme: "light", uiLanguage: "vi", sidebarOpen: true },
     updatedAt: null,
   };
@@ -116,6 +126,9 @@ export function migrateProgress(raw) {
   // đã có vocabSrs (đã migrate trước đó, hoặc phục hồi từ backup mới) thì giữ nguyên; chỉ đọc
   // từ localStorage cũ khi đây là lần đầu nâng cấp lên v4.
   base.vocabSrs = raw.vocabSrs && Object.keys(raw.vocabSrs).length ? raw.vocabSrs : loadLegacyVocabSrs();
+  // v4 → v5: thêm `vocabSaved` (bộ thẻ tự lưu khi làm bài). Backup cũ không có trường này nạp
+  // bình thường, chỉ là bộ tự lưu rỗng — không đụng tới vocabSrs đã có.
+  base.vocabSaved = raw.vocabSaved || {};
   base.schemaVersion = PROGRESS_SCHEMA_VERSION;
   return base;
 }
@@ -136,6 +149,9 @@ export function mergeProgressData(base, data) {
       examDate: base.tracking?.examDate ?? data.tracking?.examDate ?? null,
     },
     vocabSrs: mergeVocabSrs(base.vocabSrs, data.vocabSrs),
+    // Bộ thẻ tự lưu là hợp của 2 nguồn — giữ lần lưu SỚM NHẤT của mỗi thẻ để "lưu từ câu nào"
+    // vẫn trỏ đúng về câu hỏi đầu tiên khiến người học muốn học từ đó.
+    vocabSaved: mergeVocabSaved(base.vocabSaved, data.vocabSaved),
     settings: { ...base.settings, ...(data.settings || {}) },
   };
   return { merged, addedCount: newAttempts.length };
@@ -151,6 +167,14 @@ export function mergeVocabSrs(base, incoming) {
     const curScore = (cur.reviewCount || 0) * 100 + (cur.box || 0);
     const recScore = (rec.reviewCount || 0) * 100 + (rec.box || 0);
     if (recScore > curScore) merged[id] = rec;
+  }
+  return merged;
+}
+export function mergeVocabSaved(base, incoming) {
+  const merged = { ...(base || {}) };
+  for (const [id, rec] of Object.entries(incoming || {})) {
+    const cur = merged[id];
+    if (!cur || (rec.savedAt || "") < (cur.savedAt || "")) merged[id] = rec;
   }
   return merged;
 }

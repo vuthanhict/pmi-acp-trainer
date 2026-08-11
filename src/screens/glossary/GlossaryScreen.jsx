@@ -3,6 +3,8 @@ import { useAppCtx } from "../../context/AppContext.jsx";
 import { useIsDesktop, useIsWide } from "../../hooks/useViewport.js";
 import { VI_TERM_LIST } from "../../lib/embeddedData.js";
 import { Card, Icon } from "../../components/ui/primitives.jsx";
+import { SpeakButton } from "../../components/vocab/SpeakButton.jsx";
+import { RATE_SENTENCE } from "../../lib/speech.js";
 
 /* ===================== Glossary Screen ===================== */
 export function GlossaryScreen() {
@@ -54,17 +56,28 @@ export function GlossaryScreen() {
                 <div className="flex items-center justify-between">
                   <div className="min-w-0">
                     <p className="pmi-display font-medium text-sm truncate">{en}</p>
+                    {tm.ipa && <p className="pmi-mono text-[11px] truncate" style={{ color: "var(--sky)" }}>{tm.ipa}</p>}
                     {tm.translationVi && tm.translationVi !== en && <p className="text-xs italic truncate" style={{ color: "var(--ink-soft)" }}>{tm.translationVi}</p>}
                   </div>
-                  <Icon name={isOpen ? "chevronUp" : "chevronDown"} size={15} style={{ color: "var(--ink-soft)" }} className="shrink-0 ml-2" />
+                  <div className="flex items-center shrink-0 ml-2">
+                    <SpeakButton text={en} title={t("speakWord")} />
+                    <Icon name={isOpen ? "chevronUp" : "chevronDown"} size={15} style={{ color: "var(--ink-soft)" }} />
+                  </div>
                 </div>
                 {isOpen && (
                   <div className="mt-2 space-y-1.5">
-                    <p className="text-xs" style={{ color: "var(--ink-mid)" }}>{tm.definitionVi}</p>
+                    {tm.senseEn && (
+                      <p className="text-xs" style={{ color: "var(--ink-mid)" }}>
+                        <span className="pmi-mono text-[9px] font-bold mr-1.5" style={{ color: "var(--ink-soft)" }}>EN</span>
+                        {tm.senseEn}
+                      </p>
+                    )}
+                    <p className="text-xs" style={{ color: "var(--ink)" }}>{tm.definitionVi}</p>
                     {tm.exampleEn && (
-                      <p className="text-xs italic" style={{ color: "var(--ink-soft)" }}>
-                        <span className="pmi-mono not-italic text-[10px] mr-1" style={{ color: "var(--sky)" }}>{t("vocabExampleLabel")}</span>
-                        “{tm.exampleEn}”
+                      <p className="text-xs italic flex items-start gap-1" style={{ color: "var(--ink-soft)" }}>
+                        <span className="pmi-mono not-italic text-[10px] mr-1 shrink-0" style={{ color: "var(--sky)" }}>{t("vocabExampleLabel")}</span>
+                        <span className="flex-1">“{tm.exampleEn}”</span>
+                        <SpeakButton text={tm.exampleEn} rate={RATE_SENTENCE} size={13} title={t("speakExample")} />
                       </p>
                     )}
                   </div>

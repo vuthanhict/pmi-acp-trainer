@@ -10,6 +10,10 @@ import { Card, Button, ProgressBar, Icon } from "../../components/ui/primitives.
 import {
   BilingualToggle, BilingualStemBlock, ChoiceViLine, ExplanationText, BilingualAnswerBlock,
 } from "../../components/bilingual/BilingualWidgets.jsx";
+import { VocabPanelButton, VocabPanelSheet } from "../../components/vocab/QuestionVocabPanel.jsx";
+import { InlineVocabText } from "../../components/vocab/InlineVocabText.jsx";
+import { TermPopover } from "../../components/vocab/TermDetail.jsx";
+import { questionVocabTerms } from "../../lib/questionVocab.js";
 
 /* ===================== Matching-question widget (3/1.470 câu, không chấm điểm) ===================== */
 const DRAG_THRESHOLD_PX = 6;
@@ -312,7 +316,7 @@ export function PaletteBody({ questions, filteredIndices, paletteFilter, setPale
   );
 }
 
-export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, onFinish, onExit, showToast }) {
+export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, onFinish, onExit, showToast, vocabSaved, onToggleVocabSaved }) {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
   const isWide = useIsWide();
@@ -324,6 +328,9 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [viOn, setViOn] = useState(false);
   const [expandedTerm, setExpandedTerm] = useState(null);
+  const [vocabOpen, setVocabOpen] = useState(false);
+  // Từ đang được tra bằng cách chạm thẳng vào đề: { termId, rect, fromChoiceId }
+  const [inlineTerm, setInlineTerm] = useState(null);
   const [pendingHelp, setPendingHelp] = useState(null);
   const [showPalette, setShowPalette] = useState(false);
   const [paletteFilter, setPaletteFilter] = useState("all");
@@ -339,6 +346,7 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
         translation: !!ex?.supportUsage?.translationOpenedBeforeAnswer,
         terminology: !!ex?.supportUsage?.terminologyOpenedBeforeAnswer,
         postTranslation: !!ex?.supportUsage?.postAnswerTranslationOpened,
+        vocab: !!ex?.supportUsage?.vocabOpenedBeforeAnswer,
       });
     }
     return helpMemoryRef.current.get(qid);
@@ -347,7 +355,12 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
   const q = questions[idx];
   const isMatching = q?.interactionType === "matching";
   const isExam = session.mode === "exam";
+  // Tra từ vựng chỉ bị tính là "có trợ giúp" ở chế độ Exam — thi thật thì không có từ điển. Ở
+  // Practice/Fill-gap thì không tính, để người học thoải mái tra từ mà không sợ mất điểm "độc lập".
+  const vocabCountsAsAssisted = isExam;
   const sessionAttempts = useMemo(() => attempts.filter((a) => a.sessionId === session.sessionId), [attempts, session.sessionId]);
+  const savedVocabIds = useMemo(() => new Set(Object.keys(vocabSaved || {})), [vocabSaved]);
+  const inlineTerms = useMemo(() => (q ? questionVocabTerms(q.id, revealed) : []), [q, revealed]);
   const existing = useMemo(() => sessionAttempts.find((a) => a.questionId === q?.id), [sessionAttempts, q]);
   const answeredThisQuestion = session.answeredQuestionIds.includes(q?.id);
   const visitedIds = session.visitedQuestionIds || [];
@@ -365,6 +378,8 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
     setRevealed(session.mode !== "exam" && !!existing && existing.gradeStatus !== "pending");
     setViOn(false);
     setExpandedTerm(null);
+    setVocabOpen(false);
+    setInlineTerm(null);
     if (q && !visitedIds.includes(q.id)) onUpdateSession({ visitedQuestionIds: [...visitedIds, q.id] });
     function onVis() {
       const n = performance.now();
@@ -402,11 +417,17 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
     const translationOpenedBeforeAnswer = priorSupport.translationOpenedBeforeAnswer || mem.translation;
     const terminologyOpenedBeforeAnswer = priorSupport.terminologyOpenedBeforeAnswer || mem.terminology;
     const postAnswerTranslationOpened = priorSupport.postAnswerTranslationOpened || mem.postTranslation;
+    const vocabOpenedBeforeAnswer = priorSupport.vocabOpenedBeforeAnswer || mem.vocab;
     return {
       translationOpenedBeforeAnswer,
       terminologyOpenedBeforeAnswer,
       postAnswerTranslationOpened,
-      assisted: translationOpenedBeforeAnswer || terminologyOpenedBeforeAnswer || priorSupport.assisted,
+      vocabOpenedBeforeAnswer,
+      assisted:
+        translationOpenedBeforeAnswer
+        || terminologyOpenedBeforeAnswer
+        || (vocabCountsAsAssisted && vocabOpenedBeforeAnswer)
+        || priorSupport.assisted,
     };
   }
 
@@ -485,12 +506,44 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
     }
     applyExpandTerm(termId, relevant);
   }
+  function applyVocabOpen(relevant) {
+    setVocabOpen(true);
+    if (relevant) {
+      const mem = getHelpMemory(q.id);
+      mem.vocab = true;
+      if (existing) onSaveAttempt({ ...existing, supportUsage: currentSupportUsageFor(mem) });
+    }
+  }
+  function requestVocabOpen() {
+    const relevant = !answeredThisQuestion;
+    // Cảnh báo chỉ bật ở Exam, và chỉ khi việc mở thật sự ảnh hưởng tới điểm của câu này.
+    if (vocabCountsAsAssisted && relevant && !session.assistedWarningAcknowledged) {
+      setPendingHelp({ kind: "vocab", value: true });
+      return;
+    }
+    applyVocabOpen(relevant);
+  }
   function confirmPendingHelp() {
     onUpdateSession({ assistedWarningAcknowledged: true });
     const relevant = !answeredThisQuestion;
     if (pendingHelp.kind === "translation") applyViOn(pendingHelp.value, relevant);
+    else if (pendingHelp.kind === "vocab") applyVocabOpen(relevant);
     else applyExpandTerm(pendingHelp.value, relevant);
     setPendingHelp(null);
+  }
+  /* Chạm vào một từ trong đề. Dùng chung luật ghi nhận trợ giúp với bảng từ vựng: cùng là tra
+     nghĩa tiếng Anh, nên không thể chỗ này tính chỗ kia không. */
+  function pickInlineTerm(termId, rect, fromChoiceId) {
+    const relevant = !answeredThisQuestion;
+    if (relevant) {
+      const mem = getHelpMemory(q.id);
+      mem.vocab = true;
+      if (existing) onSaveAttempt({ ...existing, supportUsage: currentSupportUsageFor(mem) });
+    }
+    setInlineTerm({ termId, rect, fromChoiceId });
+  }
+  function toggleVocabSaved(termId) {
+    onToggleVocabSaved(termId, q.id, q.quizIndex);
   }
   if (!q) return <div className="pt-4 text-sm" style={{ color: "var(--ink-soft)" }}>—</div>;
 
@@ -559,14 +612,28 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
       <ProgressBar value={answeredCount / questions.length} className="mb-4" />
 
       {isMatching ? (
-        <MatchingQuestion question={q} mode={session.mode} />
+        <>
+          {/* Câu ghép nối không có khối song ngữ, nhưng vẫn cần tra từ vựng như mọi câu khác. */}
+          <div className="flex justify-end mb-2">
+            <VocabPanelButton questionId={q.id} includePost={false} onClick={requestVocabOpen} compact />
+          </div>
+          <MatchingQuestion question={q} mode={session.mode} />
+        </>
       ) : (
         <Card className="mb-3">
           {q.manualReview && <p className="text-xs mb-2 flex items-center gap-1" style={{ color: "var(--seal-fg)" }}><Icon name="warn" size={13} /> {t("manualReviewWarn")}</p>}
-          <div className="flex justify-end mb-2">
+          <div className="flex justify-end gap-1.5 mb-2 flex-wrap">
+            <VocabPanelButton questionId={q.id} includePost={revealed} onClick={requestVocabOpen} compact />
             <BilingualToggle on={viOn} onClick={() => requestViOn(!viOn)} compact />
           </div>
-          <p className="text-sm leading-relaxed mb-1 whitespace-pre-wrap">{q.stem}</p>
+          <p className="text-sm leading-relaxed mb-1 whitespace-pre-wrap">
+            <InlineVocabText
+              text={q.stem}
+              terms={inlineTerms}
+              activeTermId={inlineTerm?.termId}
+              onPickTerm={(id, rect) => pickInlineTerm(id, rect, null)}
+            />
+          </p>
           {viOn && <BilingualStemBlock viItem={VI_ITEM_INDEX.get(q.id)} expandedTerm={expandedTerm} onExpandTerm={requestExpandTerm} />}
           <div className="space-y-2 mt-3">
             {q.choices.map((c) => {
@@ -590,7 +657,12 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
                 >
                   <span className="pmi-choice-letter uppercase shrink-0">{c.id}.</span>
                   <span className="flex-1">
-                    {c.text}
+                    <InlineVocabText
+                      text={c.text}
+                      terms={inlineTerms}
+                      activeTermId={inlineTerm?.termId}
+                      onPickTerm={(id, rect) => pickInlineTerm(id, rect, cid)}
+                    />
                     {viOn && <ChoiceViLine questionId={q.id} choiceId={c.id} />}
                   </span>
                   {revealed && isCorrectChoice && <Icon name="check" size={16} style={{ color: "var(--sage)" }} className="shrink-0" />}
@@ -733,11 +805,45 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
         </div>
       )}
 
+      {inlineTerm && (
+        <TermPopover
+          termId={inlineTerm.termId}
+          anchorRect={inlineTerm.rect}
+          saved={savedVocabIds.has(inlineTerm.termId)}
+          onToggleSave={toggleVocabSaved}
+          onClose={() => setInlineTerm(null)}
+          extraAction={
+            // Chạm nhầm vào một từ nằm trong đáp án chưa chọn thì cho chọn luôn ngay tại popup,
+            // thay vì bắt đóng popup rồi chạm lại vào chỗ không có gạch chân.
+            inlineTerm.fromChoiceId && !revealed && !selected.includes(inlineTerm.fromChoiceId)
+              ? {
+                  label: t("vocabPickThisChoice", { id: inlineTerm.fromChoiceId.toUpperCase() }),
+                  onClick: () => { toggleChoice(inlineTerm.fromChoiceId); setInlineTerm(null); },
+                }
+              : null
+          }
+        />
+      )}
+
+      {vocabOpen && (
+        <VocabPanelSheet
+          questionId={q.id}
+          includePost={revealed}
+          savedIds={savedVocabIds}
+          onToggleSave={toggleVocabSaved}
+          onClose={() => setVocabOpen(false)}
+        />
+      )}
+
       {pendingHelp && (
         <div className={`fixed inset-0 flex ${isDesktop ? "items-center" : "items-end"} justify-center z-50`} style={{ background: "rgba(22,35,63,0.4)" }} onClick={() => setPendingHelp(null)}>
           <div className={`pmi-card ${isDesktop ? "rounded-lg" : "rounded-t-2xl"} p-5 w-full max-w-md`} onClick={(e) => e.stopPropagation()}>
-            <p className="pmi-display font-semibold mb-1">{t("assistedConfirmTitle")}</p>
-            <p className="text-xs mb-4" style={{ color: "var(--ink-mid)" }}>{t("assistedConfirmBody")}</p>
+            <p className="pmi-display font-semibold mb-1">
+              {t(pendingHelp.kind === "vocab" ? "assistedConfirmTitleVocab" : "assistedConfirmTitle")}
+            </p>
+            <p className="text-xs mb-4" style={{ color: "var(--ink-mid)" }}>
+              {t(pendingHelp.kind === "vocab" ? "assistedConfirmBodyVocab" : "assistedConfirmBody")}
+            </p>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => setPendingHelp(null)} className="flex-1">{t("cancelBtn")}</Button>
               <Button onClick={confirmPendingHelp} className="flex-1">{t("assistedConfirmOk")}</Button>

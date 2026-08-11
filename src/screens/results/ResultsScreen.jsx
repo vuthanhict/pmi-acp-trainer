@@ -8,12 +8,18 @@ import { Card, Icon, Button, DeltaChip } from "../../components/ui/primitives.js
 import {
   BilingualToggle, BilingualStemBlock, ChoiceViLine, ExplanationText, BilingualAnswerBlock,
 } from "../../components/bilingual/BilingualWidgets.jsx";
+import { VocabPanelButton, VocabPanelSheet } from "../../components/vocab/QuestionVocabPanel.jsx";
+import { InlineVocabText } from "../../components/vocab/InlineVocabText.jsx";
+import { TermPopover } from "../../components/vocab/TermDetail.jsx";
+import { questionVocabTerms } from "../../lib/questionVocab.js";
 
 /* ===================== Review Question Card (dùng trong Results Screen) ===================== */
-export function ReviewQuestionCard({ item }) {
+export function ReviewQuestionCard({ item, savedVocabIds, onToggleVocabSaved }) {
   const { t, lang } = useAppCtx();
   const [viOn, setViOn] = useState(false);
   const [expandedTerm, setExpandedTerm] = useState(null);
+  const [vocabOpen, setVocabOpen] = useState(false);
+  const [inlineTerm, setInlineTerm] = useState(null);
   const questionId = item.kind === "unanswered" || item.kind === "matching" ? item.q.id : item.a.questionId;
   const q = item.kind === "unanswered" || item.kind === "matching" ? item.q : QUESTION_INDEX.get(questionId);
   if (!q) return null;
@@ -23,6 +29,8 @@ export function ReviewQuestionCard({ item }) {
   const matchingParsed = item.kind === "matching" ? parseMatchingQuestion(q) : null;
   const selectedIds = item.kind === "unanswered" || item.kind === "matching" ? [] : (item.a.selectedOptionIds || []).map(normOpt);
   const correctIds = (q.correctOptionIds || []).map(normOpt);
+  // Lúc xem lại thì mọi thứ đã lộ, nên gạch chân cả thẻ lấy từ phần giải thích.
+  const inlineTerms = questionVocabTerms(questionId, true);
   return (
     <Card id={q.questionNumber ? `rev-q-${q.questionNumber}` : undefined}>
       <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -30,10 +38,37 @@ export function ReviewQuestionCard({ item }) {
         <span className={`pmi-chip ${badgeStyle}`}>{badgeLabel}</span>
         {item.kind !== "unanswered" && item.kind !== "matching" && item.a.supportUsage?.assisted && <span className="pmi-chip pmi-status-developing">{t("assistedBadge")}</span>}
       </div>
-      <div className="flex justify-end mb-2">
+      <div className="flex justify-end gap-1.5 mb-2 flex-wrap">
+        {/* Lúc xem lại thì mọi thứ đã lộ, nên bảng từ vựng gồm cả thẻ lấy từ phần giải thích. */}
+        <VocabPanelButton questionId={questionId} includePost onClick={() => setVocabOpen(true)} compact />
         <BilingualToggle on={viOn} onClick={() => setViOn((o) => !o)} compact />
       </div>
-      <p className="text-sm mb-1 whitespace-pre-wrap">{matchingParsed ? matchingParsed.intro || q.stem : q.stem}</p>
+      {inlineTerm && (
+        <TermPopover
+          termId={inlineTerm.termId}
+          anchorRect={inlineTerm.rect}
+          saved={savedVocabIds?.has(inlineTerm.termId)}
+          onToggleSave={(termId) => onToggleVocabSaved(termId, questionId, q.quizIndex)}
+          onClose={() => setInlineTerm(null)}
+        />
+      )}
+      {vocabOpen && (
+        <VocabPanelSheet
+          questionId={questionId}
+          includePost
+          savedIds={savedVocabIds}
+          onToggleSave={(termId) => onToggleVocabSaved(termId, questionId, q.quizIndex)}
+          onClose={() => setVocabOpen(false)}
+        />
+      )}
+      <p className="text-sm mb-1 whitespace-pre-wrap">
+        <InlineVocabText
+          text={matchingParsed ? matchingParsed.intro || q.stem : q.stem}
+          terms={inlineTerms}
+          activeTermId={inlineTerm?.termId}
+          onPickTerm={(id, rect) => setInlineTerm({ termId: id, rect })}
+        />
+      </p>
       {viOn && <BilingualStemBlock viItem={viItem} expandedTerm={expandedTerm} onExpandTerm={setExpandedTerm} />}
       {item.kind === "unanswered" && <p className="pmi-mono text-xs mb-2" style={{ color: "var(--ink-soft)" }}>{t("notAnsweredLabel")}</p>}
       {item.kind !== "unanswered" && item.kind !== "matching" && (
@@ -62,7 +97,12 @@ export function ReviewQuestionCard({ item }) {
               <div key={c.id} className={`pmi-choice w-full px-3 py-2.5 text-sm flex items-start gap-2 ${stateCls}`}>
                 <span className="pmi-choice-letter uppercase shrink-0">{c.id}.</span>
                 <span className="flex-1">
-                  {c.text}
+                  <InlineVocabText
+                    text={c.text}
+                    terms={inlineTerms}
+                    activeTermId={inlineTerm?.termId}
+                    onPickTerm={(id, rect) => setInlineTerm({ termId: id, rect })}
+                  />
                   {viOn && <ChoiceViLine questionId={questionId} choiceId={c.id} />}
                 </span>
                 {isCorrectChoice && <Icon name="check" size={15} style={{ color: "var(--sage)" }} className="shrink-0" />}
@@ -89,7 +129,7 @@ export function ReviewQuestionCard({ item }) {
 }
 
 /* ===================== Results Screen ===================== */
-export function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel }) {
+export function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel, onToggleVocabSaved }) {
   const { t, lang } = useAppCtx();
   const [filter, setFilter] = useState("all");
   const [mindsetOpen, setMindsetOpen] = useState(false);
@@ -105,6 +145,7 @@ export function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel })
       .sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
     return earlier.length ? earlier[earlier.length - 1] : null;
   }, [entry, progress.completedQuizzes]);
+  const savedVocabIds = useMemo(() => new Set(Object.keys(progress.vocabSaved || {})), [progress.vocabSaved]);
   const sessAttempts = progress.attempts.filter((a) => a.sessionId === sessionId);
   const wrong = sessAttempts.filter((a) => a.gradeStatus === "graded" && !a.isCorrect);
   const correctList = sessAttempts.filter((a) => a.gradeStatus === "graded" && a.isCorrect);
@@ -277,7 +318,14 @@ export function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel })
         <div className="space-y-2">
           {reviewItems.map((item) => {
             const questionId = item.kind === "unanswered" || item.kind === "matching" ? item.q.id : item.a.questionId;
-            return <ReviewQuestionCard key={questionId} item={item} />;
+            return (
+              <ReviewQuestionCard
+                key={questionId}
+                item={item}
+                savedVocabIds={savedVocabIds}
+                onToggleVocabSaved={onToggleVocabSaved}
+              />
+            );
           })}
         </div>
       )}

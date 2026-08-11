@@ -83,6 +83,12 @@ export function Icon({ name, size = 18, className = "" }) {
     calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></>,
     trend: <><path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" /></>,
     gauge: <><path d="M12 21a9 9 0 100-18 9 9 0 000 18z" /><path d="M12 12l4-4" /></>,
+    volume: <><path d="M11 5L6 9H3v6h3l5 4V5z" /><path d="M16 9a4 4 0 010 6" /></>,
+    // Thêm một vòng sóng nữa khi đang phát — phân biệt bằng hình, không chỉ bằng màu.
+    volumeOn: <><path d="M11 5L6 9H3v6h3l5 4V5z" /><path d="M16 9a4 4 0 010 6" /><path d="M19 6a8 8 0 010 12" /></>,
+    star: <path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3z" />,
+    // Bản tô đặc — dùng khi thẻ đã được lưu, để phân biệt bằng cả hình khối chứ không chỉ bằng màu.
+    starFilled: <path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9L12 3z" fill="currentColor" />,
   };
   return <svg {...common}>{paths[name]}</svg>;
 }

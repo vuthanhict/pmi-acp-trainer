@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useAppCtx } from "../../context/AppContext.jsx";
 import { Icon } from "../ui/primitives.jsx";
+import { SpeakButton } from "../vocab/SpeakButton.jsx";
+import { RATE_SENTENCE } from "../../lib/speech.js";
 import { VI_TERM_INDEX, VI_ITEM_INDEX } from "../../lib/embeddedData.js";
 
 /* ===================== Vietnamese support (inline) ===================== */
@@ -87,7 +89,10 @@ export function BilingualStemBlock({ viItem, expandedTerm, onExpandTerm }) {
 /* song ngữ đã bật (không cần bấm thêm 1 nút "mở" riêng như thiết kế cũ nữa).                    */
 export function BilingualAnswerBlock({ viItem }) {
   const { t } = useAppCtx();
-  if (!viItem) return null;
+  // Trước đây return null ở đây: khi câu chưa có gói dịch (đề 89/90 hiện chưa có), nút "Song ngữ"
+  // ngay phía trên cũng tự ẩn vì nó chỉ hiện lúc !viOn — kết quả là bấm nút xong không còn gì
+  // trên màn hình, trông y hệt một lỗi. Đồng bộ với BilingualStemBlock: luôn báo rõ lý do.
+  if (!viItem) return <p className="text-xs mt-2 mb-2" style={{ color: "var(--ink-soft)" }}>{t("viNoData")}</p>;
   return (
     <div className="mt-2 p-3 rounded-lg" style={{ background: "var(--sky-tint)", border: "1px solid var(--sky)" }}>
       <p className="pmi-mono text-[10px] font-bold tracking-wide mb-1.5" style={{ color: "var(--sky)" }}>{t("viBlockLabel")}</p>
@@ -103,12 +108,17 @@ export function TermDefinitionCard({ termId }) {
   const en = (t.sourceTerms && t.sourceTerms[0]) || t.termVi;
   return (
     <div className="mt-2 text-xs pl-2" style={{ borderLeft: "2px solid var(--line-strong)" }}>
-      <p className="font-semibold">{en}</p>
+      <p className="font-semibold flex items-center gap-1">
+        <span>{en}</span>
+        {t.ipa && <span className="pmi-mono font-normal text-[10px]" style={{ color: "var(--sky)" }}>{t.ipa}</span>}
+        <SpeakButton text={en} size={13} title={tt("speakWord")} />
+      </p>
       <p className="mt-0.5" style={{ color: "var(--ink-mid)" }}>{t.definitionVi}</p>
       {t.exampleEn && (
-        <p className="mt-1 italic" style={{ color: "var(--ink-soft)" }}>
-          <span className="pmi-mono not-italic text-[10px] mr-1" style={{ color: "var(--sky)" }}>{tt("vocabExampleLabel")}</span>
-          “{t.exampleEn}”
+        <p className="mt-1 italic flex items-start gap-1" style={{ color: "var(--ink-soft)" }}>
+          <span className="pmi-mono not-italic text-[10px] mr-1 shrink-0" style={{ color: "var(--sky)" }}>{tt("vocabExampleLabel")}</span>
+          <span className="flex-1">“{t.exampleEn}”</span>
+          <SpeakButton text={t.exampleEn} rate={RATE_SENTENCE} size={12} title={tt("speakExample")} />
         </p>
       )}
     </div>
