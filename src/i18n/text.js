@@ -22,7 +22,7 @@ export const UI_TEXT = {
 
     // Library
     stage: "GIAI ĐOẠN", questionsShort: "câu", attemptedTimes: "đã làm {n} lần", notAttempted: "chưa làm", lastScore: "gần nhất {p}%",
-    examBtn: "Exam", practiceBtn: "Practice", historyOfQuizBtn: "Lịch sử",
+    examBtn: "Exam", practiceBtn: "Practice", historyOfQuizBtn: "Lịch sử", mistakesOfQuizBtn: "Câu hay sai",
 
     // History
     historyTitle: "Lịch sử làm bài", historyEmpty: "Chưa có lần làm bài nào. Hãy bắt đầu một đề trong Thư viện.",
@@ -219,6 +219,16 @@ export const UI_TEXT = {
     todayAction_final_review: "Mọi mốc bắt buộc đã đạt — ôn nhẹ task còn yếu và từ vựng đã lưu.",
     todayAction_rest: "Ôn thật nhẹ, ngủ đủ giấc — đừng nhồi nhét lúc này.",
 
+    // Câu hay sai (theo đề) — xem MistakeReviewScreen
+    mistakeReviewHeader: "CÂU HAY SAI", mistakeReviewBackBtn: "Quay lại Thư viện",
+    mistakeReviewEmpty: "Chưa có câu nào từng làm sai trong đề này.",
+    mistakeReviewSummary: "{repeat} câu sai từ 2 lần trở lên · {once} câu mới sai 1 lần.",
+    mistakeReviewPracticeBtn: "Luyện lại {n} câu này",
+    mistakeReviewRepeatHeader: "SAI LẶP LẠI (≥2 LẦN)",
+    mistakeReviewOnceHeader: "MỚI SAI 1 LẦN",
+    mistakeReviewRowStats: "Sai {wrong}/{total} lần",
+    mistakeReviewLastCorrect: "lần gần nhất: đúng", mistakeReviewLastWrong: "lần gần nhất: sai",
+
     masteryTrendHeader: "MASTERY THEO DOMAIN",
     masteryTrendEmpty: "Cần ít nhất 2 lần nộp bài để vẽ diễn biến mastery.",
 
@@ -250,7 +260,7 @@ export const UI_TEXT = {
     accuracyLabel: "accuracy", practiceGapBtn: "Practice GAP",
 
     stage: "STAGE", questionsShort: "questions", attemptedTimes: "attempted {n}x", notAttempted: "not attempted", lastScore: "last {p}%",
-    examBtn: "Exam", practiceBtn: "Practice", historyOfQuizBtn: "History",
+    examBtn: "Exam", practiceBtn: "Practice", historyOfQuizBtn: "History", mistakesOfQuizBtn: "Frequent mistakes",
 
     // History
     historyTitle: "Attempt history", historyEmpty: "No attempts yet. Start an exam from the Library.",
@@ -438,6 +448,16 @@ export const UI_TEXT = {
     todayAction_wait_cooldown: "{quizName} unlocks Exam mode from {date} — drill GAP in the meantime so the day isn't wasted.",
     todayAction_final_review: "Every required milestone is met — lightly review the tasks still weak and your saved vocab.",
     todayAction_rest: "Keep it light, sleep well — don't cram at this point.",
+
+    // Frequent mistakes (per exam) — see MistakeReviewScreen
+    mistakeReviewHeader: "FREQUENT MISTAKES", mistakeReviewBackBtn: "Back to Library",
+    mistakeReviewEmpty: "No question in this exam has been answered wrong yet.",
+    mistakeReviewSummary: "{repeat} question(s) missed 2+ times · {once} question(s) missed once.",
+    mistakeReviewPracticeBtn: "Redo these {n} questions",
+    mistakeReviewRepeatHeader: "REPEATED MISTAKES (2+)",
+    mistakeReviewOnceHeader: "MISSED ONCE",
+    mistakeReviewRowStats: "Missed {wrong}/{total} times",
+    mistakeReviewLastCorrect: "last attempt: correct", mistakeReviewLastWrong: "last attempt: wrong",
 
     masteryTrendHeader: "MASTERY BY DOMAIN",
     masteryTrendEmpty: "Need at least 2 submitted sessions to chart mastery over time.",

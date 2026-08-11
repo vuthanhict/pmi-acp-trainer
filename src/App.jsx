@@ -8,6 +8,7 @@ import { FillGapScreen } from "./screens/gap/GapScreen.jsx";
 import { ProgressScreen } from "./screens/progress/ProgressScreen.jsx";
 import { TodayScreen } from "./screens/today/TodayScreen.jsx";
 import { LibraryScreen } from "./screens/library/LibraryScreen.jsx";
+import { MistakeReviewScreen } from "./screens/library/MistakeReviewScreen.jsx";
 import { HistoryScreen } from "./screens/history/HistoryScreen.jsx";
 import { GlossaryScreen } from "./screens/glossary/GlossaryScreen.jsx";
 import { DataScreen } from "./screens/data/DataScreen.jsx";
@@ -55,6 +56,7 @@ function App() {
   const [lastSessionId, setLastSessionId] = useState(null);
   const [resultsReturnView, setResultsReturnView] = useState("today");
   const [historyQuizFilter, setHistoryQuizFilter] = useState(null);
+  const [mistakeReviewQuizIndex, setMistakeReviewQuizIndex] = useState(null);
   const [driveConnectedState, setDriveConnectedState] = useState(false);
   const [driveBusy, setDriveBusy] = useState(false);
   const [driveError, setDriveError] = useState(null);
@@ -613,8 +615,25 @@ function App() {
                     onQuickPractice={startQuickPractice}
                   />
                 )}
-                {view === "library" && <LibraryScreen progress={progress} onOpenQuiz={(qi, mode) => startQuizSession(qi, mode)} onOpenHistory={(qi) => { setHistoryQuizFilter(qi); setView("history"); }} />}
+                {view === "library" && (
+                  <LibraryScreen
+                    progress={progress}
+                    onOpenQuiz={(qi, mode) => startQuizSession(qi, mode)}
+                    onOpenHistory={(qi) => { setHistoryQuizFilter(qi); setView("history"); }}
+                    onOpenMistakes={(qi) => { setMistakeReviewQuizIndex(qi); setView("mistakes"); }}
+                  />
+                )}
                 {view === "history" && <HistoryScreen progress={progress} initialQuizFilter={historyQuizFilter} onOpenEntry={openHistoryEntry} />}
+                {view === "mistakes" && mistakeReviewQuizIndex != null && (
+                  <MistakeReviewScreen
+                    progress={progress}
+                    quizIndex={mistakeReviewQuizIndex}
+                    quizName={QUIZ_CATALOG.find((c) => c.quizIndex === mistakeReviewQuizIndex)?.quizName || ""}
+                    onBack={() => setView("library")}
+                    onPracticeMistakes={(ids) => startFillGapSession(ids, ids.length)}
+                    onToggleVocabSaved={toggleVocabSaved}
+                  />
+                )}
                 {view === "quiz" && progress.activeSession && (
                   <QuizRunner
                     session={progress.activeSession}

@@ -6,7 +6,7 @@ import { Card, Button, Icon, TierChip } from "../../components/ui/primitives.jsx
 import { AttemptSparkline } from "../progress/trackingWidgets.jsx";
 
 /* ===================== Library Screen ===================== */
-export function LibraryScreen({ progress, onOpenQuiz, onOpenHistory }) {
+export function LibraryScreen({ progress, onOpenQuiz, onOpenHistory, onOpenMistakes }) {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
   const isWide = useIsWide();
@@ -68,6 +68,11 @@ export function LibraryScreen({ progress, onOpenQuiz, onOpenHistory }) {
                     {attempts > 0 && (
                       <Button onClick={() => onOpenHistory(c.quizIndex)} variant="ghost" className="shrink-0" title={t("historyOfQuizBtn")}>
                         <Icon name="clock" size={16} />
+                      </Button>
+                    )}
+                    {attempts > 0 && (
+                      <Button onClick={() => onOpenMistakes(c.quizIndex)} variant="ghost" className="shrink-0" title={t("mistakesOfQuizBtn")}>
+                        <Icon name="warn" size={16} />
                       </Button>
                     )}
                   </div>
