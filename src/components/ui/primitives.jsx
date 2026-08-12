@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAppCtx } from "../../context/AppContext.jsx";
 import { useIsDesktop } from "../../hooks/useViewport.js";
 import { STATUS_LABEL, TIER_LABEL } from "../../i18n/text.js";
@@ -136,6 +137,41 @@ export function Button({ children, onClick, variant = "primary", className = "",
     <button title={title} onClick={onClick} disabled={disabled} className={`pmi-btn pmi-focusable ${cls} px-4 py-2.5 ${className}`}>
       {children}
     </button>
+  );
+}
+/* Ảnh minh họa trong thân câu hỏi (vd. radar chart): mặc định hiện nhỏ để tiết kiệm không gian,
+   đặc biệt trên mobile — bấm vào để xem popup full-size, bấm ra ngoài hoặc bấm lại để đóng. */
+export function QuestionImage({ src, alt }) {
+  const [open, setOpen] = useState(false);
+  if (!src) return null;
+  const url = `${import.meta.env.BASE_URL}${src}`;
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="pmi-focusable relative block mx-auto my-3"
+        style={{ width: 180 }}
+        aria-label="Xem ảnh phóng to"
+      >
+        <img src={url} alt={alt || ""} className="w-full rounded-lg border" style={{ borderColor: "var(--line)" }} />
+        <span
+          className="absolute bottom-1.5 right-1.5 flex items-center justify-center rounded-full"
+          style={{ width: 22, height: 22, background: "rgba(22,35,63,0.7)", color: "#fff" }}
+        >
+          <Icon name="search" size={12} />
+        </span>
+      </button>
+      {open && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ background: "rgba(22,35,63,0.75)" }}
+          onClick={() => setOpen(false)}
+        >
+          <img src={url} alt={alt || ""} className="max-w-full max-h-full rounded-lg bg-white" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
+    </>
   );
 }
 export function Toast({ text }) {

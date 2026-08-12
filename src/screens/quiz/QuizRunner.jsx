@@ -6,7 +6,7 @@ import { parseMatchingQuestion } from "../../lib/matching.js";
 import { gradeAttempt } from "../../lib/gapEngine.js";
 import { DEFAULT_SUPPORT_USAGE } from "../../lib/storage.js";
 import { normOpt, isoNow, fmtClock } from "../../lib/utils.js";
-import { Card, Button, ProgressBar, Icon } from "../../components/ui/primitives.jsx";
+import { Card, Button, ProgressBar, Icon, QuestionImage } from "../../components/ui/primitives.jsx";
 import {
   BilingualToggle, BilingualStemBlock, ChoiceViLine, ExplanationText, BilingualAnswerBlock,
 } from "../../components/bilingual/BilingualWidgets.jsx";
@@ -634,6 +634,7 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
               onPickTerm={(id, rect, surface, context) => pickInlineTerm(id, rect, null, surface, context)}
             />
           </p>
+          <QuestionImage src={q.image} alt={q.imageAlt} />
           {viOn && <BilingualStemBlock viItem={VI_ITEM_INDEX.get(q.id)} stemText={q.stem} expandedTerm={expandedTerm} onExpandTerm={requestExpandTerm} />}
           <div className="space-y-2 mt-3">
             {q.choices.map((c) => {

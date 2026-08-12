@@ -4,7 +4,7 @@ import { QUESTION_INDEX, VI_ITEM_INDEX } from "../../lib/embeddedData.js";
 import { parseMatchingQuestion } from "../../lib/matching.js";
 import { normOpt } from "../../lib/utils.js";
 import { DOMAIN_MINDSET, EXAM_MINDSET_TIPS } from "../../i18n/text.js";
-import { Card, Icon, Button, DeltaChip } from "../../components/ui/primitives.jsx";
+import { Card, Icon, Button, DeltaChip, QuestionImage } from "../../components/ui/primitives.jsx";
 import {
   BilingualToggle, BilingualStemBlock, ChoiceViLine, ExplanationText, BilingualAnswerBlock,
 } from "../../components/bilingual/BilingualWidgets.jsx";
@@ -72,6 +72,7 @@ export function ReviewQuestionCard({ item, savedVocabIds, onToggleVocabSaved }) 
           onPickTerm={(id, rect, surface, context) => setInlineTerm({ termId: id, rect, surface, context })}
         />
       </p>
+      <QuestionImage src={q.image} alt={q.imageAlt} />
       {viOn && (
         <BilingualStemBlock
           viItem={viItem}
