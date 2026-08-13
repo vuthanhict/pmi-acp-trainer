@@ -1,7 +1,7 @@
 /* ===================== Ôn câu hay sai (theo đề) ===================== */
 /* Logic thuần, không import React. Gộp lịch sử làm bài của TỪNG CÂU trong một đề qua TẤT CẢ các
    session/lần làm — trả lời "câu nào tôi cứ sai hoài" thay vì chỉ xem đúng/sai trong 1 lần làm
-   (ResultsScreen) hay điểm % tổng qua các lần (AttemptSparkline ở LibraryScreen), cả hai đều
+   (ResultsScreen) hay điểm % của cả lượt (QuizPassSummary ở LibraryScreen), cả hai đều
    không giữ lại danh sách câu cụ thể xuyên suốt lịch sử. */
 import { QUESTIONS_BY_QUIZ } from "./embeddedData.js";
 

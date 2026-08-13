@@ -109,10 +109,9 @@
 .pmi-meter-bar { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink-soft); }
 .pmi-meter-dot { position: absolute; top: 50%; width: 12px; height: 12px; margin-top: -6px; margin-left: -6px; border-radius: 50%; border: 2px solid var(--paper-raised); }
 
-/* Sparkline lần 1..n trong Thư viện */
-.pmi-spark-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); }
-.pmi-spark-dot.is-last { background: var(--ink); width: 9px; height: 9px; }
-.pmi-spark-line { flex: 1; height: 1px; background: var(--line-strong); }
+/* Thanh độ phủ của một LƯỢT làm đề trong Thư viện (xem QuizPassSummary) */
+.pmi-pass-track { height: 4px; border-radius: var(--radius-pill); background: var(--line-strong); overflow: hidden; margin: 2px 0; }
+.pmi-pass-fill { height: 100%; border-radius: var(--radius-pill); }
 
 /* Bảng dữ liệu tương đương cho trình đọc màn hình (biểu đồ SVG không tự đọc được).
    Tự định nghĩa thay vì dựa vào .sr-only của Tailwind để chắc chắn luôn có mặt. */

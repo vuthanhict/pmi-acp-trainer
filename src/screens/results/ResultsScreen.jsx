@@ -3,6 +3,8 @@ import { useAppCtx } from "../../context/AppContext.jsx";
 import { QUESTION_INDEX, VI_ITEM_INDEX } from "../../lib/embeddedData.js";
 import { parseMatchingQuestion } from "../../lib/matching.js";
 import { normOpt } from "../../lib/utils.js";
+import { displayScore } from "../../lib/scoreDisplay.js";
+import { buildQuizPasses, comparePasses, currentPass, marginOfError } from "../../lib/passStats.js";
 import { DOMAIN_MINDSET, EXAM_MINDSET_TIPS } from "../../i18n/text.js";
 import { Card, Icon, Button, DeltaChip, QuestionImage } from "../../components/ui/primitives.jsx";
 import {
@@ -148,14 +150,21 @@ export function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel, o
   const [jumpValue, setJumpValue] = useState("");
   const [jumpError, setJumpError] = useState(false);
   const entry = progress.completedQuizzes.find((c) => c.sessionId === sessionId);
-  // Lượt gần nhất TRƯỚC lượt này của cùng bộ đề (nếu có) — dùng để so sánh tiến bộ.
-  const prevEntry = useMemo(() => {
-    if (!entry || entry.quizIndex == null) return null;
-    const earlier = progress.completedQuizzes
-      .filter((c) => c.quizIndex === entry.quizIndex && c.sessionId !== entry.sessionId && new Date(c.completedAt) < new Date(entry.completedAt))
-      .sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
-    return earlier.length ? earlier[earlier.length - 1] : null;
-  }, [entry, progress.completedQuizzes]);
+  // Điểm hiển thị: trusted nếu bộ đề có câu eligibleForGap, ngược lại lùi về điểm thô.
+  const shownScore = displayScore(entry);
+  // Điểm của riêng phiên này gần như là nhiễu khi phiên chỉ vài chục câu — luôn kèm con số của
+  // cả LƯỢT làm đề để người học có mốc đáng tin (xem passStats.js).
+  const pass = useMemo(() => {
+    if (entry?.quizIndex == null) return null;
+    return currentPass(buildQuizPasses(progress.attempts, entry.quizIndex));
+  }, [entry?.quizIndex, progress.attempts]);
+  const chunkMoe = marginOfError(shownScore.correct, shownScore.graded);
+  const passComparison = useMemo(() => {
+    if (entry?.quizIndex == null) return null;
+    const passes = buildQuizPasses(progress.attempts, entry.quizIndex);
+    if (passes.length < 2) return null;
+    return comparePasses(progress.attempts, entry.quizIndex, passes.length - 1, passes.length);
+  }, [entry?.quizIndex, progress.attempts]);
   const savedVocabIds = useMemo(() => new Set(Object.keys(progress.vocabSaved || {})), [progress.vocabSaved]);
   const sessAttempts = progress.attempts.filter((a) => a.sessionId === sessionId);
   const wrong = sessAttempts.filter((a) => a.gradeStatus === "graded" && !a.isCorrect);
@@ -217,8 +226,15 @@ export function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel, o
     <div className="pt-1 space-y-4 pb-4">
       <Card className="text-center py-6">
         <p className="pmi-eyebrow mb-1">{entry.quizName}</p>
-        <p className="pmi-display font-bold text-5xl mb-3" style={{ color: entry.trustedScore.percent >= 70 ? "var(--sage)" : "var(--flag)" }}>{entry.trustedScore.percent}%</p>
-        <p className="pmi-mono text-xs mb-1" style={{ color: "var(--ink-soft)" }}>{t("trustedLabel")}: {entry.trustedScore.correct}/{entry.trustedScore.graded} · {t("rawLabel")}: {entry.rawScore.correct}/{entry.rawScore.graded} ({entry.rawScore.percent}%)</p>
+        <p className="pmi-display font-bold text-5xl mb-3" style={{ color: shownScore.percent >= 70 ? "var(--sage)" : "var(--flag)" }}>{shownScore.percent}%</p>
+        {shownScore.fallback ? (
+          <>
+            <p className="pmi-mono text-xs mb-1" style={{ color: "var(--ink-soft)" }}>{t("rawFallbackBadge")}: {entry.rawScore.correct}/{entry.rawScore.graded}</p>
+            <p className="text-xs mb-1" style={{ color: "var(--seal-fg)" }}>{t("rawFallbackNote")}</p>
+          </>
+        ) : (
+          <p className="pmi-mono text-xs mb-1" style={{ color: "var(--ink-soft)" }}>{t("trustedLabel")}: {entry.trustedScore.correct}/{entry.trustedScore.graded} · {t("rawLabel")}: {entry.rawScore.correct}/{entry.rawScore.graded} ({entry.rawScore.percent}%)</p>
+        )}
         <p className="pmi-mono text-xs mb-3" style={{ color: "var(--ink-soft)" }}>
           {t("independentLabel")}: {entry.independentScore ? `${entry.independentScore.percent}% (${entry.independentScore.correct}/${entry.independentScore.graded}, ${t("independentSuffix")})` : t("independentNoData")}
         </p>
@@ -227,30 +243,45 @@ export function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel, o
             ? t("resultsFirstExposureLine", { p: Math.round(entry.firstExposureScore.percent), c: entry.firstExposureScore.correct, n: entry.firstExposureScore.graded })
             : t("resultsFirstExposureNone")}
         </p>
+        {pass && (
+          <div className="mb-3">
+            <p className="pmi-mono text-xs" style={{ color: "var(--ink)" }}>
+              {t("resultsPassLine", { n: pass.pass, p: Math.round(pass.percent), c: pass.correct, a: pass.answered, t: pass.total })}
+            </p>
+            {chunkMoe != null && shownScore.graded < pass.answered && (
+              <p className="pmi-mono text-[10px] mt-0.5" style={{ color: "var(--ink-soft)" }}>
+                {t("resultsChunkNoise", { n: shownScore.graded, m: chunkMoe })}
+              </p>
+            )}
+          </div>
+        )}
         {manual.length > 0 && <p className="text-xs" style={{ color: "var(--seal-fg)" }}>{t("manualReviewNote", { n: manual.length })}</p>}
         {unansweredQuestions.length > 0 && <p className="text-xs mt-1" style={{ color: "var(--seal-fg)" }}>{t("unansweredNote", { n: unansweredQuestions.length })}</p>}
       </Card>
 
-      {/* So sánh với lần trước cùng bộ đề — đặt ngay sau điểm số, đúng khoảnh khắc người học
-          quan tâm nhất và dễ tiếp nhận thông tin "sự thật" nhất. */}
+      {/* So sánh tiến bộ. CỐ TÌNH KHÔNG so phiên này với phiên trước cùng bộ đề như trước đây:
+          hai phiên luyện tập là hai tập câu KHÁC NHAU, mỗi tập chỉ hơn chục câu, nên chênh lệch
+          giữa chúng gần như hoàn toàn là sai số lấy mẫu — "50% → 27% ▼23" đọc thành "tôi đang tệ
+          đi" trong khi chẳng có gì thay đổi. So sánh duy nhất có nghĩa là so CÓ CẶP giữa hai lượt
+          trên đúng những câu xuất hiện ở cả hai (xem comparePasses). */}
       {entry.quizIndex != null && (
         <Card className="py-3">
           <p className="pmi-eyebrow mb-2">{t("resultsCompareHeader")}</p>
-          {prevEntry ? (
+          {passComparison ? (
             <div className="space-y-1 text-xs" style={{ color: "var(--ink-mid)" }}>
               <p className="flex items-center gap-2">
-                <span>{t("resultsCompareTrusted", { prev: Math.round(prevEntry.trustedScore.percent), cur: Math.round(entry.trustedScore.percent) })}</span>
-                <DeltaChip delta={entry.trustedScore.percent - prevEntry.trustedScore.percent} />
+                <span>{t("resultsComparePass", {
+                  a: passComparison.passA, b: passComparison.passB, n: passComparison.shared,
+                  pa: Math.round(passComparison.percentA), pb: Math.round(passComparison.percentB),
+                })}</span>
+                <DeltaChip delta={passComparison.delta} />
               </p>
-              {entry.firstExposureScore && prevEntry.firstExposureScore && (
-                <p className="flex items-center gap-2">
-                  <span>{t("resultsCompareFirst", { prev: Math.round(prevEntry.firstExposureScore.percent), cur: Math.round(entry.firstExposureScore.percent) })}</span>
-                  <DeltaChip delta={entry.firstExposureScore.percent - prevEntry.firstExposureScore.percent} />
-                </p>
-              )}
+              <p style={{ color: "var(--ink-soft)" }}>
+                {t("resultsComparePassDetail", { f: passComparison.fixed, r: passComparison.broken })}
+              </p>
             </div>
           ) : (
-            <p className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("resultsCompareNoPrev")}</p>
+            <p className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("resultsComparePassNone")}</p>
           )}
         </Card>
       )}

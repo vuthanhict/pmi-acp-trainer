@@ -2,6 +2,9 @@ import { useState, useMemo } from "react";
 import { useAppCtx } from "../../context/AppContext.jsx";
 import { QUIZ_CATALOG } from "../../lib/embeddedData.js";
 import { fmtDate } from "../../lib/utils.js";
+import { displayScore } from "../../lib/scoreDisplay.js";
+import { buildQuizPasses, comparePasses } from "../../lib/passStats.js";
+import { QuizPassSummary } from "../progress/trackingWidgets.jsx";
 import { Card } from "../../components/ui/primitives.jsx";
 
 /* ===================== History Screen ===================== */
@@ -17,6 +20,15 @@ export function HistoryScreen({ progress, initialQuizFilter, onOpenEntry }) {
       .slice()
       .sort((a, b) => new Date(b.completedAt ?? 0) - new Date(a.completedAt ?? 0));
   }, [progress.completedQuizzes, quizFilter, modeFilter]);
+
+  const quizPasses = useMemo(
+    () => (quizFilter === "all" ? [] : buildQuizPasses(progress.attempts, quizFilter)),
+    [progress.attempts, quizFilter],
+  );
+  const quizComparison = useMemo(
+    () => (quizPasses.length > 1 ? comparePasses(progress.attempts, quizFilter, quizPasses.length - 1, quizPasses.length) : null),
+    [progress.attempts, quizFilter, quizPasses.length],
+  );
 
   const modeFilters = [
     { key: "all", label: t("historyFilterModeAll") },
@@ -55,13 +67,24 @@ export function HistoryScreen({ progress, initialQuizFilter, onOpenEntry }) {
         </div>
       </div>
 
+      {/* Khi lọc theo một bộ đề: đưa tiến độ THEO LƯỢT lên đầu. Danh sách bên dưới là nhật ký
+          từng phiên — hữu ích để xem lại bài, nhưng % của mỗi phiên không phải thước đo trình độ. */}
+      {quizFilter !== "all" && quizPasses.length > 0 && (
+        <Card>
+          <p className="pmi-eyebrow mb-2">{t("historyPassHeader")}</p>
+          <QuizPassSummary passes={quizPasses} comparison={quizComparison} />
+        </Card>
+      )}
+
       {entries.length === 0 ? (
         <p className="text-sm text-center py-10" style={{ color: "var(--ink-soft)" }}>{t("historyEmpty")}</p>
       ) : (
         <>
           <p className="pmi-mono text-[11px]" style={{ color: "var(--ink-soft)" }}>{t("historyEntryCount", { n: entries.length })}</p>
           <div className="space-y-2">
-            {entries.map((c) => (
+            {entries.map((c) => {
+              const shown = displayScore(c);
+              return (
               <Card key={c.sessionId} onClick={() => onOpenEntry(c.sessionId)}>
                 <div className="flex items-center justify-between mb-1 gap-2">
                   <p className="font-medium text-sm pr-2">{c.quizName}</p>
@@ -69,10 +92,13 @@ export function HistoryScreen({ progress, initialQuizFilter, onOpenEntry }) {
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="pmi-mono text-[11px]" style={{ color: "var(--ink-soft)" }}>{fmtDate(c.completedAt, lang)}</p>
-                  <p className="pmi-mono text-sm font-semibold" style={{ color: c.trustedScore.percent >= 70 ? "var(--sage)" : "var(--flag)" }}>{c.trustedScore.percent}%</p>
+                  <p className="pmi-mono text-sm font-semibold" style={{ color: shown.percent >= 70 ? "var(--sage)" : "var(--flag)" }}>
+                    {shown.percent}%{shown.fallback ? <span className="pmi-mono text-[10px] font-normal" style={{ color: "var(--ink-soft)" }}> ({t("rawFallbackBadge")})</span> : null}
+                  </p>
                 </div>
               </Card>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
