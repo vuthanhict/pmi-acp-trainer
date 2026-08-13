@@ -4,7 +4,7 @@
    đây (không phải gapEngine.js) vì nó là 1 phần của luồng "Luyện GAP", dùng QUESTIONS_BY_QUIZ
    để CHỌN câu chứ không tính mastery. */
 import { DEFAULT_TZ, dayKey, todayKey, shiftDayKey, diffDayKeys, weekdayOfDayKey, clamp, mean, shuffleArray } from "./utils.js";
-import { QUIZ_CATALOG, QUESTIONS_BY_QUIZ } from "./embeddedData.js";
+import { QUIZ_CATALOG, QUESTIONS_BY_QUIZ, QUESTION_INDEX } from "./embeddedData.js";
 
 /* ===================== Tracking engine ===================== */
 /* NGUYÊN TẮC THIẾT KẾ QUAN TRỌNG: mọi số liệu tracking đều được TÍNH LẠI từ `attempts[]`  */
@@ -298,28 +298,105 @@ export function computeReadiness(gapProfile, attempts, { now = Date.now(), lang 
   };
 }
 
+/* Giãn cách kiểu Leitner cho CÂU HỎI, dùng lại đúng ý tưởng đã áp dụng cho từ vựng (vocabSrs):
+   trả lời đúng thì lần gặp lại được đẩy xa dần, trả lời sai thì kéo về đầu. Chỉ số là số lần
+   đúng LIÊN TIẾP gần nhất. Không có giãn cách thì câu sai hôm nay có thể được phục vụ lại ngay
+   hôm sau — trả lời đúng ở khoảng cách 1 ngày chủ yếu đo trí nhớ ngắn hạn, làm mastery tăng ảo
+   trong khi năng lực thi không đổi. */
+export const QUESTION_REVIEW_INTERVAL_DAYS = [1, 3, 7, 14];
+
+function reviewIntervalDays(box) {
+  return QUESTION_REVIEW_INTERVAL_DAYS[Math.min(box, QUESTION_REVIEW_INTERVAL_DAYS.length - 1)];
+}
+
+/** Trạng thái ôn của từng câu suy từ attempts: số lần làm, chuỗi đúng liên tiếp, lần gặp cuối. */
+export function buildQuestionReviewState(attempts) {
+  const state = new Map();
+  const sorted = attempts
+    .filter(isCountableAttempt)
+    .filter((a) => a.answeredAt)
+    .slice()
+    .sort((x, y) => new Date(x.answeredAt) - new Date(y.answeredAt));
+  for (const a of sorted) {
+    const cur = state.get(a.questionId) || { count: 0, streak: 0, lastAt: 0 };
+    cur.count += 1;
+    cur.streak = a.isCorrect ? cur.streak + 1 : 0;
+    cur.lastAt = new Date(a.answeredAt).getTime() || cur.lastAt;
+    state.set(a.questionId, cur);
+  }
+  return state;
+}
+
 /**
  * Chọn câu cho một phiên luyện GAP. Tách khỏi FillGapScreen để nút "Làm tiếp N câu" ở
  * màn Hôm nay dùng chung được — một chạm là vào bài, không bắt người dùng chọn task.
  * CHỈ ĐỌC ngân hàng câu hỏi.
+ *
+ * Thứ tự ưu tiên (thay cho "chưa gặp → từng sai → còn lại" trước đây):
+ *   1. Câu CHƯA GẶP của những đề ĐÃ BẮT ĐẦU — học tiếp thứ đang dở, không mở thêm mặt trận mới.
+ *   2. Câu cần ôn lại và ĐÃ ĐỦ GIÃN CÁCH — ưu tiên câu yếu nhất (chuỗi đúng ngắn nhất) và lâu
+ *      chưa gặp nhất.
+ *   3. Câu chưa gặp của đề chưa động tới — chỉ khi hai nhóm trên đã cạn.
+ *   4. Câu chưa tới hạn ôn — phương án cuối, chọn câu ÍT ĐƯỢC LÀM NHẤT trước để số lần làm giữa
+ *      các câu không lệch nhau.
+ *
+ * reservedQuizIndexes: các đề người học để dành làm thi thử — không bao giờ bị rút câu ra đây,
+ * để tuần cuối vẫn còn đề nguyên vẹn làm bài kiểm tra thật.
  */
-export function buildGapPracticeQuestionIds({ attempts, taskIds, size }) {
+export function buildGapPracticeQuestionIds({ attempts, taskIds, size, reservedQuizIndexes = [], now = Date.now() }) {
   const answeredIds = new Set(attempts.map((a) => a.questionId));
-  const wrongIds = new Set(attempts.filter((a) => a.gradeStatus === "graded" && !a.isCorrect).map((a) => a.questionId));
+  const review = buildQuestionReviewState(attempts);
   const taskFilter = taskIds && taskIds.length ? new Set(taskIds) : null;
+  const reserved = new Set(reservedQuizIndexes);
+
+  const startedQuizzes = new Set();
+  for (const a of attempts) {
+    const q = QUESTION_INDEX.get(a.questionId);
+    if (q && q.quizIndex != null) startedQuizzes.add(q.quizIndex);
+  }
 
   const pool = [];
-  for (const [, list] of QUESTIONS_BY_QUIZ) {
+  for (const [quizIndex, list] of QUESTIONS_BY_QUIZ) {
+    if (reserved.has(quizIndex)) continue;
     for (const q of list) {
       if (q.manualReview) continue;
       if (taskFilter && !taskFilter.has(q.taskId)) continue;
       pool.push(q);
     }
   }
-  const unseen = pool.filter((q) => !answeredIds.has(q.id));
-  const needReview = pool.filter((q) => wrongIds.has(q.id));
-  const rest = pool.filter((q) => answeredIds.has(q.id) && !wrongIds.has(q.id));
-  const ordered = [...shuffleArray(unseen), ...shuffleArray(needReview), ...shuffleArray(rest)];
+
+  const daysSince = (ts) => (ts ? (now - ts) / 86_400_000 : Infinity);
+  const isDue = (st) => daysSince(st.lastAt) >= reviewIntervalDays(st.streak);
+
+  const unseenStarted = [];
+  const unseenFresh = [];
+  const due = [];
+  const notDue = [];
+  for (const q of pool) {
+    if (!answeredIds.has(q.id)) {
+      (startedQuizzes.has(q.quizIndex) ? unseenStarted : unseenFresh).push(q);
+      continue;
+    }
+    (isDue(review.get(q.id) || { streak: 0, lastAt: 0 }) ? due : notDue).push(q);
+  }
+
+  const byWeakestFirst = (a, b) => {
+    const sa = review.get(a.id) || { streak: 0, lastAt: 0 };
+    const sb = review.get(b.id) || { streak: 0, lastAt: 0 };
+    return sa.streak - sb.streak || sa.lastAt - sb.lastAt;
+  };
+  const byLeastPractised = (a, b) => {
+    const sa = review.get(a.id) || { count: 0, lastAt: 0 };
+    const sb = review.get(b.id) || { count: 0, lastAt: 0 };
+    return sa.count - sb.count || sa.lastAt - sb.lastAt;
+  };
+
+  const ordered = [
+    ...shuffleArray(unseenStarted),
+    ...due.sort(byWeakestFirst),
+    ...shuffleArray(unseenFresh),
+    ...notDue.sort(byLeastPractised),
+  ];
 
   const seenDup = new Set();
   const picked = [];

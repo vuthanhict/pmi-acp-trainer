@@ -109,7 +109,10 @@ export function FillGapScreen({ progress, gapProfile, onStart, onBack }) {
 
   // Dùng chung bộ chọn câu với nút "Làm tiếp N câu" ở màn Hôm nay (xem buildGapPracticeQuestionIds).
   function buildSession() {
-    return buildGapPracticeQuestionIds({ attempts: progress.attempts, taskIds: selectedTasks, size });
+    return buildGapPracticeQuestionIds({
+      attempts: progress.attempts, taskIds: selectedTasks, size,
+      reservedQuizIndexes: progress.settings?.reservedQuizIndexes || [],
+    });
   }
 
   return (
