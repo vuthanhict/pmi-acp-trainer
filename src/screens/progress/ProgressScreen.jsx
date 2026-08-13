@@ -1,17 +1,30 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAppCtx } from "../../context/AppContext.jsx";
 import { useIsDesktop } from "../../hooks/useViewport.js";
 import { Card, DomainRing } from "../../components/ui/primitives.jsx";
 import { GapScreen } from "../gap/GapScreen.jsx";
 import {
   GoalPicker, StreakBadge, ReadinessCard, TrendChart, Heatmap, MasteryTrendCard, ExamDateCard,
+  PlanProgressCard,
 } from "./trackingWidgets.jsx";
+import { buildPlanProgress, buildStudyPlan } from "../../lib/studyPlan.js";
 
 /* ===================== Progress Screen (Tổng quan / Nhịp luyện / GAP) ===================== */
-export function ProgressScreen({ progress, gapProfile, tracking, onFillGap, onGoLibrary, onSetGoal, onSetExamDate }) {
+export function ProgressScreen({ progress, gapProfile, tracking, onFillGap, onGoLibrary, onSetGoal, onSetExamDate, onStartTodayPractice, onStartExamMode }) {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
   const [tab, setTab] = useState("overview");
+  // Chỉ tính khi thực sự mở tab Nhịp luyện: hàm dựng lại khối lượng lộ trình cho từng ngày.
+  const planProgress = useMemo(
+    () => (tab === "rhythm" ? buildPlanProgress({ progress, tracking }) : null),
+    [tab, progress, tracking],
+  );
+  // Mốc bắt buộc + danh sách đề lấy từ buildStudyPlan — cùng nguồn với thẻ Ngày thi bên dưới, để
+  // vạch trên biểu đồ và bảng đề không bao giờ lệch nhau.
+  const studyPlan = useMemo(
+    () => (tab === "rhythm" && tracking.examDate ? buildStudyPlan({ progress, gapProfile, tracking }) : null),
+    [tab, progress, gapProfile, tracking],
+  );
   const tabs = [
     { key: "overview", label: t("progressTabOverview") },
     { key: "rhythm", label: t("progressTabRhythm") },
@@ -57,7 +70,7 @@ export function ProgressScreen({ progress, gapProfile, tracking, onFillGap, onGo
         <div className={isDesktop ? "grid grid-cols-2 gap-4 items-start" : "space-y-4"}>
           <Card>
             <p className="pmi-eyebrow mb-3">{t("heatmapHeader")}</p>
-            <Heatmap tracking={tracking} />
+            <Heatmap tracking={tracking} planRows={planProgress?.rows} />
           </Card>
           <Card>
             <div className="flex items-center justify-between mb-3">
@@ -73,6 +86,16 @@ export function ProgressScreen({ progress, gapProfile, tracking, onFillGap, onGo
               <p className="text-xs" style={{ color: "var(--ink-mid)" }}>{t("goalLockedByPlan")}</p>
             ) : (
               <GoalPicker goal={tracking.goal} onSave={onSetGoal} onCancel={null} />
+            )}
+          </Card>
+          <Card style={isDesktop ? { gridColumn: "span 2" } : undefined}>
+            <p className="pmi-eyebrow mb-3">{t("planHeader")}</p>
+            {!planProgress?.hasExamDate ? (
+              <p className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("planNoExamDate")}</p>
+            ) : planProgress.overdue ? (
+              <p className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("planOverdue")}</p>
+            ) : (
+              <PlanProgressCard plan={planProgress} studyPlan={studyPlan} onStartTodayPractice={onStartTodayPractice} onStartExamMode={onStartExamMode} />
             )}
           </Card>
           {/* Chiếm trọn chiều rộng — bảng "số lượt cần làm từng đề" bên trong cần đủ không gian

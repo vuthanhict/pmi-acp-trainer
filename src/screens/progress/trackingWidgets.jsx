@@ -1,11 +1,12 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useAppCtx } from "../../context/AppContext.jsx";
-import { useIsDesktop } from "../../hooks/useViewport.js";
+import { useIsDesktop, useIsWide } from "../../hooks/useViewport.js";
 import { QUIZ_CATALOG } from "../../lib/embeddedData.js";
 import { DOMAIN_WEIGHTS } from "../../lib/gapEngine.js";
 import { GOAL_PRESETS, DEFAULT_GOAL_VALUE, READINESS_READY_BAR } from "../../lib/trackingEngine.js";
-import { buildStudyPlan, computeCatchUp, MIN_REDO_GAP_DAYS } from "../../lib/studyPlan.js";
-import { fmtDayKey, shiftDayKey, weekdayOfDayKey, diffDayKeys } from "../../lib/utils.js";
+import { buildStudyPlan, computeCatchUp } from "../../lib/studyPlan.js";
+import { fmtDate, fmtDayKey, shiftDayKey, weekdayOfDayKey, diffDayKeys } from "../../lib/utils.js";
+import { marginOfError } from "../../lib/passStats.js";
 import { Card, Button, ProgressBar, Icon, TierChip, STATUS_RING_VAR } from "../../components/ui/primitives.jsx";
 
 /* ===================== Tracking: hook + components ===================== */
@@ -140,42 +141,53 @@ export function DailyGoalCard({ tracking, onSetGoal, onPractice }) {
   );
 }
 
-/* ---------- Sparkline lần 1..n (Thư viện) ---------- */
-export function AttemptSparkline({ entries }) {
-  const { t } = useAppCtx();
-  if (!entries.length) return null;
-  const first = entries[0].trustedScore.percent;
-  const last = entries[entries.length - 1].trustedScore.percent;
-  const delta = Math.round(last - first);
-  const shown = entries.slice(-6); // giữ card gọn khi làm đi làm lại nhiều lần
+/* ---------- Tiến độ theo LƯỢT của một bộ đề (Thư viện) ---------- */
+/* Thay cho sparkline điểm từng phiên trước đây: mỗi phiên chỉ ~10 câu nên sai số lấy mẫu ±31
+   điểm — chuỗi 30%/100%/27% là nhiễu chứ không phải xu hướng. Ở đây hiển thị theo LƯỢT (lần gặp
+   thứ N của từng câu trong đề, xem passStats.js): độ phủ, % của cả lượt và sai số kèm theo. */
+export function QuizPassSummary({ passes, comparison }) {
+  const { t, lang } = useAppCtx();
+  if (!passes.length) return null;
   const colorFor = (p) => (p >= READINESS_READY_BAR ? "var(--sage)" : p >= 60 ? "var(--sky)" : "var(--flag)");
 
   return (
-    <div className="mb-2.5">
-      <div className="flex items-center gap-1 mb-1">
-        {shown.map((e, i) => (
-          <React.Fragment key={e.sessionId}>
-            {i > 0 && <div className="pmi-spark-line" />}
-            <div className="flex flex-col items-center gap-1" style={{ minWidth: 34 }}>
-              <span className="pmi-mono text-[10px]" style={{ color: colorFor(e.trustedScore.percent) }}>
-                {Math.round(e.trustedScore.percent)}%
+    <div className="mb-2.5 space-y-1.5">
+      {passes.map((p) => {
+        const moe = marginOfError(p.correct, p.answered);
+        return (
+          <div key={p.pass}>
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="pmi-mono text-[10px]" style={{ color: "var(--ink-soft)" }}>
+                {t("passLabel", { n: p.pass })}
               </span>
-              <div className={`pmi-spark-dot ${i === shown.length - 1 ? "is-last" : ""}`} style={{ background: colorFor(e.trustedScore.percent) }} />
-              <span className="pmi-mono text-[9px]" style={{ color: "var(--ink-soft)" }}>
-                {t("attemptNth", { n: entries.length - shown.length + i + 1 })}
+              <span className="pmi-mono text-[10px]" style={{ color: colorFor(p.percent) }}>
+                {Math.round(p.percent)}%{moe != null && <span style={{ color: "var(--ink-soft)" }}> ±{moe}</span>}
               </span>
             </div>
-          </React.Fragment>
-        ))}
-      </div>
-      {entries.length > 1 && (
-        <p className="pmi-mono text-[10px]" style={{ color: delta >= 0 ? "var(--sage)" : "var(--flag)" }}>
-          {t("attemptDelta", { sign: delta >= 0 ? "+" : "", n: delta })}
+            <div className="pmi-pass-track">
+              <div className="pmi-pass-fill" style={{ width: `${Math.min(100, (p.answered / p.total) * 100)}%`, background: colorFor(p.percent) }} />
+            </div>
+            <p className="pmi-mono text-[9px]" style={{ color: "var(--ink-soft)" }}>
+              {p.complete
+                ? t("passCoverageDone", { c: p.correct, a: p.answered, d: p.completedAt ? fmtDate(p.completedAt, lang) : "" })
+                : t("passCoverageOngoing", { c: p.correct, a: p.answered, n: p.total - p.answered })}
+            </p>
+          </div>
+        );
+      })}
+      {comparison && (
+        <p className="pmi-mono text-[9px]" style={{ color: comparison.delta >= 0 ? "var(--sage)" : "var(--flag)" }}>
+          {t("passPairedLine", {
+            a: comparison.passA, b: comparison.passB, n: comparison.shared,
+            pa: Math.round(comparison.percentA), pb: Math.round(comparison.percentB),
+            f: comparison.fixed, r: comparison.broken,
+          })}
         </p>
       )}
     </div>
   );
 }
+
 
 /* ---------- Thước Readiness ---------- */
 export function ReadinessCard({ readiness, onAction }) {
@@ -306,10 +318,19 @@ export function TrendChart({ points }) {
 }
 
 /* ---------- Heatmap 12 tuần ---------- */
-export function Heatmap({ tracking }) {
+export function Heatmap({ tracking, planRows }) {
   const { t, lang } = useAppCtx();
   const [selected, setSelected] = useState(null);
   const { history, today, goal, target } = tracking;
+
+  // Mục tiêu của TỪNG NGÀY trong quá khứ (khi đã đặt ngày thi, mục tiêu đổi mỗi ngày — xem
+  // buildPlanProgress). Không có thì mới rơi về mục tiêu hôm nay; dùng mục tiêu hôm nay cho mọi
+  // ngày cũ sẽ tô đỏ oan những ngày người học thực sự đã đạt.
+  const targetByDay = useMemo(() => {
+    const m = new Map();
+    for (const r of planRows || []) m.set(r.dayKey, r.target);
+    return m;
+  }, [planRows]);
 
   const { cells, metCount, activeCount } = useMemo(() => {
     const mondayIdx = (weekdayOfDayKey(today) + 6) % 7; // 0 = thứ 2
@@ -325,8 +346,9 @@ export function Heatmap({ tracking }) {
         let level = 0;
         if (row) {
           active += 1;
-          if (target) {
-            const r = row.answered / target;
+          const dayTarget = targetByDay.get(key) ?? target;
+          if (dayTarget) {
+            const r = row.answered / dayTarget;
             level = r >= 1.5 ? 4 : r >= 1 ? 3 : r >= 0.5 ? 2 : 1;
             if (r >= 1) met += 1;
           } else {
@@ -337,7 +359,7 @@ export function Heatmap({ tracking }) {
       }
     }
     return { cells: out, metCount: met, activeCount: active };
-  }, [history, today, target]);
+  }, [history, today, target, targetByDay]);
 
   const selectedCell = selected ? cells.find((c) => c.key === selected) : null;
   const dayLabels = lang === "en" ? ["M", "T", "W", "T", "F", "S", "S"] : ["2", "3", "4", "5", "6", "7", "CN"];
@@ -404,6 +426,269 @@ export function Heatmap({ tracking }) {
   );
 }
 
+/* ---------- Tiến độ so với KẾ HOẠCH (burn-up + mục tiêu từng ngày) ---------- */
+/* Trả lời đúng hai câu hỏi người học hay hỏi khi đã đặt ngày thi: "hôm nay/những ngày qua tôi có
+   đạt mục tiêu không" và "tổng thể tôi đang vượt hay chậm so với kế hoạch". Cả hai đều dùng ĐƠN
+   VỊ KHỐI LƯỢNG LỘ TRÌNH chứ không phải tổng số câu đã bấm (xem buildPlanProgress). */
+const STRIP_H = 46;
+
+export function PlanProgressCard({ plan, studyPlan, onStartTodayPractice, onStartExamMode }) {
+  const { t, lang } = useAppCtx();
+  const isDesktop = useIsDesktop();
+  const isWide = useIsWide();
+  if (!plan?.hasExamDate || !plan.rows.length) return null;
+
+  // Khung vẽ đổi theo viewport thay vì phóng to một khung 320px: nếu chỉ kéo giãn viewBox thì trên
+  // desktop nét vẽ và chữ bị phóng theo (to, mờ) mà số nhãn ngày vẫn y nguyên. Khung rộng hơn cho
+  // phép hiện NHIỀU MỐC NGÀY hơn với cỡ chữ giữ nguyên tỉ lệ dễ đọc.
+  const W = isWide ? 900 : isDesktop ? 620 : 320;
+  const H = isWide ? 260 : isDesktop ? 210 : 168;
+  const FS = isWide ? 10 : isDesktop ? 9 : 6.5;      // cỡ chữ nhãn trục
+  const padL = isWide ? 46 : isDesktop ? 40 : 32;
+  const padR = isWide ? 14 : 10;
+  const padT = 10;
+  const padB = isWide ? 44 : isDesktop ? 40 : 34;
+  const series = plan.series;
+  const n = series.length;
+  // Trục Y chạm ĐÚNG tổng khối lượng lộ trình: đây là "số câu cần đạt", phải nhìn thấy được đích
+  // chứ không chỉ thấy đoạn đã đi.
+  const maxY = Math.max(plan.scope, 1);
+  const x = (i) => padL + (n === 1 ? 0 : (i / (n - 1)) * (W - padL - padR));
+  const y = (v) => padT + (1 - Math.min(1, v / maxY)) * (H - padT - padB);
+  const pathOf = (field) => {
+    const pts = series.map((r, i) => [i, r[field]]).filter(([, v]) => v !== null && v !== undefined);
+    return pts.map(([i, v], k) => `${k ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  };
+  const indexOfDay = (day) => series.findIndex((r) => r.dayKey === day);
+
+  const behind = plan.aheadBy < 0;
+  const statusColor = behind ? "var(--flag)" : "var(--sage)";
+  const lateFinish = plan.projectedFinishDay && plan.projectedFinishDay > plan.deadlineDay;
+
+  // Mốc bắt buộc suy ngược từ ngày thi (buildStudyPlan) — vẽ thành vạch đứng để biết ĐẾN NGÀY NÀO
+  // thì phải xong việc gì, thay vì chỉ có một đường kế hoạch trơn.
+  const markers = (studyPlan?.segments || [])
+    .map((sg) => ({ key: sg.key, day: sg.endDate, i: indexOfDay(sg.endDate) }))
+    .filter((m) => m.i > 0)
+    // Trên khung hẹp bỏ mốc "nghỉ": nó chỉ cách mốc thi thử 1-2 ngày nên hai nhãn chồng lên nhau,
+    // mà thông tin "2 ngày nghỉ trước thi" đã có ở thẻ Ngày thi.
+    .filter((m) => isDesktop || m.key !== "final_days");
+
+  // Nhãn ngày trên trục X: chia đều theo bề rộng thật, luôn có ngày đầu và ngày thi.
+  const tickCount = isWide ? 12 : isDesktop ? 8 : 5;
+  const tickIdx = [];
+  for (let k = 0; k < tickCount; k++) {
+    const i = Math.round((k / (tickCount - 1)) * (n - 1));
+    if (!tickIdx.includes(i)) tickIdx.push(i);
+  }
+  const dm = (day) => day.slice(5).replace("-", "/");
+
+  const stripDays = isWide ? 21 : isDesktop ? 14 : 10;
+  const strip = plan.rows.slice(-stripDays);
+  const ratioOf = (r) => (r.target > 0 ? Math.min(1.6, r.progressed / r.target) : (r.progressed > 0 ? 1 : 0));
+  const pending = (studyPlan?.quizPassPlan || []).filter((q) => q.status !== "done");
+  const doneCount = (studyPlan?.quizPassPlan || []).length - pending.length;
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-2 mb-1">
+        <span className="pmi-mono text-sm font-semibold" style={{ color: statusColor }}>
+          {behind
+            ? t("planBehind", { n: Math.abs(plan.aheadBy), d: Math.abs(plan.aheadDays) })
+            : t("planAhead", { n: plan.aheadBy, d: plan.aheadDays })}
+        </span>
+        <span className="pmi-mono text-[10px]" style={{ color: "var(--ink-soft)" }}>
+          {t("planMetDays", { m: plan.metDays, n: plan.judgedDays })}
+        </span>
+      </div>
+      <p className="pmi-mono text-[10px] mb-2" style={{ color: "var(--ink-soft)" }}>
+        {t("planScopeLine", { done: plan.cumDone, total: plan.scope, from: fmtDayKey(plan.startDay, lang), to: fmtDayKey(plan.examDate, lang) })}
+      </p>
+
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto" }} role="img" aria-label={t("planChartLabel")}>
+        {[0, 0.5, 1].map((g) => (
+          <g key={g}>
+            <line x1={padL} x2={W - padR} y1={y(maxY * g)} y2={y(maxY * g)} stroke="var(--line)" strokeWidth="0.5" />
+            <text x={padL - 4} y={y(maxY * g) + FS / 2 - 1} textAnchor="end" fontSize={FS} fill="var(--ink-soft)" fontFamily="var(--font-mono)">
+              {Math.round(maxY * g)}
+            </text>
+          </g>
+        ))}
+
+        {/* Nhãn mốc so le hai hàng: các mốc cuối lộ trình nằm sát nhau (cách nhau vài ngày), để
+            cùng một hàng là chữ chồng lên nhau không đọc được. */}
+        {markers.map((m, k) => (
+          <g key={m.key}>
+            <line x1={x(m.i)} x2={x(m.i)} y1={padT} y2={H - padB} stroke="var(--line-strong)" strokeWidth="0.7" strokeDasharray="2 2" />
+            <text
+              x={x(m.i)} y={padT + 8 + (k % 2 ? FS + 3 : 0)}
+              textAnchor={m.i > (n - 1) * 0.88 ? "end" : m.i < (n - 1) * 0.12 ? "start" : "middle"}
+              fontSize={FS} fill="var(--ink-soft)" fontFamily="var(--font-mono)"
+            >
+              {t(`planMarker_${m.key}`)} {dm(m.day)}
+            </text>
+          </g>
+        ))}
+        {/* Vạch HÔM NAY: ranh giới giữa phần đã đi thật và phần dự phóng. */}
+        <line x1={x(plan.todayIndex)} x2={x(plan.todayIndex)} y1={padT} y2={H - padB} stroke="var(--ink-soft)" strokeWidth="1" />
+
+        <path d={pathOf("cumPlan")} fill="none" stroke="var(--ink-soft)" strokeWidth="1.6" strokeDasharray="4 3" />
+        <path d={pathOf("cumProjected")} fill="none" stroke={statusColor} strokeWidth="1.4" strokeDasharray="1.5 2.5" opacity="0.85" />
+        <path d={pathOf("cumDone")} fill="none" stroke={statusColor} strokeWidth="2.4" strokeLinejoin="round" strokeLinecap="round" />
+        <circle cx={x(plan.todayIndex)} cy={y(plan.cumDone)} r="2.6" fill={statusColor} />
+
+        {tickIdx.map((i, k) => (
+          <g key={series[i].dayKey}>
+            <line x1={x(i)} x2={x(i)} y1={H - padB} y2={H - padB + 3} stroke="var(--line-strong)" strokeWidth="0.6" />
+            <text
+              x={x(i)} y={H - padB + FS + 5}
+              textAnchor={k === 0 ? "start" : k === tickIdx.length - 1 ? "end" : "middle"}
+              fontSize={FS} fill="var(--ink-soft)" fontFamily="var(--font-mono)"
+            >
+              {dm(series[i].dayKey)}
+            </text>
+          </g>
+        ))}
+        {/* Nhãn HÔM NAY gắn thẳng vào vạch để không phải đếm ô mới biết mình đang ở đâu. */}
+        <text
+          x={x(plan.todayIndex)} y={H - padB + 2 * FS + 8}
+          textAnchor={plan.todayIndex < (n - 1) * 0.12 ? "start" : "middle"}
+          fontSize={FS} fill="var(--ink)" fontFamily="var(--font-mono)"
+        >
+          {t("planToday")} {dm(plan.today)}
+        </text>
+      </svg>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 mb-3 pmi-mono text-[10px]" style={{ color: "var(--ink-mid)" }}>
+        <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 2.5, background: statusColor, display: "inline-block" }} />{t("planLegendActual")}</span>
+        <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 0, borderTop: "2px dashed var(--ink-soft)", display: "inline-block" }} />{t("planLegendPlan")}</span>
+        <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 0, borderTop: `1.5px dotted ${statusColor}`, display: "inline-block" }} />{t("planLegendProjected")}</span>
+      </div>
+
+      {plan.shortfallAtExam > 0 && (
+        <p className="pmi-mono text-[10px] mb-3" style={{ color: "var(--flag)" }}>
+          {t("planShortfallAtExam", { n: plan.shortfallAtExam, p: Math.round((plan.projectedAtExam / plan.scope) * 100) })}
+        </p>
+      )}
+
+      <p className="pmi-eyebrow mb-1.5">{t("planDailyHeader")}</p>
+      <div className="flex items-end gap-1" style={{ height: STRIP_H, position: "relative" }}>
+        {/* Vạch 100% nằm ở 1/1.6 chiều cao vì trục cắt tại 160% mục tiêu. */}
+        <div style={{ position: "absolute", bottom: `${(1 / 1.6) * STRIP_H}px`, left: 0, right: 0, borderTop: "1px dashed var(--ink-soft)", opacity: 0.7, pointerEvents: "none" }} />
+        {strip.map((r) => {
+          const ratio = ratioOf(r);
+          const color = r.pending ? "var(--line-strong)" : r.met ? (ratio >= 1.25 ? "var(--sky)" : "var(--sage)") : "var(--flag)";
+          return (
+            <div key={r.dayKey} className="flex-1 flex flex-col justify-end items-stretch" style={{ height: "100%" }}
+              title={t("planDayTip", { date: fmtDayKey(r.dayKey, lang), p: r.progressed, g: r.target, a: r.answered })}>
+              <div style={{ height: `${(ratio / 1.6) * 100}%`, background: color, borderRadius: 2, minHeight: 2 }} />
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex gap-1 mt-1">
+        {strip.map((r, i) => (
+          <span key={r.dayKey} className="flex-1 pmi-mono text-center" style={{ fontSize: isDesktop ? 9 : 8, color: r.dayKey === plan.today ? "var(--ink)" : "var(--ink-soft)" }}>
+            {/* Trên mobile 10 cột hẹp — chỉ ghi ngày, cách một cột một nhãn để không dính chữ. */}
+            {isDesktop || strip.length <= 6 || i % 2 === 0 ? dm(r.dayKey) : ""}
+          </span>
+        ))}
+      </div>
+      <p className="pmi-mono text-[9px] mt-1" style={{ color: "var(--ink-soft)" }}>{t("planDailyLegend")}</p>
+
+      <div className={`pmi-mono grid ${isDesktop ? "grid-cols-2" : "grid-cols-1"} gap-x-3 gap-y-1 text-[10px] mt-3`} style={{ color: "var(--ink-mid)" }}>
+        <span>{t("planPace", { n: plan.pace })}</span>
+        <span>{t("planNeeded", { n: Math.ceil(plan.remaining / Math.max(1, plan.daysToDeadline)) })}</span>
+        <span>{t("planRemaining", { n: plan.remaining })}</span>
+        <span style={lateFinish ? { color: "var(--flag)" } : undefined}>
+          {plan.projectedFinishDay
+            ? t("planProjected", { d: fmtDayKey(plan.projectedFinishDay, lang) })
+            : t("planProjectedNone")}
+        </span>
+      </div>
+      {lateFinish && (
+        <p className="text-xs mt-2 flex gap-1.5" style={{ color: "var(--seal-fg)" }}>
+          <span className="shrink-0">ⓘ</span><span>{t("planLateWarning", { d: fmtDayKey(plan.deadlineDay, lang) })}</span>
+        </p>
+      )}
+
+      {/* "Đề nào còn phải làm xong" — cùng dữ liệu với bảng thu gọn ở thẻ Ngày thi, nhưng đặt thẳng
+          dưới biểu đồ vì đây chính là thứ tạo nên khối lượng của đường kế hoạch phía trên. */}
+      {pending.length > 0 && (
+        <div className="mt-3">
+          <div className="flex items-baseline justify-between mb-1.5">
+            <span className="pmi-eyebrow">{t("planQuizHeader")}</span>
+            <span className="pmi-mono text-[10px]" style={{ color: "var(--ink-soft)" }}>
+              {t("planQuizDone", { m: doneCount, n: doneCount + pending.length })}
+            </span>
+          </div>
+          <div className="space-y-1">
+            {pending.map((q) => {
+              const stat = q.status === "first_pass"
+                ? t("planQuizRemaining", { n: q.unseenInQuiz, done: q.gradableCount - q.unseenInQuiz, total: q.gradableCount })
+                : t("planQuizNeedsExam");
+              // Mobile: tên đề một dòng riêng rồi mới tới số liệu — nhét chung một dòng thì tên bị
+              // cắt còn "PMI-ACP: S..." và không phân biệt được Phần 1 với Phần 2.
+              // Nút làm nốt: bấm là vào thẳng những câu CHƯA GẶP của đúng đề đó (không mở lại cả
+              // đề), trần MAX_CHUNK_SIZE câu một phiên để còn ngồi hết được trong một lần.
+              const chunk = Math.min(MAX_CHUNK_SIZE, q.unseenInQuiz);
+              const cooldownLeft = q.status === "needs_exam_mode" && q.earliestExamModeDate
+                ? diffDayKeys(q.earliestExamModeDate, plan.today)
+                : 0;
+              return (
+                <div key={q.quizIndex} className="text-[11px] py-1.5" style={{ borderBottom: "1px solid var(--line)" }}>
+                  <div className={isDesktop ? "flex items-center justify-between gap-2" : ""}>
+                    <div className="min-w-0 flex items-center gap-1.5">
+                      <TierChip tier={q.tier} />
+                      <span className="truncate">{q.quizName}</span>
+                    </div>
+                    <span className={`pmi-mono text-[10px] shrink-0 ${isDesktop ? "" : "block text-right"}`} style={{ color: "var(--ink-soft)" }}>
+                      {stat}
+                    </span>
+                  </div>
+                  <div className={`mt-1 ${isDesktop ? "flex justify-end" : ""}`}>
+                    {q.status === "first_pass" ? (
+                      <button
+                        onClick={() => onStartTodayPractice?.(q.quizIndex, chunk)}
+                        className="pmi-focusable pmi-mono text-[10px] px-2 py-1 rounded-md"
+                        style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
+                      >
+                        {t("planQuizContinueBtn", { n: chunk })}
+                      </button>
+                    ) : cooldownLeft > 0 ? (
+                      <span className="pmi-mono text-[10px]" style={{ color: "var(--ink-soft)" }}>
+                        {t("planQuizExamCooldown", { d: fmtDayKey(q.earliestExamModeDate, lang) })}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => onStartExamMode?.(q.quizIndex)}
+                        className="pmi-focusable pmi-mono text-[10px] px-2 py-1 rounded-md"
+                        style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
+                      >
+                        {t("planQuizExamBtn")}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <table className="pmi-sr">
+        <caption>{t("planChartLabel")}</caption>
+        <thead><tr><th>{lang === "en" ? "Date" : "Ngày"}</th><th>{t("planDailyTarget")}</th><th>{t("planDailyDone")}</th></tr></thead>
+        <tbody>
+          {plan.rows.map((r) => (
+            <tr key={r.dayKey}><td>{fmtDayKey(r.dayKey, lang)}</td><td>{r.target}</td><td>{r.progressed}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /* ---------- Diễn biến mastery theo domain (đọc từ gapSnapshots đã có sẵn) ---------- */
 export function MasteryTrendCard({ masteryTrend }) {
   const { t } = useAppCtx();
@@ -456,7 +741,6 @@ const STUDY_SEGMENT_COLOR = { foundation: "var(--sky)", gap_fill: "var(--seal)",
 export function ExamDateCard({ progress, tracking, gapProfile, onSetExamDate, onFillGap, onGoLibrary, style }) {
   const { t, lang } = useAppCtx();
   const [draft, setDraft] = useState(tracking.examDate || "");
-  const [showQuizPlan, setShowQuizPlan] = useState(false);
   const plan = useMemo(
     () => (tracking.examDate ? buildStudyPlan({ progress, gapProfile, tracking }) : null),
     [progress, gapProfile, tracking]
@@ -551,30 +835,6 @@ export function ExamDateCard({ progress, tracking, gapProfile, onSetExamDate, on
                 ))}
               </div>
 
-              <button onClick={() => setShowQuizPlan((v) => !v)} className="pmi-focusable text-xs font-medium flex items-center gap-1" style={{ color: "var(--ink)" }}>
-                <Icon name={showQuizPlan ? "chevronUp" : "chevronDown"} size={13} />
-                {t("studyQuizPlanToggle")}
-              </button>
-              {showQuizPlan && (
-                <div className="mt-2 space-y-1.5">
-                  <p className="text-[11px]" style={{ color: "var(--ink-soft)" }}>{t("studyQuizPlanExplain", { n: MIN_REDO_GAP_DAYS })}</p>
-                  {plan.quizPassPlan.map((q) => (
-                    <div key={q.quizIndex} className="flex items-center justify-between gap-2 text-xs py-1" style={{ borderBottom: "1px solid var(--line)" }}>
-                      <div className="min-w-0 flex items-center gap-1.5">
-                        <TierChip tier={q.tier} />
-                        <span className="truncate">{q.quizName}</span>
-                      </div>
-                      <span className="pmi-mono text-[11px] shrink-0" style={{ color: q.status === "done" ? "var(--sage)" : "var(--ink-soft)" }}>
-                        {q.status === "done"
-                          ? t("studyQuizPassDone")
-                          : q.status === "first_pass"
-                            ? t("studyQuizPassFirst", { done: q.gradableCount - q.unseenInQuiz, target: q.gradableCount })
-                            : t("studyQuizPassExamMode", { date: fmtDayKey(q.earliestExamModeDate, lang) })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
             </>
           )}
         </>

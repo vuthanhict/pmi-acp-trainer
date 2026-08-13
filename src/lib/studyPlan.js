@@ -270,6 +270,129 @@ export function buildStudyPlan({ progress, gapProfile, tracking }) {
 }
 
 /**
+ * Diễn biến "mục tiêu ngày vs thực tế" và luỹ kế so với kế hoạch, cho TỪNG NGÀY trong quá khứ.
+ *
+ * Mục tiêu mỗi ngày KHÔNG cố định: nó là (khối lượng còn lại) / (số ngày học còn lại) tính TẠI
+ * NGÀY ĐÓ. Vì vậy không thể lấy mục tiêu hôm nay áp ngược cho quá khứ — làm thế thì một ngày
+ * "đạt" hồi đầu lộ trình có thể bị vẽ thành "hụt" chỉ vì hôm nay mục tiêu cao hơn. Hàm này tính
+ * lại đúng phép tính của buildStudyPlan như thể đang đứng ở từng ngày (giống computeCatchUp,
+ * nhưng cho cả một dải ngày thay vì chỉ hôm qua).
+ *
+ * Luỹ kế dùng ĐƠN VỊ KHỐI LƯỢNG LỘ TRÌNH (câu core chưa từng làm + các lượt Exam mode required
+ * còn thiếu), không phải tổng số câu đã trả lời: làm lại một câu đã làm thì tốn thời gian nhưng
+ * không đẩy lộ trình tiến lên, và biểu đồ phải nói đúng điều đó.
+ *
+ * Dựng TOÀN BỘ đường chạy: từ ngày học đầu tiên tới ngày thi. Phần quá khứ là số thật (rows),
+ * phần tương lai là hai đường dự phóng — đường kế hoạch (cần đạt bao nhiêu vào ngày nào) và đường
+ * theo nhịp hiện tại (giữ đà này thì về đích lúc nào) — để nhìn một phát thấy được đang hụt bao xa
+ * và hụt tới ngày thi thì còn thiếu bao nhiêu câu.
+ */
+export function buildPlanProgress({ progress, tracking }) {
+  const { today, tz, examDate, history } = tracking;
+  if (!examDate) return { hasExamDate: false };
+  // Ngày thi đã qua: "còn bao nhiêu ngày để đi hết khối lượng" không còn nghĩa gì, và đường kế
+  // hoạch sẽ dựng đứng lên trần ngay ngày đầu. Trả về cờ riêng để UI nói thẳng thay vì vẽ bậy.
+  if (diffDayKeys(examDate, today) < 0) return { hasExamDate: true, overdue: true };
+
+  const attemptsSorted = progress.attempts.filter((a) => a.answeredAt);
+  const firstDay = attemptsSorted.reduce((mn, a) => {
+    const d = dayKey(a.answeredAt, tz);
+    return d && (!mn || d < mn) ? d : mn;
+  }, null);
+
+  const startDay = firstDay || today;
+  const deadlineDay = shiftDayKey(examDate, -FINAL_REST_DAYS); // ngày học cuối cùng trước khi nghỉ
+
+  // Khối lượng còn lại tính tại thời điểm KẾT THÚC ngày d (đã tính cả hoạt động của ngày d).
+  const workloadAfter = (d) => {
+    const at = progress.attempts.filter((a) => !a.answeredAt || dayKey(a.answeredAt, tz) <= d);
+    const cq = progress.completedQuizzes.filter((c) => !c.completedAt || dayKey(c.completedAt, tz) <= d);
+    return computeQuizWorkload(at, cq, tz).workloadQuestions;
+  };
+
+  const dayList = [];
+  for (let d = startDay; diffDayKeys(today, d) >= 0; d = shiftDayKey(d, 1)) dayList.push(d);
+
+  const scope = workloadAfter(shiftDayKey(startDay, -1)); // tổng khối lượng tại thời điểm bắt đầu
+  const planDays = Math.max(1, diffDayKeys(deadlineDay, startDay));
+  const planPerDay = scope / planDays;
+
+  let prevWorkload = scope;
+  const rows = dayList.map((d, i) => {
+    const daysLeftThatDay = diffDayKeys(examDate, d);
+    const studyDaysLeft = Math.max(0, daysLeftThatDay - FINAL_REST_DAYS);
+    // Mục tiêu của ngày d dựa trên khối lượng còn lại TRƯỚC khi ngày d bắt đầu.
+    const target = studyDaysLeft > 0 ? Math.ceil(prevWorkload / studyDaysLeft) : prevWorkload;
+    const after = workloadAfter(d);
+    const progressed = Math.max(0, prevWorkload - after); // khối lượng lộ trình đi được trong ngày
+    prevWorkload = after;
+
+    const met = target === 0 || progressed >= target;
+    return {
+      dayKey: d,
+      target,
+      progressed,
+      answered: history.get(d)?.answered || 0,
+      met,
+      // HÔM NAY chưa đạt thì là "đang dở", không phải "hụt" — vẫn còn cả ngày để làm. Cùng nguyên
+      // tắc với computeStreak: không phạt người học vì một ngày chưa kết thúc.
+      pending: d === today && !met,
+      delta: progressed - target,
+      cumDone: scope - after,
+      cumPlan: Math.min(scope, Math.round(planPerDay * (i + 1))),
+    };
+  });
+
+  const last = rows[rows.length - 1] || null;
+  const aheadBy = last ? last.cumDone - last.cumPlan : 0;
+  const cumDoneToday = last ? last.cumDone : 0;
+  // Nhịp thực tế 7 ngày gần nhất, tính theo khối lượng lộ trình (không phải tổng câu đã làm).
+  const recent = rows.slice(-7);
+  const pace = recent.length ? recent.reduce((s, r) => s + r.progressed, 0) / recent.length : 0;
+  const remaining = scope - cumDoneToday;
+
+  // Phần tương lai: từ mai tới đúng NGÀY THI. Đường kế hoạch chạm trần vào ngày học cuối rồi đi
+  // ngang qua 2 ngày nghỉ; đường dự phóng theo nhịp 7 ngày gần nhất, cũng chặn trần ở scope.
+  const future = [];
+  for (let d = shiftDayKey(today, 1), k = 1; diffDayKeys(examDate, d) >= 0; d = shiftDayKey(d, 1), k++) {
+    const dayFromStart = diffDayKeys(d, startDay) + 1;
+    future.push({
+      dayKey: d,
+      cumPlan: Math.min(scope, Math.round(planPerDay * dayFromStart)),
+      cumProjected: Math.min(scope, Math.round(cumDoneToday + pace * k)),
+    });
+  }
+
+  const series = [
+    ...rows.map((r) => ({ dayKey: r.dayKey, cumPlan: r.cumPlan, cumDone: r.cumDone, cumProjected: null })),
+    ...future.map((f) => ({ dayKey: f.dayKey, cumPlan: f.cumPlan, cumDone: null, cumProjected: f.cumProjected })),
+  ];
+  // Nối liền hai đoạn: đường dự phóng phải bắt đầu từ đúng điểm hôm nay, không nhảy cóc.
+  if (rows.length) series[rows.length - 1].cumProjected = cumDoneToday;
+
+  const projectedAtExam = future.length ? future[future.length - 1].cumProjected : cumDoneToday;
+
+  return {
+    hasExamDate: true,
+    examDate, deadlineDay, startDay, today,
+    scope, planPerDay, rows, series,
+    todayIndex: Math.max(0, rows.length - 1),
+    cumDone: cumDoneToday,
+    projectedAtExam,
+    shortfallAtExam: Math.max(0, scope - projectedAtExam),
+    metDays: rows.filter((r) => r.met).length,
+    judgedDays: rows.filter((r) => !r.pending).length,
+    aheadBy,
+    aheadDays: planPerDay > 0 ? Number((aheadBy / planPerDay).toFixed(1)) : 0,
+    pace: Math.round(pace),
+    remaining,
+    // Ngày dự kiến xong khối lượng NẾU giữ nhịp hiện tại — null khi nhịp bằng 0 (không bao giờ xong).
+    projectedFinishDay: pace > 0 ? shiftDayKey(today, Math.ceil(remaining / pace)) : null,
+    daysToDeadline: diffDayKeys(deadlineDay, today),
+  };
+}
+
+/**
  * So sánh mục tiêu HÔM QUA (theo lộ trình, tính lại như thể đang đứng ở hôm qua — loại toàn bộ
  * hoạt động của HÔM NAY ra khỏi attempts/completedQuizzes) với số câu thực tế đã làm hôm qua.
  * Không cộng phần thiếu này vào dailyQuestionTarget của hôm nay lần nữa — target hôm nay vốn đã
