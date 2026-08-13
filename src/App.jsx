@@ -20,6 +20,7 @@ import { connectDrive, disconnectDrive, isDriveConnected, uploadBackupToDrive, d
 import { UI_TEXT, fmtStr } from "./i18n/text.js";
 import { AppCtx } from "./context/AppContext.jsx";
 import { QUIZ_CATALOG, QUESTION_INDEX, QUESTIONS_BY_QUIZ, initEmbeddedData } from "./lib/embeddedData.js";
+import { computeSessionScores } from "./lib/sessionScore.js";
 import { calculateGapProfile, gradeAttempt } from "./lib/gapEngine.js";
 import { buildGapPracticeQuestionIds, compactGapSnapshots } from "./lib/trackingEngine.js";
 import { buildStudyPlan } from "./lib/studyPlan.js";
@@ -351,6 +352,14 @@ function App() {
   function setExamDate(dateKey) {
     persist((prev) => ({ ...prev, tracking: { ...prev.tracking, examDate: dateKey } }));
   }
+  /** Bật/tắt việc để dành một bộ đề làm bài kiểm tra thật — xem buildGapPracticeQuestionIds. */
+  function toggleReservedQuiz(quizIndex) {
+    persist((prev) => {
+      const cur = prev.settings?.reservedQuizIndexes || [];
+      const next = cur.includes(quizIndex) ? cur.filter((i) => i !== quizIndex) : [...cur, quizIndex];
+      return { ...prev, settings: { ...prev.settings, reservedQuizIndexes: next } };
+    });
+  }
   function updateVocabSrs(nextMap) {
     persist((prev) => ({ ...prev, vocabSrs: nextMap }));
   }
@@ -368,7 +377,10 @@ function App() {
   /** Nút "Làm tiếp N câu" ở màn Hôm nay: tự chọn câu theo GAP, vào bài ngay trong một chạm. */
   function startQuickPractice(size) {
     const taskIds = gapProfile.tasks.slice(0, 5).map((tk) => tk.taskId);
-    const ids = buildGapPracticeQuestionIds({ attempts: progress.attempts, taskIds, size });
+    const ids = buildGapPracticeQuestionIds({
+      attempts: progress.attempts, taskIds, size,
+      reservedQuizIndexes: progress.settings?.reservedQuizIndexes || [],
+    });
     if (!ids.length) return;
     startFillGapSession(ids, ids.length);
   }
@@ -414,20 +426,7 @@ function App() {
         });
       }
       const finalAttempts = attempts.filter((a) => a.sessionId === session.sessionId);
-      const graded = finalAttempts.filter((a) => a.gradeStatus === "graded");
-      const trusted = graded.filter((a) => a.eligibleForGap);
-      const trustedCorrect = trusted.filter((a) => a.isCorrect).length;
-      const rawGraded = finalAttempts.filter((a) => a.gradeStatus !== "manual_review");
-      const rawCorrect = rawGraded.filter((a) => a.isCorrect).length;
-      const independent = trusted.filter((a) => !a.supportUsage?.assisted);
-      const independentCorrect = independent.filter((a) => a.isCorrect).length;
-
-      // Điểm "lần đầu gặp": chỉ tính những câu chưa từng xuất hiện ở BẤT KỲ phiên nào trước đó.
-      // Làm lại một bộ đề thì phần lớn điểm tăng là do nhớ đáp án; con số này tách phần đó ra
-      // để người học không tự tin sai trước kỳ thi thật.
       const seenBefore = new Set(prev.attempts.filter((a) => a.sessionId !== session.sessionId).map((a) => a.questionId));
-      const firstExposure = trusted.filter((a) => !seenBefore.has(a.questionId));
-      const firstExposureCorrect = firstExposure.filter((a) => a.isCorrect).length;
 
       const completedEntry = {
         quizIndex: session.quizIndex,
@@ -436,14 +435,7 @@ function App() {
         mode: session.mode,
         completedAt: isoNow(),
         questionIds: session.questionIds,
-        rawScore: { correct: rawCorrect, graded: rawGraded.length, percent: rawGraded.length ? Number(((rawCorrect / rawGraded.length) * 100).toFixed(2)) : 0 },
-        trustedScore: { correct: trustedCorrect, graded: trusted.length, percent: trusted.length ? Number(((trustedCorrect / trusted.length) * 100).toFixed(2)) : 0 },
-        independentScore: independent.length
-          ? { correct: independentCorrect, graded: independent.length, percent: Number(((independentCorrect / independent.length) * 100).toFixed(2)) }
-          : null,
-        firstExposureScore: firstExposure.length
-          ? { correct: firstExposureCorrect, graded: firstExposure.length, percent: Number(((firstExposureCorrect / firstExposure.length) * 100).toFixed(2)) }
-          : null,
+        ...computeSessionScores(finalAttempts, seenBefore),
       };
 
       const nextProgress = {
@@ -580,7 +572,9 @@ function App() {
               </div>
             )}
 
-            <div className={!isDesktop ? "max-w-md mx-auto px-4" : view === "quiz" && isWide ? "max-w-6xl mx-auto px-8" : isWide ? "max-w-5xl mx-auto px-8" : "max-w-3xl mx-auto px-8"}>
+            {/* Bề rộng nội dung: màn hình rộng thì dùng rộng, RIÊNG màn làm bài giữ hẹp hơn —
+                dòng chữ quá dài làm mắt khó bắt đầu dòng mới, mà đề thi là thứ phải đọc kỹ. */}
+            <div className={!isDesktop ? "max-w-md mx-auto px-4" : view === "quiz" ? (isWide ? "max-w-5xl mx-auto px-8" : "max-w-3xl mx-auto px-8") : isWide ? "max-w-7xl mx-auto px-8" : "max-w-5xl mx-auto px-6"}>
               {!isDesktop && (
                 <header className="pt-5 pb-3 flex items-center justify-between">
                   <div>
@@ -621,6 +615,7 @@ function App() {
                   <LibraryScreen
                     progress={progress}
                     onOpenQuiz={(qi, mode) => startQuizSession(qi, mode)}
+                    onToggleReserved={toggleReservedQuiz}
                     onOpenHistory={(qi) => { setHistoryQuizFilter(qi); setView("history"); }}
                     onOpenMistakes={(qi) => { setMistakeReviewQuizIndex(qi); setView("mistakes"); }}
                   />
@@ -659,6 +654,8 @@ function App() {
                     onGoLibrary={() => setView("library")}
                     onSetGoal={setDailyGoal}
                     onSetExamDate={setExamDate}
+                    onStartTodayPractice={startTodayPracticeSession}
+                    onStartExamMode={(qi) => startQuizSession(qi, "exam")}
                   />
                 )}
                 {view === "fillgap" && <FillGapScreen progress={progress} gapProfile={gapProfile} onStart={(ids, size) => startFillGapSession(ids, size)} onBack={() => setView("gap")} />}

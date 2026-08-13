@@ -4,6 +4,9 @@
    phần của shape mặc định 1 attempt, dùng bởi ensureSupportUsage(). */
 import { compactGapSnapshots } from "./trackingEngine.js";
 import { loadLegacyVocabSrs } from "./vocabSrs.js";
+import { attemptIsTrusted, computeSessionScores } from "./sessionScore.js";
+import { gradeAttempt } from "./gapEngine.js";
+import { QUESTION_INDEX } from "./embeddedData.js";
 
 export const DEFAULT_SUPPORT_USAGE = {
   translationOpenedBeforeAnswer: false,
@@ -82,7 +85,7 @@ const storage = {
 };
 
 const PROGRESS_KEY = "progress";
-export const PROGRESS_SCHEMA_VERSION = 5;
+export const PROGRESS_SCHEMA_VERSION = 6;
 
 export function defaultProgress() {
   return {
@@ -105,7 +108,10 @@ export function defaultProgress() {
     // muốn học thẻ này" (saved) và "tôi đã thuộc tới đâu" (srs). Một thẻ có thể có srs mà chưa
     // từng được lưu (ôn ở màn Ôn từ vựng), hoặc được lưu mà chưa ôn lần nào.
     vocabSaved: {},
-    settings: { theme: "light", uiLanguage: "vi", sidebarOpen: true },
+    // Đề người học để dành làm bài kiểm tra thật ở tuần cuối: luyện GAP không bao giờ rút câu
+    // từ những đề này, để chúng còn nguyên vẹn khi cần một phép đo sạch (xem
+    // buildGapPracticeQuestionIds).
+    settings: { theme: "light", uiLanguage: "vi", sidebarOpen: true, reservedQuizIndexes: [] },
     updatedAt: null,
   };
 }
@@ -117,6 +123,7 @@ export function ensureSupportUsage(attempt) {
 }
 export function migrateProgress(raw) {
   const base = { ...defaultProgress(), ...raw, settings: { ...defaultProgress().settings, ...(raw.settings || {}) } };
+  base.settings.reservedQuizIndexes = Array.isArray(base.settings.reservedQuizIndexes) ? base.settings.reservedQuizIndexes : [];
   base.attempts = (raw.attempts || []).map(ensureSupportUsage);
   // v2 → v3: thêm nhánh `tracking`. Backup cũ không có trường này vẫn nạp bình thường,
   // chỉ là chưa đặt mục tiêu — không có bước migrate nào đụng tới attempts/completedQuizzes.
@@ -129,8 +136,58 @@ export function migrateProgress(raw) {
   // v4 → v5: thêm `vocabSaved` (bộ thẻ tự lưu khi làm bài). Backup cũ không có trường này nạp
   // bình thường, chỉ là bộ tự lưu rỗng — không đụng tới vocabSrs đã có.
   base.vocabSaved = raw.vocabSaved || {};
+  // v5 → v6: tính lại điểm của các lần làm bài đã lưu (xem recomputeCompletedScores). Chạy ở MỌI
+  // lần nạp chứ không chỉ khi nâng cấp version: ngân hàng câu hỏi được sửa dần (phân loại lại
+  // domain/task, sửa đáp án), và một bản backup cũ nạp vào máy đã migrate rồi vẫn cần tính lại.
+  Object.assign(base, recomputeCompletedScores(base.attempts, base.completedQuizzes));
   base.schemaVersion = PROGRESS_SCHEMA_VERSION;
   return base;
+}
+/* Tính lại rawScore/trustedScore/independentScore/firstExposureScore của mọi lần làm bài đã lưu,
+   từ attempts + ngân hàng câu hỏi HIỆN TẠI.
+
+   Vì sao cần: điểm được chốt một lần lúc nộp bài và không bao giờ được tính lại. Đề SUPER 1 (quiz
+   89/90) từng được nhúng vào khi chưa phân loại domain/task ECO, nên mọi câu có eligibleForGap =
+   false → trustedScore = 0/0 → màn Results và Lịch sử hiển thị 0% dù người học làm đúng quá nửa.
+   Sau khi phân loại (tools/classifySuper1.mjs), điểm cũ vẫn kẹt ở 0 nếu không tính lại.
+
+   Cờ eligibleForGap đóng băng trong từng attempt cũng được làm mới theo ngân hàng hiện tại, để dữ
+   liệu xuất ra (backup/Drive) không còn mang cờ sai. Câu trả lời đang treo ở trạng thái
+   "manual_review" được chấm lại nếu câu hỏi nay đã chấm tự động được (44 câu bị gắn nhầm cờ
+   manualReview chỉ vì chưa phân loại — xem tools/classifyRemaining.mjs); ngoài trường hợp đó thì
+   isCorrect/gradeStatus giữ nguyên, vì đó là điều người học đã thực sự làm. */
+export function recomputeCompletedScores(attempts, completedQuizzes) {
+  const freshAttempts = attempts.map((raw) => {
+    let a = raw;
+    if (a.gradeStatus === "manual_review") {
+      const question = QUESTION_INDEX.get(a.questionId);
+      if (question && !question.manualReview) a = { ...a, ...gradeAttempt(question, a.selectedOptionIds) };
+    }
+    const trusted = attemptIsTrusted(a);
+    return trusted === a.eligibleForGap ? a : { ...a, eligibleForGap: trusted };
+  });
+
+  const bySession = new Map();
+  for (const a of freshAttempts) {
+    if (!bySession.has(a.sessionId)) bySession.set(a.sessionId, []);
+    bySession.get(a.sessionId).push(a);
+  }
+
+  const freshCompleted = completedQuizzes.map((entry) => {
+    const sessionAttempts = bySession.get(entry.sessionId);
+    if (!sessionAttempts?.length) return entry; // lần làm không còn attempt nào — giữ nguyên số cũ
+    // "Đã gặp trước đó" phải tính theo MỐC THỜI GIAN của lần làm này, không phải toàn bộ lịch sử:
+    // nếu không, các lần làm cũ sẽ bị coi là đã gặp câu hỏi ở những lần làm SAU chúng.
+    const cutoff = new Date(entry.completedAt ?? 0).getTime() || Infinity;
+    const seenBefore = new Set(
+      freshAttempts
+        .filter((a) => a.sessionId !== entry.sessionId && new Date(a.answeredAt ?? 0).getTime() < cutoff)
+        .map((a) => a.questionId),
+    );
+    return { ...entry, ...computeSessionScores(sessionAttempts, seenBefore) };
+  });
+
+  return { attempts: freshAttempts, completedQuizzes: freshCompleted };
 }
 export function mergeProgressData(base, data) {
   const existingKeys = new Set(base.attempts.map((a) => `${a.sessionId}::${a.questionId}`));
@@ -154,6 +211,9 @@ export function mergeProgressData(base, data) {
     vocabSaved: mergeVocabSaved(base.vocabSaved, data.vocabSaved),
     settings: { ...base.settings, ...(data.settings || {}) },
   };
+  // Lần làm bài đến từ máy khác/bản backup cũ mang điểm chốt theo ngân hàng lúc đó — tính lại
+  // theo ngân hàng hiện tại, giống hệt đường nạp qua migrateProgress().
+  Object.assign(merged, recomputeCompletedScores(merged.attempts, merged.completedQuizzes));
   return { merged, addedCount: newAttempts.length };
 }
 /* Gộp SRS từ vựng của 2 nguồn theo từng thẻ — giữ bản "học nhiều/thuộc kỹ hơn" (reviewCount cao
