@@ -5,7 +5,7 @@ import { QUESTION_INDEX, VI_ITEM_INDEX } from "../../lib/embeddedData.js";
 import { parseMatchingQuestion } from "../../lib/matching.js";
 import { gradeAttempt } from "../../lib/gapEngine.js";
 import { DEFAULT_SUPPORT_USAGE } from "../../lib/storage.js";
-import { normOpt, isoNow, fmtClock } from "../../lib/utils.js";
+import { normOpt, isoNow, fmtClock, setsEqual } from "../../lib/utils.js";
 import { Card, Button, ProgressBar, Icon, QuestionImage } from "../../components/ui/primitives.jsx";
 import {
   BilingualToggle, BilingualStemBlock, ChoiceViLine, ExplanationText, BilingualAnswerBlock,
@@ -434,6 +434,15 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
   function persistAnswer(finalSelected, finalConfidence, opts = {}) {
     const grade = opts.forceGrade ? gradeAttempt(q, finalSelected) : { isCorrect: null, gradeStatus: "pending", eligibleForGap: false };
     const ms = elapsedMs();
+    // "Đã đổi đáp án": từng lưu một lựa chọn khác cho chính câu này trong phiên này. DÍNH như các
+    // cờ supportUsage — đổi rồi thì lượt làm đó mãi mãi là một lượt có đổi, kể cả những lần
+    // persistAnswer sau (điều hướng, bấm Kiểm tra, nộp bài) lưu lại cùng một đáp án.
+    // Trước đây trường này bị gán cứng `false`, nên chẩn đoán answer_change_risk trong
+    // diagnoseTask() không bao giờ kích hoạt được (0/24 task trên dữ liệu thật) và cả nhánh
+    // isMindsetIssue lẫn nhãn i18n của nó đều là code chết.
+    const priorSelected = existing?.selectedOptionIds;
+    const changedAnswer = !!existing?.changedAnswer
+      || (Array.isArray(priorSelected) && priorSelected.length > 0 && !setsEqual(priorSelected, finalSelected));
     const attempt = {
       sessionId: session.sessionId,
       questionId: q.id,
@@ -447,7 +456,7 @@ export function QuizRunner({ session, attempts, onSaveAttempt, onUpdateSession, 
       confidence: finalConfidence,
       responseTimeMs: ms > 0 ? ms : null,
       timingSource: ms > 0 ? "per_question" : "not_recorded",
-      changedAnswer: false,
+      changedAnswer,
       flagged: session.flaggedQuestionIds.includes(q.id),
       answeredAt: isoNow(),
       supportUsage: currentSupportUsageFor(getHelpMemory(q.id)),

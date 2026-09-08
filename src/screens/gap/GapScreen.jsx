@@ -3,7 +3,7 @@ import { useAppCtx } from "../../context/AppContext.jsx";
 import { useIsDesktop, useIsWide } from "../../hooks/useViewport.js";
 import { DOMAIN_MINDSET, DIAGNOSIS_LABEL } from "../../i18n/text.js";
 import { fmtPct } from "../../lib/utils.js";
-import { buildGapPracticeQuestionIds } from "../../lib/trackingEngine.js";
+import { buildGapPracticeQuestionIds, MAX_GAP_TASKS } from "../../lib/trackingEngine.js";
 import { Card, Button, DomainRing, StatusChip, ProgressBar } from "../../components/ui/primitives.jsx";
 
 /* ===================== GAP Screen ===================== */
@@ -95,14 +95,28 @@ export function DiagnosisChips({ diagnoses }) {
 export function FillGapScreen({ progress, gapProfile, onStart, onBack }) {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
-  const [selectedTasks, setSelectedTasks] = useState(() => gapProfile.tasks.slice(0, 3).map((tk) => tk.taskId));
+  const [selectedTasks, setSelectedTasks] = useState(() => gapProfile.tasks.slice(0, MAX_GAP_TASKS).map((tk) => tk.taskId));
   const [size, setSize] = useState(10);
-  const candidateTasks = gapProfile.tasks.slice(0, 8);
+  // MỌI task đều chọn được, nhóm theo domain. Bản trước chỉ liệt kê `tasks.slice(0, 8)` — 8 task
+  // ưu tiên cao nhất theo gapPriority — mà gapPriority nhân với examWeight, nên domain có trọng
+  // số đề thi thấp bị đẩy khỏi danh sách bất kể yếu tới đâu: trên dữ liệu thật cả bốn task
+  // Product (P1…P4) đều nằm ngoài top 8 trong khi Product là domain mastery thấp nhất và
+  // ReadinessCard đang nêu đích danh nó là thứ còn thiếu. Người học được bảo phải sửa Product
+  // nhưng không có cách nào chọn luyện Product.
+  const tasksByDomain = useMemo(() => {
+    const m = new Map();
+    for (const tk of gapProfile.tasks) {
+      if (!m.has(tk.domain)) m.set(tk.domain, []);
+      m.get(tk.domain).push(tk);
+    }
+    return m;
+  }, [gapProfile]);
+  const atLimit = selectedTasks.length >= MAX_GAP_TASKS;
 
   function toggleTask(taskId) {
     setSelectedTasks((prev) => {
       if (prev.includes(taskId)) return prev.filter((tid) => tid !== taskId);
-      if (prev.length >= 3) return prev;
+      if (prev.length >= MAX_GAP_TASKS) return prev;
       return [...prev, taskId];
     });
   }
@@ -119,20 +133,46 @@ export function FillGapScreen({ progress, gapProfile, onStart, onBack }) {
     <div className="pt-1 space-y-4 pb-4">
       <button onClick={onBack} className="pmi-focusable text-xs" style={{ color: "var(--ink-soft)" }}>{t("backToGap")}</button>
       <Card>
-        <p className="pmi-eyebrow mb-3">{t("chooseTasks")}</p>
-        <div className="space-y-2">
-          {candidateTasks.map((tk) => (
-            <button
-              key={tk.taskId}
-              onClick={() => toggleTask(tk.taskId)}
-              className="pmi-focusable w-full text-left px-3 py-2.5 rounded-lg flex items-center justify-between"
-              style={selectedTasks.includes(tk.taskId) ? { border: "1.5px solid var(--ink)", background: "var(--paper)" } : { border: "1.5px solid var(--line-strong)" }}
-            >
-              <span className="text-sm">{tk.taskId} · {tk.taskName}</span>
-              <StatusChip status={tk.status} />
-            </button>
-          ))}
-          {candidateTasks.length === 0 && <p className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("noTasksYet")}</p>}
+        <div className="flex items-baseline justify-between mb-3">
+          <span className="pmi-eyebrow">{t("chooseTasks")}</span>
+          <span className="pmi-mono text-[10px]" style={{ color: "var(--ink-soft)" }}>
+            {t("chooseTasksCount", { n: selectedTasks.length, max: MAX_GAP_TASKS })}
+          </span>
+        </div>
+        <div className="space-y-3">
+          {gapProfile.domains.map((d) => {
+            const rows = tasksByDomain.get(d.domain) || [];
+            if (!rows.length) return null;
+            return (
+              <div key={d.domain}>
+                <p className="pmi-mono text-[10px] mb-1.5" style={{ color: "var(--ink-soft)" }}>{d.domain}</p>
+                <div className="space-y-2">
+                  {rows.map((tk) => {
+                    const on = selectedTasks.includes(tk.taskId);
+                    // Đã chọn đủ thì các task còn lại mờ đi và không bấm được — bản trước vẫn cho
+                    // bấm nhưng lặng lẽ bỏ qua, không có phản hồi nào.
+                    const blocked = !on && atLimit;
+                    return (
+                      <button
+                        key={tk.taskId}
+                        onClick={() => toggleTask(tk.taskId)}
+                        disabled={blocked}
+                        className="pmi-focusable w-full text-left px-3 py-2.5 rounded-lg flex items-center justify-between"
+                        style={{
+                          ...(on ? { border: "1.5px solid var(--ink)", background: "var(--paper)" } : { border: "1.5px solid var(--line-strong)" }),
+                          ...(blocked ? { opacity: 0.45, cursor: "not-allowed" } : null),
+                        }}
+                      >
+                        <span className="text-sm">{tk.taskId} · {tk.taskName}</span>
+                        <StatusChip status={tk.status} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+          {gapProfile.tasks.length === 0 && <p className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("noTasksYet")}</p>}
         </div>
       </Card>
       <Card>

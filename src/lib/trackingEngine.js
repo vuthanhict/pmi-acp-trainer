@@ -16,6 +16,9 @@ import { recencyWeight } from "./gapEngine.js";
 
 export const GOAL_PRESETS = [10, 20, 30, 50];
 export const DEFAULT_GOAL_VALUE = 20;
+// Số task tối đa cho một phiên luyện GAP. Nhiều hơn thì mỗi task chỉ còn 2-3 câu, không đủ để
+// dịch chuyển mastery của task nào.
+export const MAX_GAP_TASKS = 3;
 export const READINESS_READY_BAR = 75;   // ngưỡng thận trọng do app đặt, KHÔNG phải chuẩn PMI
 // Vạch tham chiếu trên biểu đồ ĐỘ CHÍNH XÁC. Tách khỏi READINESS_READY_BAR dù cùng giá trị: một
 // bên là ngưỡng của chỉ số readiness (0-100, tổng hợp 4 hệ số), một bên là tỉ lệ trả lời đúng —
@@ -369,6 +372,31 @@ export function buildQuestionReviewState(attempts) {
     state.set(a.questionId, cur);
   }
   return state;
+}
+
+/**
+ * Chọn tối đa `size` task cho một phiên luyện nhanh, BẢO ĐẢM PHỦ ĐỦ MỌI DOMAIN: lấy task ưu tiên
+ * cao nhất của từng domain trước, rồi mới lấp phần còn lại theo gapPriority chung.
+ *
+ * Lấy thẳng `tasks.slice(0, n)` như bản trước thì domain có examWeight thấp không bao giờ lọt
+ * vào, vì gapPriority nhân với examWeight. Đo trên dữ liệu thật: top 5 là M2, D7, D3, D5, L1 —
+ * không có Product nào, dù Product là domain mastery thấp nhất và ReadinessCard đang nêu đích
+ * danh nó. Luyện nhanh khi đó không bao giờ phục vụ được chỗ yếu nhất.
+ */
+export function pickGapTaskIds(tasks, n) {
+  const picked = [];
+  const seenDomain = new Set();
+  for (const t of tasks) {
+    if (picked.length >= n) break;
+    if (seenDomain.has(t.domain)) continue;
+    seenDomain.add(t.domain);
+    picked.push(t);
+  }
+  for (const t of tasks) {
+    if (picked.length >= n) break;
+    if (!picked.includes(t)) picked.push(t);
+  }
+  return picked.map((t) => t.taskId);
 }
 
 /**

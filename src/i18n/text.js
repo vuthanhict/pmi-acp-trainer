@@ -154,7 +154,7 @@ export const UI_TEXT = {
     speedLabel: "Speed", evidenceLabel: "Evidence", viHelpRatioLabel: "Hỗ trợ VN", practiceGapNow: "Luyện GAP ngay",
 
     // Fill-gap
-    backToGap: "← Quay lại GAP", chooseTasks: "Chọn tối đa 3 task ưu tiên", noTasksYet: "Chưa có task nào để luyện, hãy làm ít nhất một đề trước.",
+    backToGap: "← Quay lại GAP", chooseTasks: "Chọn task cần luyện", chooseTasksCount: "đã chọn {n}/{max}", noTasksYet: "Chưa có task nào để luyện, hãy làm ít nhất một đề trước.",
     sessionSize: "Số câu trong session", startFillGapBtn: "Bắt đầu luyện GAP",
 
     // Data
@@ -440,7 +440,7 @@ export const UI_TEXT = {
     attemptsLabel: "Attempts", sessionsLabel: "Sessions", accLabel: "Accuracy", calLabel: "Calibration",
     speedLabel: "Speed", evidenceLabel: "Evidence", viHelpRatioLabel: "VN support use", practiceGapNow: "Practice GAP now",
 
-    backToGap: "← Back to GAP", chooseTasks: "Choose up to 3 priority tasks", noTasksYet: "No tasks to practice yet — take at least one exam first.",
+    backToGap: "← Back to GAP", chooseTasks: "Pick tasks to drill", chooseTasksCount: "{n}/{max} selected", noTasksYet: "No tasks to practice yet — take at least one exam first.",
     sessionSize: "Questions per session", startFillGapBtn: "Start GAP practice",
 
     overview: "Overview", attemptsCount: "{n} attempts · {m} exams completed", lastUpdated: "Last updated: {t}",

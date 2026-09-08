@@ -22,7 +22,7 @@ import { AppCtx } from "./context/AppContext.jsx";
 import { QUIZ_CATALOG, QUESTION_INDEX, QUESTIONS_BY_QUIZ, initEmbeddedData } from "./lib/embeddedData.js";
 import { computeSessionScores } from "./lib/sessionScore.js";
 import { calculateGapProfile, gradeAttempt } from "./lib/gapEngine.js";
-import { buildGapPracticeQuestionIds, compactGapSnapshots } from "./lib/trackingEngine.js";
+import { buildGapPracticeQuestionIds, compactGapSnapshots, pickGapTaskIds } from "./lib/trackingEngine.js";
 import { buildStudyPlan, examAnsweredQuestionIds } from "./lib/studyPlan.js";
 import {
   defaultProgress, ensureSupportUsage, migrateProgress, mergeProgressData, loadProgressFromStorage, saveProgressToStorage,
@@ -392,7 +392,7 @@ function App() {
   }
   /** Nút "Làm tiếp N câu" ở màn Hôm nay: tự chọn câu theo GAP, vào bài ngay trong một chạm. */
   function startQuickPractice(size) {
-    const taskIds = gapProfile.tasks.slice(0, 5).map((tk) => tk.taskId);
+    const taskIds = pickGapTaskIds(gapProfile.tasks, 5);
     const ids = buildGapPracticeQuestionIds({
       attempts: progress.attempts, taskIds, size,
       reservedQuizIndexes: progress.settings?.reservedQuizIndexes || [],
