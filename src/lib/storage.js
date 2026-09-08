@@ -67,20 +67,28 @@ async function checkIdbUsable() {
 const storage = {
   async get(key) {
     if (await checkIdbUsable()) {
-      try { return await idbGet(key); } catch (e) { /* rơi về localStorage bên dưới */ }
+      // `?? localStorage` chứ không chỉ `return await idbGet(...)`: máy đã dùng app từ trước khi
+      // có IndexedDB vẫn còn dữ liệu nằm ở localStorage, và IndexedDB (mới tạo) thì rỗng.
+      try {
+        const v = await idbGet(key);
+        if (v != null) return v;
+      } catch (e) { /* rơi về localStorage bên dưới */ }
     }
     return localStorage.getItem(key);
   },
   async set(key, value) {
-    let ok = false;
+    // CHỈ ghi localStorage khi IndexedDB không dùng được. Ghi cả hai nơi (như trước đây) khiến
+    // mỗi lần lưu phải giữ thêm một bản sao chuỗi JSON của toàn bộ progress trong bộ nhớ, và với
+    // hạn mức ~5MB của localStorage thì bản ghi đó vốn đã luôn thất bại ở người dùng lâu năm —
+    // trả giá bộ nhớ cho một bản sao không bao giờ được đọc tới.
     if (await checkIdbUsable()) {
-      try { await idbSet(key, value); ok = true; } catch (e) { /* thử localStorage bên dưới */ }
+      try { await idbSet(key, value); return; } catch (e) { /* thử localStorage bên dưới */ }
     }
     try {
       localStorage.setItem(key, value);
-      ok = true;
-    } catch (e) { /* localStorage cũng bị chặn (vd. Safari private mode cũ) */ }
-    if (!ok) throw new Error("storage-unavailable");
+    } catch (e) { /* localStorage cũng bị chặn (vd. Safari private mode cũ) */
+      throw new Error("storage-unavailable");
+    }
   },
 };
 

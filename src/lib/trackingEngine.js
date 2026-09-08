@@ -409,28 +409,59 @@ export function buildGapPracticeQuestionIds({ attempts, taskIds, size, reservedQ
   return picked.map((q) => q.id);
 }
 
+/* Mỗi phiên làm bài sinh ĐÚNG MỘT snapshot (xem finishSession ở App.jsx), nên hai bản có cùng
+   sessionId luôn là bản sao của nhau. Giữ bản còn nguyên chi tiết (chưa nén); hoà thì giữ bản
+   sinh sau. */
+function betterSnapshot(a, b) {
+  if (!!a.compacted !== !!b.compacted) return a.compacted ? b : a;
+  return new Date(a.generatedAt || 0) >= new Date(b.generatedAt || 0) ? a : b;
+}
+
 /**
- * Nén gapSnapshots cũ hơn 90 ngày: giữ lại phần domains + 10 task ưu tiên nhất, bỏ phần
- * chi tiết hàng trăm task. Snapshot đầy đủ nặng ~40KB, sau 100 phiên là 4MB — vượt hạn
- * mức localStorage và làm chậm mọi lần lưu.
+ * Chuẩn hoá danh sách gapSnapshots trước khi ghi xuống storage: khử trùng lặp theo sessionId,
+ * sắp lại theo thời gian, rồi nén những snapshot cũ hơn 90 ngày (giữ domains + 10 task ưu tiên
+ * nhất, bỏ phần chi tiết).
+ *
+ * KHỬ TRÙNG LẶP là bắt buộc, không phải tối ưu: mergeProgressData() nối [...base, ...data] cho
+ * gapSnapshots trong khi attempts/completedQuizzes đều được lọc theo khoá. Mỗi lần đồng bộ Drive
+ * (chạy sau MỌI lần autosave) lại nối nguyên danh sách trên Drive vào danh sách cục bộ, nên số
+ * snapshot nhân lên theo cấp số nhân: một máy có 110 phiên đã sinh ra 10.623 snapshot ≈ 94MB,
+ * đủ để JSON.parse lúc mở app hết bộ nhớ. Đặt ngay trong hàm này để cả ba đường ghi
+ * (migrateProgress, mergeProgressData, finishSession) đều được chuẩn hoá — và bản dữ liệu đã
+ * phình sẵn trên máy người dùng tự lành ở lần mở app kế tiếp.
+ *
+ * Sắp theo generatedAt cũng là điều kiện đúng của buildMasteryTrend (nó cắt `.slice(-40)` để lấy
+ * 40 phiên GẦN NHẤT — sau khi gộp từ máy khác, thứ tự nối không còn là thứ tự thời gian).
  */
 export function compactGapSnapshots(snapshots, now = Date.now()) {
   const cutoff = now - 90 * 86_400_000;
-  return (snapshots || []).map((s) => {
-    if (!s?.profile || s.compacted) return s;
-    const at = new Date(s.generatedAt || 0).getTime();
-    if (!at || at >= cutoff) return s;
-    return {
-      sessionId: s.sessionId,
-      generatedAt: s.generatedAt,
-      compacted: true,
-      profile: {
-        generatedAt: s.profile.generatedAt,
-        eligibleAttempts: s.profile.eligibleAttempts,
-        domains: s.profile.domains,
-        tasks: (s.profile.tasks || []).slice(0, 10),
-        nextBestActions: s.profile.nextBestActions || [],
-      },
-    };
+
+  const bySession = new Map();
+  (snapshots || []).forEach((s, i) => {
+    if (!s) return;
+    // Snapshot không có sessionId (dữ liệu cũ/hỏng) không thể so trùng — giữ nguyên từng bản.
+    const key = s.sessionId || `__anon-${i}`;
+    const cur = bySession.get(key);
+    bySession.set(key, cur ? betterSnapshot(s, cur) : s);
   });
+
+  return [...bySession.values()]
+    .sort((a, b) => new Date(a.generatedAt || 0) - new Date(b.generatedAt || 0))
+    .map((s) => {
+      if (!s?.profile || s.compacted) return s;
+      const at = new Date(s.generatedAt || 0).getTime();
+      if (!at || at >= cutoff) return s;
+      return {
+        sessionId: s.sessionId,
+        generatedAt: s.generatedAt,
+        compacted: true,
+        profile: {
+          generatedAt: s.profile.generatedAt,
+          eligibleAttempts: s.profile.eligibleAttempts,
+          domains: s.profile.domains,
+          tasks: (s.profile.tasks || []).slice(0, 10),
+          nextBestActions: s.profile.nextBestActions || [],
+        },
+      };
+    });
 }
