@@ -410,32 +410,59 @@ export function buildGapPracticeQuestionIds({ attempts, taskIds, size, reservedQ
 }
 
 /* Mỗi phiên làm bài sinh ĐÚNG MỘT snapshot (xem finishSession ở App.jsx), nên hai bản có cùng
-   sessionId luôn là bản sao của nhau. Giữ bản còn nguyên chi tiết (chưa nén); hoà thì giữ bản
-   sinh sau. */
+   sessionId luôn là bản sao của nhau. Giữ bản còn nguyên chi tiết (nguồn giàu nhất để chiếu
+   xuống shape lưu trữ); hoà thì giữ bản sinh sau. */
 function betterSnapshot(a, b) {
   if (!!a.compacted !== !!b.compacted) return a.compacted ? b : a;
   return new Date(a.generatedAt || 0) >= new Date(b.generatedAt || 0) ? a : b;
 }
 
+/* Chiếu một snapshot xuống ĐÚNG phần được đọc: diễn biến mastery từng domain theo thời gian.
+   buildMasteryTrend là người đọc DUY NHẤT của gapSnapshots trong toàn app, và nó chỉ cần
+   generatedAt + profile.domains[].mastery; `tasks` (24 task, kèm diagnoses) và `nextBestActions`
+   không có nơi nào đọc tới — chúng chỉ là bản sao của thứ calculateGapProfile luôn tính lại từ
+   attempts mỗi lần render (xem nguyên tắc ở đầu file).
+
+   `eligibleAttempts` giữ lại vì nó nói snapshot này dựa trên bao nhiêu bằng chứng — một con số,
+   và không suy ngược được từ attempts sau này.
+
+   Vì sao snapshot vẫn phải tồn tại dù nguyên tắc chung là "không lưu bản sao tổng hợp": mastery
+   có trọng số theo độ mới (recencyWeight tính theo `now`), nên mastery của ngày hôm qua KHÔNG
+   dựng lại được từ attempts hôm nay. Đây là ngoại lệ duy nhất, và nó chỉ cần đúng 4 con số.
+
+   Đo trên dữ liệu thật (129 phiên): 9.104 B/snapshot → 527 B, tức 1.147KB → 66KB. */
+function compactSnapshot(s) {
+  return {
+    sessionId: s.sessionId,
+    generatedAt: s.generatedAt,
+    compacted: true,
+    profile: {
+      eligibleAttempts: s.profile.eligibleAttempts,
+      domains: s.profile.domains,
+    },
+  };
+}
+
 /**
  * Chuẩn hoá danh sách gapSnapshots trước khi ghi xuống storage: khử trùng lặp theo sessionId,
- * sắp lại theo thời gian, rồi nén những snapshot cũ hơn 90 ngày (giữ domains + 10 task ưu tiên
- * nhất, bỏ phần chi tiết).
+ * sắp lại theo thời gian, rồi nén từng bản xuống phần thực sự được đọc (xem compactSnapshot).
  *
  * KHỬ TRÙNG LẶP là bắt buộc, không phải tối ưu: mergeProgressData() nối [...base, ...data] cho
  * gapSnapshots trong khi attempts/completedQuizzes đều được lọc theo khoá. Mỗi lần đồng bộ Drive
  * (chạy sau MỌI lần autosave) lại nối nguyên danh sách trên Drive vào danh sách cục bộ, nên số
- * snapshot nhân lên theo cấp số nhân: một máy có 110 phiên đã sinh ra 10.623 snapshot ≈ 94MB,
+ * snapshot nhân lên theo cấp số nhân: một máy có 129 phiên đã sinh ra 35.760 snapshot ≈ 318MB,
  * đủ để JSON.parse lúc mở app hết bộ nhớ. Đặt ngay trong hàm này để cả ba đường ghi
  * (migrateProgress, mergeProgressData, finishSession) đều được chuẩn hoá — và bản dữ liệu đã
  * phình sẵn trên máy người dùng tự lành ở lần mở app kế tiếp.
  *
+ * NÉN NGAY LÚC GHI, không đợi 90 ngày như trước: phần bị bỏ đi vốn không có người đọc, nên giữ
+ * nó thêm 90 ngày chỉ là trả tiền bộ nhớ cho dữ liệu chết. Bản đã nén theo shape cũ (còn 10
+ * task) cũng được chiếu lại xuống shape mới thay vì bỏ qua, để dữ liệu cũ co lại luôn.
+ *
  * Sắp theo generatedAt cũng là điều kiện đúng của buildMasteryTrend (nó cắt `.slice(-40)` để lấy
  * 40 phiên GẦN NHẤT — sau khi gộp từ máy khác, thứ tự nối không còn là thứ tự thời gian).
  */
-export function compactGapSnapshots(snapshots, now = Date.now()) {
-  const cutoff = now - 90 * 86_400_000;
-
+export function compactGapSnapshots(snapshots) {
   const bySession = new Map();
   (snapshots || []).forEach((s, i) => {
     if (!s) return;
@@ -447,21 +474,5 @@ export function compactGapSnapshots(snapshots, now = Date.now()) {
 
   return [...bySession.values()]
     .sort((a, b) => new Date(a.generatedAt || 0) - new Date(b.generatedAt || 0))
-    .map((s) => {
-      if (!s?.profile || s.compacted) return s;
-      const at = new Date(s.generatedAt || 0).getTime();
-      if (!at || at >= cutoff) return s;
-      return {
-        sessionId: s.sessionId,
-        generatedAt: s.generatedAt,
-        compacted: true,
-        profile: {
-          generatedAt: s.profile.generatedAt,
-          eligibleAttempts: s.profile.eligibleAttempts,
-          domains: s.profile.domains,
-          tasks: (s.profile.tasks || []).slice(0, 10),
-          nextBestActions: s.profile.nextBestActions || [],
-        },
-      };
-    });
+    .map((s) => (s?.profile ? compactSnapshot(s) : s));
 }
