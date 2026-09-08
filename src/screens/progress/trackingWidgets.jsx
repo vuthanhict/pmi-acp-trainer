@@ -3,7 +3,7 @@ import { useAppCtx } from "../../context/AppContext.jsx";
 import { useIsDesktop, useIsWide } from "../../hooks/useViewport.js";
 import { QUIZ_CATALOG } from "../../lib/embeddedData.js";
 import { DOMAIN_WEIGHTS } from "../../lib/gapEngine.js";
-import { GOAL_PRESETS, DEFAULT_GOAL_VALUE, READINESS_READY_BAR, TREND_ACCURACY_BAR } from "../../lib/trackingEngine.js";
+import { GOAL_PRESETS, DEFAULT_GOAL_VALUE, READINESS_READY_BAR, TREND_ACCURACY_BAR, MAX_CHUNK_SIZE } from "../../lib/trackingEngine.js";
 import { buildStudyPlan, computeCatchUp } from "../../lib/studyPlan.js";
 import { fmtDate, fmtDayKey, shiftDayKey, weekdayOfDayKey, diffDayKeys } from "../../lib/utils.js";
 import { marginOfError } from "../../lib/passStats.js";
@@ -915,7 +915,6 @@ const TODAY_ACTION_ICON = { first_pass: "play", exam_mode: "target", gap_fill: "
 // Trần số câu cho MỘT phiên "Luyện tập ngay" — dù mục tiêu hôm nay có cao (lộ trình gấp), phiên
 // luyện vẫn phải đủ ngắn để ngồi một mạch làm hết; còn thiếu thì bấm lại sau khi nộp bài. Đây là
 // phần trả lời trực tiếp cho việc tránh phải nộp bài dở dang vì không đủ 3-4 tiếng liền.
-const MAX_CHUNK_SIZE = 40;
 // Phiên "làm thêm" khi đã đạt mục tiêu hôm nay — nhỏ, không bắt buộc, chỉ để tận dụng lúc rảnh.
 const BONUS_CHUNK_SIZE = 10;
 

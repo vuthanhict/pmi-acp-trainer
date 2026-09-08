@@ -19,6 +19,8 @@ export const DEFAULT_GOAL_VALUE = 20;
 // Số task tối đa cho một phiên luyện GAP. Nhiều hơn thì mỗi task chỉ còn 2-3 câu, không đủ để
 // dịch chuyển mastery của task nào.
 export const MAX_GAP_TASKS = 3;
+// Trần số câu cho một phiên luyện cắt từ một đề — đủ để ngồi hết trong một lần.
+export const MAX_CHUNK_SIZE = 40;
 export const READINESS_READY_BAR = 75;   // ngưỡng thận trọng do app đặt, KHÔNG phải chuẩn PMI
 // Vạch tham chiếu trên biểu đồ ĐỘ CHÍNH XÁC. Tách khỏi READINESS_READY_BAR dù cùng giá trị: một
 // bên là ngưỡng của chỉ số readiness (0-100, tổng hợp 4 hệ số), một bên là tỉ lệ trả lời đúng —

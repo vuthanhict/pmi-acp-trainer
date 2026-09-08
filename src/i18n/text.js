@@ -17,7 +17,7 @@ export const UI_TEXT = {
     // Today
     inProgress: "ĐANG LÀM DỞ", questionsAnswered: "{n}/{total} câu đã trả lời", continueBtn: "Tiếp tục",
     recommendedNext: "ĐỀ KHUYẾN NGHỊ TIẾP THEO", questionsCount: "{n} câu", startExamBtn: "Bắt đầu đề", libraryBtn: "Thư viện",
-    top3Gaps: "BA GAP ƯU TIÊN", viewAll: "Xem tất cả", noGapData: "Chưa có đủ dữ liệu để xác định GAP. Hãy làm ít nhất một đề.",
+    topGapsByDomain: "GAP LỚN NHẤT MỖI DOMAIN", viewAll: "Xem tất cả", noGapData: "Chưa có đủ dữ liệu để xác định GAP. Hãy làm ít nhất một đề.",
     accuracyLabel: "độ chính xác", practiceGapBtn: "Luyện GAP",
 
     // Library
@@ -310,7 +310,7 @@ export const UI_TEXT = {
 
     inProgress: "IN PROGRESS", questionsAnswered: "{n}/{total} questions answered", continueBtn: "Continue",
     recommendedNext: "RECOMMENDED NEXT", questionsCount: "{n} questions", startExamBtn: "Start Exam", libraryBtn: "Library",
-    top3Gaps: "TOP 3 GAPS", viewAll: "View all", noGapData: "Not enough data yet to identify gaps. Take at least one exam.",
+    topGapsByDomain: "BIGGEST GAP PER DOMAIN", viewAll: "View all", noGapData: "Not enough data yet to identify gaps. Take at least one exam.",
     accuracyLabel: "accuracy", practiceGapBtn: "Practice GAP",
 
     stage: "STAGE", questionsShort: "questions", attemptedTimes: "attempted {n}x", notAttempted: "not attempted", lastScore: "last {p}%",

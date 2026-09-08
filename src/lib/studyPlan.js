@@ -98,7 +98,7 @@ export function examAnsweredQuestionIds(attempts, completedQuizzes) {
  * tiến độ lẫn mục tiêu hằng ngày đều bám đúng việc học. Làm exam mode chia nhỏ nhiều phiên (làm
  * 10 câu rồi nộp, lần sau làm tiếp từ câu 11) được cộng dồn đúng như cách người học thực sự làm.
  */
-function computeQuizWorkload(attempts, completedQuizzes, tz) {
+export function computeQuizWorkload(attempts, completedQuizzes, tz) {
   const examSessionIds = examModeSessionIds(completedQuizzes);
   const examAnsweredIds = examAnsweredQuestionIds(attempts, completedQuizzes);
   const answeredIds = new Set(attempts.map((a) => a.questionId));
@@ -470,13 +470,29 @@ export function computeCatchUp({ progress, tracking }) {
   const daysLeftYesterday = diffDayKeys(examDate, yesterday);
   if (daysLeftYesterday <= 0) return null; // hôm qua đã là ngày thi hoặc trễ hơn — so sánh vô nghĩa
 
-  const attemptsUpToYesterday = progress.attempts.filter((a) => !a.answeredAt || dayKey(a.answeredAt, tz) <= yesterday);
-  const completedUpToYesterday = progress.completedQuizzes.filter((c) => !c.completedAt || dayKey(c.completedAt, tz) <= yesterday);
-  const { workloadQuestions } = computeQuizWorkload(attemptsUpToYesterday, completedUpToYesterday, tz);
+  // Khối lượng lộ trình còn lại tại thời điểm KẾT THÚC ngày `d` — cùng phép cắt lịch sử mà
+  // buildPlanProgress dùng, để hai nơi không bao giờ nói khác nhau về cùng một ngày.
+  const workloadAfter = (d) => computeQuizWorkload(
+    progress.attempts.filter((a) => !a.answeredAt || dayKey(a.answeredAt, tz) <= d),
+    progress.completedQuizzes.filter((c) => !c.completedAt || dayKey(c.completedAt, tz) <= d),
+    tz,
+  ).workloadQuestions;
 
+  const workloadBefore = workloadAfter(shiftDayKey(yesterday, -1));
+  const workloadAfterYesterday = workloadAfter(yesterday);
+
+  // Mục tiêu của hôm qua dựa trên khối lượng còn lại TRƯỚC khi hôm qua bắt đầu — giống hệt cách
+  // buildPlanProgress tính `target` cho từng dòng. Bản trước chia khối lượng cuối ngày, tức đã
+  // trừ mất phần làm được trong chính ngày đó, nên con số nhỏ hơn dòng tương ứng trên biểu đồ.
   const studyDaysLeftYesterday = studyDaysFrom(yesterday, examDate);
-  const yesterdayTarget = studyDaysLeftYesterday > 0 ? Math.ceil(workloadQuestions / studyDaysLeftYesterday) : workloadQuestions;
-  const yesterdayDone = history.get(yesterday)?.answered || 0;
+  const yesterdayTarget = studyDaysLeftYesterday > 0 ? Math.ceil(workloadBefore / studyDaysLeftYesterday) : workloadBefore;
+
+  // "Đã làm" phải cùng ĐƠN VỊ với mục tiêu: khối lượng lộ trình đi được, không phải tổng số câu
+  // đã bấm. history.answered đếm cả câu làm lại — mà làm lại một câu đã phủ thì tốn thời gian
+  // nhưng không đẩy lộ trình tiến lên (xem buildPlanProgress). Chênh lệch còn nhỏ lúc này (1/29
+  // ngày) nhưng sẽ lớn dần: càng về sau càng nhiều lượt luyện GAP trên câu đã gặp, và thẻ sẽ báo
+  // thừa chỉ tiêu trong khi lộ trình vẫn đang hụt.
+  const yesterdayDone = Math.max(0, workloadBefore - workloadAfterYesterday);
   const shortfall = Math.max(0, yesterdayTarget - yesterdayDone);
   const surplus = Math.max(0, yesterdayDone - yesterdayTarget);
 

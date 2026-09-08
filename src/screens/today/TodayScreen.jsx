@@ -1,7 +1,7 @@
 import { useAppCtx } from "../../context/AppContext.jsx";
 import { useIsDesktop } from "../../hooks/useViewport.js";
-import { QUIZ_CATALOG } from "../../lib/embeddedData.js";
 import { recommendNextQuiz } from "../../lib/recommend.js";
+import { pickGapTaskIds, MAX_CHUNK_SIZE } from "../../lib/trackingEngine.js";
 import { fmtPct } from "../../lib/utils.js";
 import { Card, Button, DomainRing, ProgressBar, StatusChip, TierChip } from "../../components/ui/primitives.jsx";
 import { DailyGoalCard, TodayFocusCard } from "../progress/trackingWidgets.jsx";
@@ -11,8 +11,18 @@ export function TodayScreen({ progress, gapProfile, tracking, onResume, onStart,
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
   const rec = recommendNextQuiz(progress);
-  const recCat = QUIZ_CATALOG.find((c) => c.quizIndex === rec.quizIndex);
-  const topGaps = gapProfile.tasks.slice(0, 3);
+  // Chế độ và số câu bám đúng trạng thái thật của đề. Trước đây nút LUÔN gọi Exam mode và hiện
+  // questionCount của cả đề, nên vừa mời làm Exam mode một đề chưa học câu nào, vừa nói "120 câu"
+  // trong khi phiên nạp ít hơn (đề có câu manualReview, hoặc lượt exam đang làm dở).
+  const recNeedsExam = rec.status === "needs_exam_mode";
+  const recCount = recNeedsExam ? rec.remaining : Math.min(MAX_CHUNK_SIZE, rec.remaining);
+  // Một task ưu tiên nhất của TỪNG domain thay vì 3 task đầu bảng. gapPriority nhân với
+  // examWeight nên 3 task đầu luôn thuộc các domain nặng ký: trên dữ liệu thật là M2/D7/D3, không
+  // bao giờ có Product — trong khi ReadinessCard ngay màn Tiến độ lại nêu đích danh Product là
+  // domain yếu nhất. Hai chỗ nói ngược nhau về cùng một bộ dữ liệu.
+  const topGaps = pickGapTaskIds(gapProfile.tasks, gapProfile.domains.length)
+    .map((id) => gapProfile.tasks.find((tk) => tk.taskId === id))
+    .filter(Boolean);
 
   return (
     <div className="space-y-4 pt-1">
@@ -50,16 +60,20 @@ export function TodayScreen({ progress, gapProfile, tracking, onResume, onStart,
           </Card>
         )}
 
-        {recCat && (
+        {rec && rec.status !== "done" && (
           <Card>
             <div className="flex items-center justify-between mb-2">
               <span className="pmi-eyebrow">{t("recommendedNext")}</span>
-              <TierChip tier={recCat.tier} />
+              <TierChip tier={rec.tier} />
             </div>
-            <p className="pmi-display font-semibold mb-1">{recCat.quizName}</p>
-            <p className="text-xs mb-3" style={{ color: "var(--ink-mid)" }}>{t("questionsCount", { n: recCat.questionCount })}</p>
+            <p className="pmi-display font-semibold mb-1">{rec.quizName}</p>
+            <p className="text-xs mb-3" style={{ color: "var(--ink-mid)" }}>{t("questionsCount", { n: recCount })}</p>
             <div className="flex gap-2">
-              <Button onClick={() => onStart(recCat.quizIndex)} className="flex-1">{t("startExamBtn")}</Button>
+              {recNeedsExam ? (
+                <Button onClick={() => onStart(rec.quizIndex, "exam")} className="flex-1">{t("startExamContinueBtn", { n: recCount })}</Button>
+              ) : (
+                <Button onClick={() => onStartTodayPractice(rec.quizIndex, recCount)} className="flex-1">{t("startPracticeBtn", { n: recCount })}</Button>
+              )}
               <Button onClick={onGoLibrary} variant="secondary">{t("libraryBtn")}</Button>
             </div>
           </Card>
@@ -67,7 +81,7 @@ export function TodayScreen({ progress, gapProfile, tracking, onResume, onStart,
 
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <span className="pmi-eyebrow">{t("top3Gaps")}</span>
+            <span className="pmi-eyebrow">{t("topGapsByDomain")}</span>
             <button onClick={onGoGap} className="pmi-focusable text-xs font-medium" style={{ color: "var(--ink)" }}>{t("viewAll")}</button>
           </div>
           {topGaps.length === 0 ? (
