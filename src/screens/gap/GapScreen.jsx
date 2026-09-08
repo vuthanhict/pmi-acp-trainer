@@ -24,7 +24,7 @@ export function GapScreen({ gapProfile, onFillGap, embedded = false }) {
     <div className={embedded ? "space-y-4" : "pt-1 space-y-4 pb-4"}>
       {/* Khi nhúng trong màn Tiến độ, vòng domain đã hiển thị ở tab Tổng quan — không lặp lại. */}
       {!embedded && (
-        <Card className="flex items-center justify-around py-5">
+        <Card className="flex flex-wrap items-center justify-around gap-y-4 py-5">
           {gapProfile.domains.map((d) => (
             <DomainRing key={d.domain} domain={d.domain} mastery={d.mastery} />
           ))}

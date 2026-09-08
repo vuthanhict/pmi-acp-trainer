@@ -40,7 +40,7 @@ export function TodayScreen({ progress, gapProfile, tracking, onResume, onStart,
       )}
 
       {/* Hero: 4 Domain Rings — con số mastery thật của app, không phải trang trí */}
-      <Card className="flex items-center justify-around py-5">
+      <Card className="flex flex-wrap items-center justify-around gap-y-4 py-5">
         {gapProfile.domains.map((d) => (
           <DomainRing key={d.domain} domain={d.domain} mastery={d.mastery} onClick={onGoGap} />
         ))}

@@ -46,16 +46,21 @@ export function ProgressScreen({ progress, gapProfile, tracking, onFillGap, onGo
       </div>
 
       {tab === "overview" && (
-        <div className={isDesktop ? "grid grid-cols-2 gap-4 items-start" : "space-y-4"}>
-          <Card className="flex items-center justify-around py-5" style={isDesktop ? { gridColumn: "span 2" } : undefined}>
+        <div className={isDesktop ? "grid grid-cols-2 gap-4" : "space-y-4"}>
+          {/* Hàng 1 chia đôi: 4 vòng domain và thẻ sẵn sàng thi. Trước đây vòng domain chiếm trọn
+              chiều ngang cho 4 vòng tròn 68px — phần lớn là khoảng trống — rồi thẻ sẵn sàng nằm
+              một mình ở cột trái, bỏ trống nguyên nửa hàng bên phải. Ghép lại thì hết cả hai chỗ
+              trống, và hai thứ này đọc cùng nhau vẫn đúng: vòng domain là mastery từng mảng, thẻ
+              bên cạnh là kết luận tổng.
+              Hai biểu đồ xu hướng bên dưới thì ngược lại, phải chiếm TRỌN chiều ngang: trục hoành
+              của chúng là thời gian, ở nửa bề ngang thì 30+ ngày bị nén tới mức không đọc được. */}
+          {/* flex-wrap: nửa hàng ở màn ~800px chỉ còn ~305px, vừa đúng bằng 4 vòng (68px + nhãn
+              tối đa 76px) nên vòng cuối bị cắt. Cho xuống dòng thì nó tự về 2×2 thay vì tràn. */}
+          <Card className="flex flex-wrap items-center justify-around gap-y-4 py-5">
             {gapProfile.domains.map((d) => (
               <DomainRing key={d.domain} domain={d.domain} mastery={d.mastery} />
             ))}
           </Card>
-          {/* Hai biểu đồ xu hướng chiếm TRỌN chiều ngang thay vì nằm trong cột phải: trục hoành
-              của chúng là thời gian, mà ở nửa bề ngang thì 30+ ngày bị nén tới mức không đọc
-              được. ReadinessCard thì ngược lại — nội dung là một con số và một danh sách gạch
-              đầu dòng, hẹp vẫn đọc tốt. */}
           <ReadinessCard readiness={tracking.readiness} onAction={onFillGap} />
           <Card style={isDesktop ? { gridColumn: "span 2" } : undefined}>
             <p className="pmi-eyebrow mb-3">{t("trendHeader", { n: tracking.trendDays })}</p>
