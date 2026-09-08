@@ -22,7 +22,10 @@ export const STATUS_RING_VAR = {
   developing: "var(--sky)",
   ready: "var(--sage)",
 };
-export function DomainRing({ domain, mastery, weight, size = 68, onClick }) {
+/* `onClick` không bắt buộc: ở tab Tổng quan vòng domain chỉ để đọc. Không có onClick thì render
+   ra <div> chứ không phải <button> — một <button> không làm gì vẫn nhận focus, khiến người dùng
+   bàn phím phải tab qua 4 nút chết trước khi tới nội dung thật. */
+export function DomainRing({ domain, mastery, size = 68, onClick }) {
   const { t, lang } = useAppCtx();
   const stroke = 5;
   const r = size / 2 - stroke;
@@ -31,8 +34,12 @@ export function DomainRing({ domain, mastery, weight, size = 68, onClick }) {
   const status = domainStatus(mastery);
   const color = STATUS_RING_VAR[status];
   const key = domain === "Mindset" ? "domainMindset" : domain === "Leadership" ? "domainLeadership" : domain === "Product" ? "domainProduct" : "domainDelivery";
+  const Tag = onClick ? "button" : "div";
   return (
-    <button onClick={onClick} className="pmi-focusable flex flex-col items-center gap-1.5" style={{ background: "transparent" }}>
+    <Tag
+      {...(onClick ? { onClick, className: "pmi-focusable flex flex-col items-center gap-1.5" } : { className: "flex flex-col items-center gap-1.5" })}
+      style={{ background: "transparent" }}
+    >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--line)" strokeWidth={stroke} transform={`rotate(-90 ${size / 2} ${size / 2})`} />
         <circle
@@ -47,7 +54,7 @@ export function DomainRing({ domain, mastery, weight, size = 68, onClick }) {
       </svg>
       <span className="pmi-mono text-[10px]" style={{ color: "var(--ink-mid)" }}>{mastery === null ? "—" : `${Math.round(pct * 100)}%`}</span>
       <span className="text-[10px] text-center leading-tight" style={{ color: "var(--ink-soft)", maxWidth: size + 8 }}>{t(key)}</span>
-    </button>
+    </Tag>
   );
 }
 

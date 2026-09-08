@@ -3,7 +3,7 @@ import { useAppCtx } from "../../context/AppContext.jsx";
 import { useIsDesktop, useIsWide } from "../../hooks/useViewport.js";
 import { QUIZ_CATALOG } from "../../lib/embeddedData.js";
 import { DOMAIN_WEIGHTS } from "../../lib/gapEngine.js";
-import { GOAL_PRESETS, DEFAULT_GOAL_VALUE, READINESS_READY_BAR } from "../../lib/trackingEngine.js";
+import { GOAL_PRESETS, DEFAULT_GOAL_VALUE, READINESS_READY_BAR, TREND_ACCURACY_BAR } from "../../lib/trackingEngine.js";
 import { buildStudyPlan, computeCatchUp } from "../../lib/studyPlan.js";
 import { fmtDate, fmtDayKey, shiftDayKey, weekdayOfDayKey, diffDayKeys } from "../../lib/utils.js";
 import { marginOfError } from "../../lib/passStats.js";
@@ -236,6 +236,11 @@ export function TrendChart({ points }) {
   const { t, lang } = useAppCtx();
   const W = 320, H = 140, padL = 26, padR = 6, padT = 8, padB = 18;
   const usable = points.filter((p) => p.firstExposure !== null || p.retake !== null);
+  // Cỡ mẫu của điểm mới nhất. Hai đường được vẽ cùng độ đậm nhưng có thể chênh nhau hàng chục
+  // lần về số mẫu: khi đã cạn câu chưa gặp, đường "Lần đầu gặp" — chính là đường mà chú thích
+  // bên dưới bảo người học tin — có thể chỉ còn n=16 trong khi đường "Làm lại" có n=331. Ngưỡng
+  // vẽ là n>=5, quá thấp để im lặng.
+  const lastPoint = points[points.length - 1];
   if (usable.length < 2) {
     return <p className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("trendNoData")}</p>;
   }
@@ -273,7 +278,7 @@ export function TrendChart({ points }) {
           </g>
         ))}
         <line
-          x1={padL} x2={W - padR} y1={y(READINESS_READY_BAR / 100)} y2={y(READINESS_READY_BAR / 100)}
+          x1={padL} x2={W - padR} y1={y(TREND_ACCURACY_BAR / 100)} y2={y(TREND_ACCURACY_BAR / 100)}
           stroke="var(--ink-soft)" strokeWidth="0.8" strokeDasharray="3 3"
         />
         {segmentsOf("retake").map((seg, i) => (
@@ -296,6 +301,9 @@ export function TrendChart({ points }) {
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 0, borderTop: "2px dashed var(--ink-soft)", display: "inline-block" }} />{t("trendRetake")}</span>
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 0, borderTop: "1px dashed var(--ink-soft)", display: "inline-block" }} />{t("trendThreshold")}</span>
       </div>
+      <p className="pmi-mono text-[10px] mt-1" style={{ color: "var(--ink-soft)" }}>
+        {t("trendSampleSize", { fe: lastPoint.firstExposureN, rt: lastPoint.retakeN })}
+      </p>
       <p className="text-xs mt-2.5 flex gap-1.5" style={{ color: "var(--seal-fg)" }}>
         <span className="shrink-0">ⓘ</span><span>{t("trendExplain")}</span>
       </p>
@@ -693,15 +701,36 @@ export function PlanProgressCard({ plan, studyPlan, onStartTodayPractice, onStar
 
 /* ---------- Diễn biến mastery theo domain (đọc từ gapSnapshots đã có sẵn) ---------- */
 export function MasteryTrendCard({ masteryTrend }) {
-  const { t } = useAppCtx();
-  if (masteryTrend.length < 2) {
+  const { t, lang } = useAppCtx();
+  const domains = Object.keys(DOMAIN_WEIGHTS);
+  // Ngày không có phiên nào trả về domains rỗng — đường phải NGẮT ở đó, không nối liền (cùng luật
+  // với TrendChart: nối qua khoảng trống là bịa ra dữ liệu không tồn tại).
+  const hasValue = (p, d) => p.domains[d] !== null && p.domains[d] !== undefined;
+  const usable = masteryTrend.filter((p) => domains.some((d) => hasValue(p, d)));
+  if (usable.length < 2) {
     return <p className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("masteryTrendEmpty")}</p>;
   }
-  const W = 320, H = 110, padL = 24, padR = 6, padT = 6, padB = 12;
-  const domains = Object.keys(DOMAIN_WEIGHTS);
+  const W = 320, H = 110, padL = 24, padR = 6, padT = 6, padB = 18;
   const colorOf = { Mindset: "var(--sky)", Leadership: "var(--seal)", Product: "var(--sage)", Delivery: "var(--flag)" };
+  // Trục hoành là NGÀY, không phải thứ tự phiên: mỗi ngày một bước bằng nhau dù ngày đó có 1 hay
+  // 11 phiên (xem buildMasteryTrend).
   const x = (i) => padL + (i / Math.max(1, masteryTrend.length - 1)) * (W - padL - padR);
   const y = (v) => padT + (1 - v) * (H - padT - padB);
+  const labelEvery = Math.ceil(masteryTrend.length / 4);
+
+  const segmentsOf = (d) => {
+    const segs = [];
+    let cur = [];
+    masteryTrend.forEach((p, i) => {
+      if (!hasValue(p, d)) {
+        if (cur.length > 1) segs.push(cur);
+        cur = [];
+      } else cur.push([x(i), y(p.domains[d])]);
+    });
+    if (cur.length > 1) segs.push(cur);
+    return segs;
+  };
+  const toPath = (seg) => seg.map(([px, py], i) => `${i ? "L" : "M"}${px.toFixed(1)},${py.toFixed(1)}`).join(" ");
 
   return (
     <div>
@@ -712,12 +741,16 @@ export function MasteryTrendCard({ masteryTrend }) {
             <text x={padL - 4} y={y(g) + 3} textAnchor="end" fontSize="7" fill="var(--ink-soft)" fontFamily="var(--font-mono)">{g * 100}</text>
           </g>
         ))}
-        {domains.map((d) => {
-          const pts = masteryTrend.map((s, i) => [i, s.domains[d]]).filter(([, v]) => v !== null && v !== undefined);
-          if (pts.length < 2) return null;
-          const path = pts.map(([i, v], k) => `${k ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
-          return <path key={d} d={path} fill="none" stroke={colorOf[d]} strokeWidth="1.8" strokeLinejoin="round" />;
-        })}
+        {domains.map((d) => segmentsOf(d).map((seg, i) => (
+          <path key={`${d}${i}`} d={toPath(seg)} fill="none" stroke={colorOf[d]} strokeWidth="1.8" strokeLinejoin="round" />
+        )))}
+        {masteryTrend.map((p, i) => (
+          i % labelEvery === 0 || i === masteryTrend.length - 1 ? (
+            <text key={p.dayKey} x={x(i)} y={H - 5} textAnchor="middle" fontSize="7" fill="var(--ink-soft)" fontFamily="var(--font-mono)">
+              {p.dayKey.slice(5).replace("-", "/")}
+            </text>
+          ) : null
+        ))}
       </svg>
       <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 pmi-mono text-[10px]" style={{ color: "var(--ink-mid)" }}>
         {domains.map((d) => (
@@ -726,19 +759,22 @@ export function MasteryTrendCard({ masteryTrend }) {
           </span>
         ))}
       </div>
+      {/* Bảng tương đương cho trình đọc màn hình — biểu đồ SVG không tự đọc được. */}
+      <table className="pmi-sr">
+        <caption>{t("masteryTrendHeader")}</caption>
+        <thead><tr><th>{lang === "en" ? "Date" : "Ngày"}</th>{domains.map((d) => <th key={d}>{d}</th>)}</tr></thead>
+        <tbody>
+          {usable.map((p) => (
+            <tr key={p.dayKey}>
+              <td>{fmtDayKey(p.dayKey, lang)}</td>
+              {domains.map((d) => <td key={d}>{hasValue(p, d) ? `${Math.round(p.domains[d] * 100)}%` : "—"}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
-
-/* ---------- Ngày thi + lộ trình luyện thi ---------- */
-// Tái dùng đúng 5 mức trạng thái đã có (STATUS_RING_VAR/pmi-status-*) thay vì bịa thêm bảng màu
-// riêng cho phase/risk — giữ đúng 1 ngôn ngữ thị giác xuyên suốt app (critical=đỏ, ready=xanh lá…).
-// "overdue" (phase và riskLevel) không xuất hiện ở đây — nhánh render riêng ở dưới thay thế
-// hoàn toàn khối badge/mốc/lịch khi ngày thi đã qua, nên 2 bảng màu này chỉ cần phủ các trạng
-// thái còn lại (xem nhánh `plan.phase === "overdue"` trong JSX bên dưới).
-const STUDY_PHASE_RING = { foundation: "needs_work", gap_fill: "needs_work", mock_exams: "developing", final_review: "developing", final_days: "ready" };
-const STUDY_RISK_RING = { ample: "ready", on_track: "developing", tight: "needs_work", insufficient: "critical" };
-const STUDY_SEGMENT_COLOR = { foundation: "var(--sky)", gap_fill: "var(--seal)", mock_exams: "var(--sage)", final_days: "var(--line-strong)" };
 
 export function ExamDateCard({ progress, tracking, gapProfile, onSetExamDate, onFillGap, onGoLibrary, style }) {
   const { t, lang } = useAppCtx();

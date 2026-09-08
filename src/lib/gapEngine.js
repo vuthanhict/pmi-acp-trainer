@@ -8,7 +8,13 @@ export const DOMAIN_WEIGHTS = { Mindset: 0.28, Leadership: 0.25, Product: 0.19, 
 export const CONFIDENCE_PROBABILITY = { 1: 0.35, 2: 0.5, 3: 0.65, 4: 0.8, 5: 0.95 };
 
 /* ---------- Gap engine (port of gap-engine.mjs) ---------- */
-function recencyWeight(answeredAt, now, halfLifeDays) {
+/* Nửa đời của trọng số độ mới: một lượt làm cách đây 30 ngày chỉ còn nói được một nửa so với
+   lượt hôm nay. Xuất ra ngoài để computeReadiness dùng CHUNG một nhịp quên với mastery — trước
+   đây hệ số independence là trung bình cộng phẳng toàn lịch sử, nên nó là hệ số duy nhất của
+   readiness không nhìn theo thời gian. */
+export const MASTERY_HALF_LIFE_DAYS = 30;
+
+export function recencyWeight(answeredAt, now, halfLifeDays = MASTERY_HALF_LIFE_DAYS) {
   if (!answeredAt) return 1;
   const ageDays = Math.max(0, (now - new Date(answeredAt).getTime()) / 86_400_000);
   return 0.5 ** (ageDays / halfLifeDays);
@@ -69,7 +75,7 @@ function statusFor(mastery, attempts, sessions) {
   if (mastery < 0.8) return "developing";
   return "ready";
 }
-export function calculateGapProfile({ attempts, now = Date.now(), halfLifeDays = 30 }) {
+export function calculateGapProfile({ attempts, now = Date.now(), halfLifeDays = MASTERY_HALF_LIFE_DAYS }) {
   const eligible = attempts.flatMap((attempt) => {
     const question = QUESTION_INDEX.get(attempt.questionId);
     if (!question || question.manualReview) return [];

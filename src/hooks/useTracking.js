@@ -30,7 +30,7 @@ export function useTracking(progress, gapProfile) {
       ratio: target ? clamp(done / target) : 0,
       goalMet: target ? done >= target : false,
       trend: buildAccuracyTrend(history, { tz }),
-      masteryTrend: buildMasteryTrend(progress.gapSnapshots),
+      masteryTrend: buildMasteryTrend(progress.gapSnapshots, { tz }),
       readiness: computeReadiness(gapProfile, progress.attempts),
     };
     // gapProfile đã được memo hoá ở App theo attempts nên không cần thêm dependency.

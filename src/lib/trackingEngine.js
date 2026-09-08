@@ -5,6 +5,7 @@
    để CHỌN câu chứ không tính mastery. */
 import { DEFAULT_TZ, dayKey, todayKey, shiftDayKey, diffDayKeys, weekdayOfDayKey, clamp, mean, shuffleArray } from "./utils.js";
 import { QUIZ_CATALOG, QUESTIONS_BY_QUIZ, QUESTION_INDEX } from "./embeddedData.js";
+import { recencyWeight } from "./gapEngine.js";
 
 /* ===================== Tracking engine ===================== */
 /* NGUYÊN TẮC THIẾT KẾ QUAN TRỌNG: mọi số liệu tracking đều được TÍNH LẠI từ `attempts[]`  */
@@ -16,6 +17,10 @@ import { QUIZ_CATALOG, QUESTIONS_BY_QUIZ, QUESTION_INDEX } from "./embeddedData.
 export const GOAL_PRESETS = [10, 20, 30, 50];
 export const DEFAULT_GOAL_VALUE = 20;
 export const READINESS_READY_BAR = 75;   // ngưỡng thận trọng do app đặt, KHÔNG phải chuẩn PMI
+// Vạch tham chiếu trên biểu đồ ĐỘ CHÍNH XÁC. Tách khỏi READINESS_READY_BAR dù cùng giá trị: một
+// bên là ngưỡng của chỉ số readiness (0-100, tổng hợp 4 hệ số), một bên là tỉ lệ trả lời đúng —
+// hai đại lượng khác nhau, chỉnh cái này không được vô tình dịch cái kia.
+export const TREND_ACCURACY_BAR = 75;
 const STREAK_FREEZES_PER_MONTH = 2;
 const MAX_MINUTES_PER_ATTEMPT = 10;       // chặn outlier: mở tab rồi bỏ đi cả tiếng
 const READINESS_MIN_ATTEMPTS = 60;        // dưới mức này chỉ hiện "chưa đủ dữ liệu"
@@ -206,16 +211,43 @@ export function buildAccuracyTrend(history, { days = 30, window = 7, tz = DEFAUL
   return points;
 }
 
-/** Diễn biến mastery từng domain, đọc từ gapSnapshots — dữ liệu app đã ghi sẵn từ đầu. */
-export function buildMasteryTrend(gapSnapshots) {
-  return (gapSnapshots || [])
-    .filter((s) => s?.generatedAt && s?.profile?.domains)
-    .slice(-40)
-    .map((s) => ({
-      at: s.generatedAt,
-      sessionId: s.sessionId,
-      domains: Object.fromEntries(s.profile.domains.map((d) => [d.domain, d.mastery])),
-    }));
+/**
+ * Diễn biến mastery từng domain theo NGÀY, đọc từ gapSnapshots. Một điểm cho mỗi ngày trong
+ * `days` ngày gần nhất; ngày không có phiên nào trả về domains rỗng để đường bị NGẮT thay vì
+ * nối liền qua khoảng trống (cùng luật với buildAccuracyTrend).
+ *
+ * Trước đây hàm này trả về một điểm cho mỗi SNAPSHOT và cắt `.slice(-40)`, nên biểu đồ vẽ ra hai
+ * thứ sai cùng lúc:
+ *   - Trục hoành không phải thời gian. Người học làm ~5 phiên/ngày nhưng số phiên mỗi ngày rất
+ *     lệch, nên một ngày chiếm 22,5% bề ngang còn ngày kế bên chiếm 5% — độ dốc của đường, thứ
+ *     duy nhất đọc được từ một biểu đồ xu hướng, thành vô nghĩa.
+ *   - 40 snapshot của một người làm 5 phiên/ngày chỉ là 8 ngày, tức biểu đồ phủ 9/28 ngày lịch
+ *     sử mà không có nhãn ngày nào để nhận ra.
+ *
+ * Mastery là một TRẠNG THÁI tích luỹ chứ không phải lượng làm trong ngày, nên ngày có nhiều
+ * phiên lấy snapshot CUỐI CÙNG (trạng thái cuối ngày), không lấy trung bình.
+ */
+export function buildMasteryTrend(gapSnapshots, { days = 30, tz = DEFAULT_TZ, now = Date.now() } = {}) {
+  const lastOfDay = new Map();
+  for (const s of gapSnapshots || []) {
+    if (!s?.generatedAt || !s?.profile?.domains) continue;
+    const key = dayKey(s.generatedAt, tz);
+    if (!key) continue;
+    const cur = lastOfDay.get(key);
+    if (!cur || cur.generatedAt <= s.generatedAt) lastOfDay.set(key, s);
+  }
+
+  const today = todayKey(tz, now);
+  const points = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const key = shiftDayKey(today, -i);
+    const s = lastOfDay.get(key);
+    points.push({
+      dayKey: key,
+      domains: s ? Object.fromEntries(s.profile.domains.map((d) => [d.domain, d.mastery])) : {},
+    });
+  }
+  return points;
 }
 
 export const READINESS_LEVELS = [
@@ -255,8 +287,20 @@ export function computeReadiness(gapProfile, attempts, { now = Date.now(), lang 
   const idleDays = lastAt ? Math.max(0, Math.floor((now - lastAt) / 86_400_000)) : 999;
   const recency = lastAt ? clamp(0.5 ** (idleDays / 21), 0.7, 1) : 0.7;
 
-  const assistedCount = graded.filter((a) => a.supportUsage?.assisted).length;
-  const assistedRatio = graded.length ? assistedCount / graded.length : 0;
+  // Tỉ lệ dùng hỗ trợ CÓ TRỌNG SỐ ĐỘ MỚI, cùng nhịp quên với mastery (recencyWeight). Trung bình
+  // cộng phẳng toàn lịch sử biến independence thành hệ số duy nhất của readiness không nhìn theo
+  // thời gian: base đã giảm dần theo tuổi lượt làm, recency giảm theo số ngày nghỉ, riêng nó thì
+  // đứng yên. Hệ quả đo trên dữ liệu thật: người học dùng hỗ trợ 56% trong 7 ngày gần nhất vẫn
+  // được chấm theo mức 31% của cả lịch sử — readiness báo 61 trong khi thực chất là 57. Chiều
+  // ngược lại cũng vậy: bỏ hẳn hỗ trợ phải mất hàng tháng mới được ghi nhận.
+  let assistedWeight = 0;
+  let totalWeight = 0;
+  for (const a of graded) {
+    const w = recencyWeight(a.answeredAt, now);
+    totalWeight += w;
+    if (a.supportUsage?.assisted) assistedWeight += w;
+  }
+  const assistedRatio = totalWeight ? assistedWeight / totalWeight : 0;
   const independence = 1 - 0.25 * assistedRatio;
 
   const rawScore = 100 * base * coverageFactor * recency * independence;
@@ -459,8 +503,9 @@ function compactSnapshot(s) {
  * nó thêm 90 ngày chỉ là trả tiền bộ nhớ cho dữ liệu chết. Bản đã nén theo shape cũ (còn 10
  * task) cũng được chiếu lại xuống shape mới thay vì bỏ qua, để dữ liệu cũ co lại luôn.
  *
- * Sắp theo generatedAt cũng là điều kiện đúng của buildMasteryTrend (nó cắt `.slice(-40)` để lấy
- * 40 phiên GẦN NHẤT — sau khi gộp từ máy khác, thứ tự nối không còn là thứ tự thời gian).
+ * Sắp theo generatedAt để danh sách lưu xuống (và bản xuất ra backup/Drive) luôn theo thứ tự thời
+ * gian thay vì thứ tự nối của lần gộp gần nhất. buildMasteryTrend không còn phụ thuộc thứ tự này
+ * (nó gom theo ngày và tự so generatedAt), nhưng một danh sách đã sắp thì diff/đọc bằng mắt được.
  */
 export function compactGapSnapshots(snapshots) {
   const bySession = new Map();

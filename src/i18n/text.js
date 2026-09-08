@@ -223,6 +223,7 @@ export const UI_TEXT = {
     trendHeader: "XU HƯỚNG 30 NGÀY",
     trendFirstExposure: "Lần đầu gặp", trendRetake: "Làm lại",
     trendThreshold: "ngưỡng 75%",
+    trendSampleSize: "cỡ mẫu cửa sổ 7 ngày — lần đầu gặp: n={fe} · làm lại: n={rt}",
     trendExplain: "Khoảng cách giữa hai đường là phần bạn nhớ đáp án chứ chưa thực sự nắm. Đường \"Lần đầu gặp\" mới phản ánh năng lực thật.",
     trendNoData: "Cần thêm dữ liệu ở ít nhất 2 ngày khác nhau để vẽ xu hướng.",
 
@@ -506,6 +507,7 @@ export const UI_TEXT = {
     trendHeader: "30-DAY TREND",
     trendFirstExposure: "First exposure", trendRetake: "Retake",
     trendThreshold: "75% bar",
+    trendSampleSize: "7-day window sample size — first exposure: n={fe} · retake: n={rt}",
     trendExplain: "The gap between the two lines is what you remember rather than know. The \"First exposure\" line is the one that reflects real ability.",
     trendNoData: "Need data on at least 2 different days to draw a trend.",
 
