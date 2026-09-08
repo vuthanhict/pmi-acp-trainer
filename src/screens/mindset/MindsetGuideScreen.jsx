@@ -48,6 +48,90 @@ function DomainSection({ s }) {
   );
 }
 
+/* Song ngữ: nguyên văn tiếng Anh đứng trước và được đánh dấu rõ là bản gốc, bản dịch tiếng Việt
+   ngay dưới. Đặt như vậy vì mục đích của khối này là ĐỐI CHIẾU — người học phải kiểm được bản dịch
+   với agilemanifesto.org, nên bản gốc không được lép vế về mặt thị giác. */
+function BilingualPair({ en, vi }) {
+  return (
+    <>
+      <p className="text-sm leading-relaxed" style={{ color: "var(--ink)" }} lang="en">{en}</p>
+      <p className="text-sm leading-relaxed mt-1" style={{ color: "var(--ink-mid)" }} lang="vi">{vi}</p>
+    </>
+  );
+}
+
+function PmiNote({ label, text, tone = "default" }) {
+  const color = tone === "trap" ? "var(--seal-fg)" : "var(--ink-mid)";
+  const bg = tone === "trap" ? "var(--seal-tint)" : "var(--paper)";
+  return (
+    <div className="rounded-lg p-2.5 mt-2" style={{ background: bg, border: tone === "trap" ? "none" : "1px solid var(--line)" }}>
+      <p className="pmi-eyebrow mb-1" style={{ color: tone === "trap" ? "var(--seal-fg)" : "var(--ink-soft)" }}>{label}</p>
+      <p className="text-xs leading-relaxed" style={{ color }}>{text}</p>
+    </div>
+  );
+}
+
+function ValuesSection({ s }) {
+  return (
+    <>
+      {s.intro && <p className="text-xs mb-3 leading-relaxed" style={{ color: "var(--ink-soft)" }}>{s.intro}</p>}
+      {s.preamble && (
+        <div className="mb-3 pb-3" style={{ borderBottom: "1px dashed var(--line-strong)" }}>
+          <BilingualPair en={s.preamble.en} vi={s.preamble.vi} />
+        </div>
+      )}
+      <div className="space-y-3">
+        {s.values.map((v, i) => (
+          <div key={i} className="pl-3" style={{ borderLeft: "2px solid var(--line-strong)" }}>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--ink)" }} lang="en">
+              <span className="font-semibold">{v.left.en}</span>
+              <span style={{ color: "var(--ink-soft)" }}> over </span>
+              <span>{v.right.en}</span>
+            </p>
+            <p className="text-sm leading-relaxed mt-1" style={{ color: "var(--ink-mid)" }} lang="vi">
+              <span className="font-semibold">{v.left.vi}</span>
+              <span style={{ color: "var(--ink-soft)" }}> hơn là </span>
+              <span>{v.right.vi}</span>
+            </p>
+            {v.pmi && <PmiNote label="Trong đề thi" text={v.pmi} />}
+            {v.trap && <PmiNote label="Bẫy" text={v.trap} tone="trap" />}
+          </div>
+        ))}
+      </div>
+      {s.closing && (
+        <div className="mt-3 pt-3" style={{ borderTop: "1px dashed var(--line-strong)" }}>
+          <BilingualPair en={s.closing.en} vi={s.closing.vi} />
+          {s.closingNote && <PmiNote label="Trong đề thi" text={s.closingNote} tone="trap" />}
+        </div>
+      )}
+    </>
+  );
+}
+
+function PrinciplesSection({ s }) {
+  return (
+    <>
+      {s.intro && <p className="text-xs mb-3 leading-relaxed" style={{ color: "var(--ink-soft)" }}>{s.intro}</p>}
+      <div className="space-y-3">
+        {s.principles.map((p) => (
+          <div key={p.n} className="flex gap-2.5">
+            <span className="pmi-mono shrink-0 text-[11px] font-semibold w-5 h-5 rounded-full flex items-center justify-center mt-0.5" style={{ background: "var(--line)", color: "var(--ink-mid)" }}>
+              {p.n}
+            </span>
+            <div className="min-w-0 flex-1">
+              <BilingualPair en={p.en} vi={p.vi} />
+              {p.maps && (
+                <p className="pmi-mono text-[10px] mt-1.5" style={{ color: "var(--ink-soft)" }}>→ {p.maps}</p>
+              )}
+              {p.pmi && <PmiNote label="Trong đề thi" text={p.pmi} />}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 function KeywordTableSection({ s }) {
   return (
     <>
@@ -143,6 +227,8 @@ function ReferencesSection({ s }) {
 const SECTION_RENDERERS = {
   intro: IntroSection,
   domain: DomainSection,
+  values: ValuesSection,
+  principles: PrinciplesSection,
   keywordTable: KeywordTableSection,
   ladder: LadderSection,
   modesTable: ModesTableSection,
@@ -159,6 +245,11 @@ function sectionSearchBlob(s) {
   if (s.steps) for (const st of s.steps) { parts.push(st.title, st.detail); }
   if (s.notes) parts.push(...s.notes);
   if (s.items) for (const it of s.items) { parts.push(typeof it === "string" ? it : it.label); }
+  // Song ngữ: tìm được bằng cả từ tiếng Anh lẫn tiếng Việt.
+  if (s.preamble) parts.push(s.preamble.en, s.preamble.vi);
+  if (s.closing) parts.push(s.closing.en, s.closing.vi, s.closingNote);
+  if (s.values) for (const v of s.values) { parts.push(v.left.en, v.left.vi, v.right.en, v.right.vi, v.pmi, v.trap); }
+  if (s.principles) for (const pr of s.principles) { parts.push(pr.en, pr.vi, pr.maps, pr.pmi); }
   return parts.filter(Boolean).join(" ").toLowerCase();
 }
 
