@@ -1,6 +1,6 @@
 /* ===================== Tracking: hook ===================== */
 import { useMemo } from "react";
-import { DEFAULT_TZ, clamp, shiftDayKey, todayKey } from "../lib/utils.js";
+import { DEFAULT_TZ, clamp, diffDayKeys, shiftDayKey, todayKey } from "../lib/utils.js";
 import { buildDailyHistory, computeStreak, goalTargetCount, buildAccuracyTrend, buildMasteryTrend, computeReadiness } from "../lib/trackingEngine.js";
 
 /** Tính lại toàn bộ số liệu tracking từ attempts. Không đọc/ghi bản sao tổng hợp nào. */
@@ -23,14 +23,23 @@ export function useTracking(progress, gapProfile) {
 
     const examDate = progress.tracking?.examDate || null;
 
+    // Bề rộng thời gian của hai biểu đồ xu hướng: bám theo lịch sử THẬT thay vì cố định 30 ngày.
+    // Cố định 30 thì người mới học 10 ngày phải nhìn 20 ô trống, còn người đã học 3 tháng thì mất
+    // 2/3 dữ liệu. Trần 90 ngày để trục hoành không bị nén tới mức không đọc được nhãn.
+    const activeDays = [...history.keys()].sort();
+    const trendDays = activeDays.length
+      ? clamp(diffDayKeys(today, activeDays[0]) + 1, 14, 90)
+      : 30;
+
     return {
       tz, today, history, todayRow, streak, goal, target, examDate, currentPace,
       done,
       remaining: target ? Math.max(0, target - done) : 0,
       ratio: target ? clamp(done / target) : 0,
       goalMet: target ? done >= target : false,
-      trend: buildAccuracyTrend(history, { tz }),
-      masteryTrend: buildMasteryTrend(progress.gapSnapshots, { tz }),
+      trendDays,
+      trend: buildAccuracyTrend(history, { tz, days: trendDays }),
+      masteryTrend: buildMasteryTrend(progress.gapSnapshots, { tz, days: trendDays }),
       readiness: computeReadiness(gapProfile, progress.attempts),
     };
     // gapProfile đã được memo hoá ở App theo attempts nên không cần thêm dependency.

@@ -52,17 +52,19 @@ export function ProgressScreen({ progress, gapProfile, tracking, onFillGap, onGo
               <DomainRing key={d.domain} domain={d.domain} mastery={d.mastery} />
             ))}
           </Card>
+          {/* Hai biểu đồ xu hướng chiếm TRỌN chiều ngang thay vì nằm trong cột phải: trục hoành
+              của chúng là thời gian, mà ở nửa bề ngang thì 30+ ngày bị nén tới mức không đọc
+              được. ReadinessCard thì ngược lại — nội dung là một con số và một danh sách gạch
+              đầu dòng, hẹp vẫn đọc tốt. */}
           <ReadinessCard readiness={tracking.readiness} onAction={onFillGap} />
-          <div className="space-y-4">
-            <Card>
-              <p className="pmi-eyebrow mb-3">{t("trendHeader")}</p>
-              <TrendChart points={tracking.trend} />
-            </Card>
-            <Card>
-              <p className="pmi-eyebrow mb-3">{t("masteryTrendHeader")}</p>
-              <MasteryTrendCard masteryTrend={tracking.masteryTrend} />
-            </Card>
-          </div>
+          <Card style={isDesktop ? { gridColumn: "span 2" } : undefined}>
+            <p className="pmi-eyebrow mb-3">{t("trendHeader", { n: tracking.trendDays })}</p>
+            <TrendChart points={tracking.trend} />
+          </Card>
+          <Card style={isDesktop ? { gridColumn: "span 2" } : undefined}>
+            <p className="pmi-eyebrow mb-3">{t("masteryTrendHeader")}</p>
+            <MasteryTrendCard masteryTrend={tracking.masteryTrend} />
+          </Card>
         </div>
       )}
 

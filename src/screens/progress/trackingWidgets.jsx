@@ -240,7 +240,13 @@ export function ReadinessCard({ readiness, onAction }) {
 /* đồ dốc đẹp và tạo tự tin sai trước kỳ thi thật.                                       */
 export function TrendChart({ points }) {
   const { t, lang } = useAppCtx();
-  const W = 320, H = 140, padL = 26, padR = 6, padT = 8, padB = 18;
+  const isDesktop = useIsDesktop();
+  const days = points.length;
+  // viewBox rộng gấp đôi trên desktop: thẻ chiếm trọn chiều ngang nên có chỗ, và vì cỡ chữ tính
+  // theo đơn vị viewBox nên nới W ra là nới khoảng cách giữa các ngày mà KHÔNG phóng to chữ.
+  // Trên mobile vẫn giữ 320 — dùng chung 720 thì chữ 7px bị co còn ~3px, không đọc nổi.
+  const W = isDesktop ? 720 : 320;
+  const H = 140, padL = 26, padR = 6, padT = 8, padB = 18;
   const usable = points.filter((p) => p.firstExposure !== null || p.retake !== null);
   // Cỡ mẫu của điểm mới nhất. Hai đường được vẽ cùng độ đậm nhưng có thể chênh nhau hàng chục
   // lần về số mẫu: khi đã cạn câu chưa gặp, đường "Lần đầu gặp" — chính là đường mà chú thích
@@ -272,11 +278,11 @@ export function TrendChart({ points }) {
   const toPath = (seg) => seg.map(([px, py], i) => `${i ? "L" : "M"}${px.toFixed(1)},${py.toFixed(1)}`).join(" ");
 
   const gridLines = [0.25, 0.5, 0.75, 1];
-  const labelEvery = Math.ceil(points.length / 4);
+  const labelEvery = Math.max(1, Math.ceil(points.length / (isDesktop ? 8 : 4)));
 
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto" }} role="img" aria-label={t("trendHeader")}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto" }} role="img" aria-label={t("trendHeader", { n: days })}>
         {gridLines.map((g) => (
           <g key={g}>
             <line x1={padL} x2={W - padR} y1={y(g)} y2={y(g)} stroke="var(--line)" strokeWidth="0.5" />
@@ -316,7 +322,7 @@ export function TrendChart({ points }) {
       {/* Bảng tương đương cho trình đọc màn hình — biểu đồ SVG không tự đọc được. */}
       <div className="pmi-sr">
         <table>
-          <caption>{t("trendHeader")}</caption>
+          <caption>{t("trendHeader", { n: days })}</caption>
           <thead><tr><th>{lang === "en" ? "Date" : "Ngày"}</th><th>{t("trendFirstExposure")}</th><th>{t("trendRetake")}</th></tr></thead>
           <tbody>
             {points.filter((p) => p.firstExposure !== null || p.retake !== null).map((p) => (
@@ -720,13 +726,15 @@ export function MasteryTrendCard({ masteryTrend }) {
   if (usable.length < 2) {
     return <p className="text-xs" style={{ color: "var(--ink-soft)" }}>{t("masteryTrendEmpty")}</p>;
   }
-  const W = 320, H = 110, padL = 24, padR = 6, padT = 6, padB = 18;
+  const isDesktop = useIsDesktop();
+  const W = isDesktop ? 720 : 320;
+  const H = 130, padL = 24, padR = 6, padT = 6, padB = 18;
   const colorOf = { Mindset: "var(--sky)", Leadership: "var(--seal)", Product: "var(--sage)", Delivery: "var(--flag)" };
   // Trục hoành là NGÀY, không phải thứ tự phiên: mỗi ngày một bước bằng nhau dù ngày đó có 1 hay
   // 11 phiên (xem buildMasteryTrend).
   const x = (i) => padL + (i / Math.max(1, masteryTrend.length - 1)) * (W - padL - padR);
   const y = (v) => padT + (1 - v) * (H - padT - padB);
-  const labelEvery = Math.ceil(masteryTrend.length / 4);
+  const labelEvery = Math.max(1, Math.ceil(masteryTrend.length / (isDesktop ? 8 : 4)));
 
   const segmentsOf = (d) => {
     const segs = [];

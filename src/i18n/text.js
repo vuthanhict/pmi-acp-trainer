@@ -224,7 +224,7 @@ export const UI_TEXT = {
     reasonDomainLow: "Domain {domain} mới đạt {p}% mastery (chiếm {w}% đề thi)",
     reasonAllGood: "Không còn điểm nghẽn lớn — giữ nhịp và làm mới dữ liệu mỗi tuần.",
 
-    trendHeader: "XU HƯỚNG 30 NGÀY",
+    trendHeader: "XU HƯỚNG {n} NGÀY",
     trendFirstExposure: "Lần đầu gặp", trendRetake: "Làm lại",
     trendThreshold: "ngưỡng 75%",
     trendSampleSize: "cỡ mẫu cửa sổ 7 ngày — lần đầu gặp: n={fe} · làm lại: n={rt}",
@@ -512,7 +512,7 @@ export const UI_TEXT = {
     reasonDomainLow: "{domain} is at {p}% mastery (worth {w}% of the exam)",
     reasonAllGood: "No major blockers left — keep the rhythm and refresh data weekly.",
 
-    trendHeader: "30-DAY TREND",
+    trendHeader: "{n}-DAY TREND",
     trendFirstExposure: "First exposure", trendRetake: "Retake",
     trendThreshold: "75% bar",
     trendSampleSize: "7-day window sample size — first exposure: n={fe} · retake: n={rt}",
