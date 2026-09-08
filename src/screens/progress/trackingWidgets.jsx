@@ -3,7 +3,7 @@ import { useAppCtx } from "../../context/AppContext.jsx";
 import { useIsDesktop, useIsWide } from "../../hooks/useViewport.js";
 import { QUIZ_CATALOG } from "../../lib/embeddedData.js";
 import { DOMAIN_WEIGHTS } from "../../lib/gapEngine.js";
-import { GOAL_PRESETS, DEFAULT_GOAL_VALUE, READINESS_READY_BAR, TREND_ACCURACY_BAR, MAX_CHUNK_SIZE } from "../../lib/trackingEngine.js";
+import { GOAL_PRESETS, DEFAULT_GOAL_VALUE, READINESS_READY_BAR, READINESS_MIN_QUESTIONS, TREND_ACCURACY_BAR, MAX_CHUNK_SIZE } from "../../lib/trackingEngine.js";
 import { buildStudyPlan, computeCatchUp } from "../../lib/studyPlan.js";
 import { fmtDate, fmtDayKey, shiftDayKey, weekdayOfDayKey, diffDayKeys } from "../../lib/utils.js";
 import { scoreInterval } from "../../lib/passStats.js";
@@ -190,9 +190,56 @@ export function QuizPassSummary({ passes, comparison }) {
 
 
 /* ---------- Thước Readiness ---------- */
+/* Bảng bóc tách điểm sẵn sàng. Con số 59 tự nó không nói được nó tới từ đâu, mà nó lại là con số
+   người học nhìn nhiều nhất — và là tích của bốn hệ số có ý nghĩa rất khác nhau. Hiện thẳng cả
+   bốn cùng phép nhân để "vì sao chỉ 59" trả lời được bằng mắt, không phải đoán. */
+function ReadinessBreakdown({ readiness }) {
+  const { t } = useAppCtx();
+  const f = readiness.factors;
+  const s = readiness.stats;
+  if (!readiness.enoughData) {
+    return (
+      <div className="rounded-lg p-3 mb-3 text-xs" style={{ background: "var(--paper)", border: "1px solid var(--line)", color: "var(--ink-mid)" }}>
+        {t("readinessWhyInsufficient", { n: s.eligibleQuestions, min: READINESS_MIN_QUESTIONS })}
+      </div>
+    );
+  }
+  const rows = [
+    { label: t("readinessFactorBase"), value: f.base.toFixed(2), note: t("readinessFactorBaseNote") },
+    { label: t("readinessFactorCoverage"), value: `×${f.coverageFactor.toFixed(2)}`, note: t("readinessFactorCoverageNote", { m: s.tasksWithEvidence, n: s.totalTasks }) },
+    { label: t("readinessFactorRecency"), value: `×${f.recency.toFixed(2)}`, note: t("readinessFactorRecencyNote", { n: f.idleDays }) },
+    { label: t("readinessFactorIndependence"), value: `×${f.independence.toFixed(2)}`, note: t("readinessFactorIndependenceNote", { p: Math.round(f.assistedRatio * 100) }) },
+  ];
+  const raw = 100 * f.base * f.coverageFactor * f.recency * f.independence;
+  return (
+    <div className="rounded-lg p-3 mb-3" style={{ background: "var(--paper)", border: "1px solid var(--line)" }}>
+      <p className="pmi-eyebrow mb-2" style={{ color: "var(--ink-soft)" }}>{t("readinessWhyTitle")}</p>
+      <div className="space-y-1.5 mb-2">
+        {rows.map((r) => (
+          <div key={r.label} className="flex items-baseline justify-between gap-2 text-xs">
+            <span style={{ color: "var(--ink-mid)" }}>{r.label}<span className="block text-[10px]" style={{ color: "var(--ink-soft)" }}>{r.note}</span></span>
+            <span className="pmi-mono shrink-0" style={{ color: "var(--ink)" }}>{r.value}</span>
+          </div>
+        ))}
+      </div>
+      <p className="pmi-mono text-[10px] pt-2" style={{ color: "var(--ink-soft)", borderTop: "1px dashed var(--line-strong)" }}>
+        {t("readinessWhyFormula", {
+          b: f.base.toFixed(2), c: f.coverageFactor.toFixed(2), r: f.recency.toFixed(2),
+          i: f.independence.toFixed(2), raw: raw.toFixed(1), score: readiness.score,
+        })}
+      </p>
+    </div>
+  );
+}
+
 export function ReadinessCard({ readiness, onAction }) {
   const { t } = useAppCtx();
   const isDesktop = useIsDesktop();
+  const [whyPinned, setWhyPinned] = useState(false);
+  const [whyHover, setWhyHover] = useState(false);
+  // Mở khi rê chuột, GHIM khi bấm: rê chuột hợp với desktop, còn cảm ứng thì không có hover nên
+  // phải bấm được. Bấm lần nữa để đóng.
+  const whyOpen = whyPinned || whyHover;
   const color = STATUS_RING_VAR[readiness.ring];
   return (
     <Card>
@@ -205,17 +252,39 @@ export function ReadinessCard({ readiness, onAction }) {
           chính app đang gắn nhãn "chưa đủ dữ liệu" — người mới làm 10 câu thấy một số 6 to đùng,
           và đó là thứ nổi bật nhất trên thẻ. Một con số được tính từ gần như không có bằng chứng
           thì không nên là thứ đập vào mắt đầu tiên. */}
-      <p className="pmi-display font-bold text-5xl mb-3" style={{ color }}>
-        {readiness.enoughData ? readiness.score : "—"}
-      </p>
+      <div className="flex items-center gap-2 mb-3">
+        <p className="pmi-display font-bold text-5xl" style={{ color }}>
+          {readiness.enoughData ? readiness.score : "—"}
+        </p>
+        <button
+          onClick={() => setWhyPinned((v) => !v)}
+          onMouseEnter={() => setWhyHover(true)}
+          onMouseLeave={() => setWhyHover(false)}
+          onFocus={() => setWhyHover(true)}
+          onBlur={() => setWhyHover(false)}
+          className="pmi-focusable"
+          style={{ background: "transparent", color: "var(--ink-soft)" }}
+          aria-expanded={whyOpen}
+          aria-label={t("readinessWhyBtn")}
+        >
+          <Icon name="info" size={15} />
+        </button>
+      </div>
+
+      {whyOpen && <ReadinessBreakdown readiness={readiness} />}
 
       <div className="pmi-meter mb-1.5">
         <div className="pmi-meter-fill" style={{ width: `${readiness.enoughData ? readiness.score : 0}%`, background: color }} />
         <div className="pmi-meter-bar" style={{ left: `${READINESS_READY_BAR}%` }} />
         {readiness.enoughData && <div className="pmi-meter-dot" style={{ left: `${readiness.score}%`, background: color }} />}
       </div>
-      <div className="pmi-mono flex justify-between text-[10px] mb-4" style={{ color: "var(--ink-soft)" }}>
-        <span>0</span><span>{READINESS_READY_BAR}</span><span>100</span>
+      {/* Nhãn phải đặt ĐÚNG toạ độ của vạch trên thanh đo. `justify-between` xếp ba nhãn ở 0% /
+          50% / 100%, nên số 75 rơi vào giữa thanh trong khi vạch mốc nằm ở 75% — lệch hẳn một
+          phần tư chiều dài, đọc thành "vạch mốc là 50". */}
+      <div className="pmi-mono relative h-3 text-[10px] mb-4" style={{ color: "var(--ink-soft)" }}>
+        <span className="absolute left-0">0</span>
+        <span className="absolute" style={{ left: `${READINESS_READY_BAR}%`, transform: "translateX(-50%)" }}>{READINESS_READY_BAR}</span>
+        <span className="absolute right-0">100</span>
       </div>
 
       <p className="pmi-eyebrow mb-2">{t("readinessMissingHeader")}</p>

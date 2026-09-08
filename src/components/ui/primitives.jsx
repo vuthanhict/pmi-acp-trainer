@@ -77,6 +77,7 @@ export function Icon({ name, size = 18, className = "" }) {
     download: <><path d="M12 3v12" /><path d="M7 10l5 5 5-5" /><path d="M4 21h16" /></>,
     upload: <><path d="M12 21V9" /><path d="M7 14l5-5 5 5" /><path d="M4 3h16" /></>,
     reset: <><path d="M3 12a9 9 0 109-9" /><path d="M3 3v6h6" /></>,
+    info: <><circle cx="12" cy="12" r="9" /><path d="M12 16v-4M12 8h.01" /></>,
     warn: <><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L14.71 3.86a2 2 0 00-3.42 0z" /></>,
     chevronDown: <path d="M6 9l6 6 6-6" />,
     chevronUp: <path d="M18 15l-6-6-6 6" />,

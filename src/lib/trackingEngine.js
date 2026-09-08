@@ -31,7 +31,7 @@ const MAX_MINUTES_PER_ATTEMPT = 10;       // chặn outlier: mở tab rồi bỏ
 // Dưới mức này readiness chỉ hiện "chưa đủ dữ liệu". Đếm theo CÂU KHÁC NHAU, không theo lượt:
 // làm đi làm lại 10 câu 6 lần vẫn chỉ là bằng chứng về 10 câu, mà bản trước lại tính thành 60
 // lượt và mở khoá đánh giá.
-const READINESS_MIN_QUESTIONS = 60;
+export const READINESS_MIN_QUESTIONS = 60;
 
 /** Câu hỏi được tính vào tiến độ hằng ngày: đã chấm được (loại matching/manual review). */
 export function isCountableAttempt(a) {
