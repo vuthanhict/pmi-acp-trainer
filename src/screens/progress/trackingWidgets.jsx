@@ -199,7 +199,7 @@ function ReadinessBreakdown({ readiness }) {
   const s = readiness.stats;
   if (!readiness.enoughData) {
     return (
-      <div className="rounded-lg p-3 mb-3 text-xs" style={{ background: "var(--paper)", border: "1px solid var(--line)", color: "var(--ink-mid)" }}>
+      <div className="rounded-lg p-3 text-xs" style={{ background: "var(--paper-raised)", border: "1px solid var(--line-strong)", boxShadow: "0 8px 24px rgba(0,0,0,.28)", color: "var(--ink-mid)" }}>
         {t("readinessWhyInsufficient", { n: s.eligibleQuestions, min: READINESS_MIN_QUESTIONS })}
       </div>
     );
@@ -212,7 +212,7 @@ function ReadinessBreakdown({ readiness }) {
   ];
   const raw = 100 * f.base * f.coverageFactor * f.recency * f.independence;
   return (
-    <div className="rounded-lg p-3 mb-3" style={{ background: "var(--paper)", border: "1px solid var(--line)" }}>
+    <div className="rounded-lg p-3" style={{ background: "var(--paper-raised)", border: "1px solid var(--line-strong)", boxShadow: "0 8px 24px rgba(0,0,0,.28)" }}>
       <p className="pmi-eyebrow mb-2" style={{ color: "var(--ink-soft)" }}>{t("readinessWhyTitle")}</p>
       <div className="space-y-1.5 mb-2">
         {rows.map((r) => (
@@ -252,14 +252,23 @@ export function ReadinessCard({ readiness, onAction }) {
           chính app đang gắn nhãn "chưa đủ dữ liệu" — người mới làm 10 câu thấy một số 6 to đùng,
           và đó là thứ nổi bật nhất trên thẻ. Một con số được tính từ gần như không có bằng chứng
           thì không nên là thứ đập vào mắt đầu tiên. */}
-      <div className="flex items-center gap-2 mb-3">
+      {/* Bảng bóc tách NỔI LÊN trên nội dung thay vì chen vào giữa thẻ: chen vào thì mỗi lần rê
+          chuột qua là cả thanh đo, danh sách "còn thiếu gì" và nút bên dưới nhảy xuống ~130px, và
+          vì thẻ này nằm cùng hàng lưới với thẻ vòng domain nên cả hàng đổi chiều cao theo. Định vị
+          theo CẢ HÀNG (left/right = 0) chứ không theo nút info: neo vào nút thì ở màn hẹp bảng
+          tràn khỏi mép phải thẻ.
+          Bắt hover ở cấp hàng để rê từ nút xuống bảng không bị đóng giữa chừng — và rê thẳng vào
+          chính con số cũng mở, vì đó mới là thứ người ta thắc mắc. */}
+      <div
+        className="relative flex items-center gap-2 mb-3"
+        onMouseEnter={() => setWhyHover(true)}
+        onMouseLeave={() => setWhyHover(false)}
+      >
         <p className="pmi-display font-bold text-5xl" style={{ color }}>
           {readiness.enoughData ? readiness.score : "—"}
         </p>
         <button
           onClick={() => setWhyPinned((v) => !v)}
-          onMouseEnter={() => setWhyHover(true)}
-          onMouseLeave={() => setWhyHover(false)}
           onFocus={() => setWhyHover(true)}
           onBlur={() => setWhyHover(false)}
           className="pmi-focusable"
@@ -269,9 +278,16 @@ export function ReadinessCard({ readiness, onAction }) {
         >
           <Icon name="info" size={15} />
         </button>
+        {whyOpen && (
+          <div
+            role="tooltip"
+            className="absolute left-0 right-0"
+            style={{ top: "100%", zIndex: 30 }}
+          >
+            <ReadinessBreakdown readiness={readiness} />
+          </div>
+        )}
       </div>
-
-      {whyOpen && <ReadinessBreakdown readiness={readiness} />}
 
       <div className="pmi-meter mb-1.5">
         <div className="pmi-meter-fill" style={{ width: `${readiness.enoughData ? readiness.score : 0}%`, background: color }} />
