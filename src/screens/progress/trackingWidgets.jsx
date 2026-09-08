@@ -776,6 +776,16 @@ export function MasteryTrendCard({ masteryTrend }) {
   );
 }
 
+/* ---------- Ngày thi + lộ trình luyện thi ---------- */
+// Tái dùng đúng 5 mức trạng thái đã có (STATUS_RING_VAR/pmi-status-*) thay vì bịa thêm bảng màu
+// riêng cho phase/risk — giữ đúng 1 ngôn ngữ thị giác xuyên suốt app (critical=đỏ, ready=xanh lá…).
+// "overdue" (phase và riskLevel) không xuất hiện ở đây — nhánh render riêng ở dưới thay thế
+// hoàn toàn khối badge/mốc/lịch khi ngày thi đã qua, nên 2 bảng màu này chỉ cần phủ các trạng
+// thái còn lại (xem nhánh `plan.phase === "overdue"` trong JSX bên dưới).
+const STUDY_PHASE_RING = { foundation: "needs_work", gap_fill: "needs_work", mock_exams: "developing", final_review: "developing", final_days: "ready" };
+const STUDY_RISK_RING = { ample: "ready", on_track: "developing", tight: "needs_work", insufficient: "critical" };
+const STUDY_SEGMENT_COLOR = { foundation: "var(--sky)", gap_fill: "var(--seal)", mock_exams: "var(--sage)", final_days: "var(--line-strong)" };
+
 export function ExamDateCard({ progress, tracking, gapProfile, onSetExamDate, onFillGap, onGoLibrary, style }) {
   const { t, lang } = useAppCtx();
   const [draft, setDraft] = useState(tracking.examDate || "");
