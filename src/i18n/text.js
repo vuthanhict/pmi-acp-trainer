@@ -22,7 +22,7 @@ export const UI_TEXT = {
 
     // Library
     stage: "GIAI ĐOẠN", questionsShort: "câu", attemptedTimes: "đã làm {n} lần", notAttempted: "chưa làm", lastScore: "gần nhất {p}%",
-    examBtn: "Exam", practiceBtn: "Practice", historyOfQuizBtn: "Lịch sử", mistakesOfQuizBtn: "Câu hay sai",
+    examBtn: "Exam", examContinueBtn: "Exam ({n} câu)", practiceBtn: "Practice", historyOfQuizBtn: "Lịch sử", mistakesOfQuizBtn: "Câu hay sai",
 
     // History
     historyTitle: "Lịch sử làm bài", historyEmpty: "Chưa có lần làm bài nào. Hãy bắt đầu một đề trong Thư viện.",
@@ -88,7 +88,7 @@ export const UI_TEXT = {
     passPairedLine: "So cặp L{a}→L{b} trên {n} câu chung: {pa}% → {pb}% (sửa được {f}, hỏng {r})",
     passNoneYet: "Chưa làm câu nào của đề này",
     resultsPassLine: "Lượt {n} của đề này: {p}% ({c}/{a} câu) · đã phủ {a}/{t}",
-    resultsChunkNoise: "Điểm của riêng phiên {n} câu này có sai số ±{m} điểm — hãy nhìn con số của cả lượt.",
+    resultsChunkNoise: "Điểm của riêng phiên {n} câu này chỉ chắc chắn trong khoảng {lo}–{hi}% — hãy nhìn con số của cả lượt.",
     historyPassHeader: "TIẾN ĐỘ THEO LƯỢT",
     // Tiến độ so với kế hoạch (PlanProgressCard)
     planHeader: "TIẾN ĐỘ SO VỚI KẾ HOẠCH",
@@ -314,7 +314,7 @@ export const UI_TEXT = {
     accuracyLabel: "accuracy", practiceGapBtn: "Practice GAP",
 
     stage: "STAGE", questionsShort: "questions", attemptedTimes: "attempted {n}x", notAttempted: "not attempted", lastScore: "last {p}%",
-    examBtn: "Exam", practiceBtn: "Practice", historyOfQuizBtn: "History", mistakesOfQuizBtn: "Frequent mistakes",
+    examBtn: "Exam", examContinueBtn: "Exam ({n} left)", practiceBtn: "Practice", historyOfQuizBtn: "History", mistakesOfQuizBtn: "Frequent mistakes",
 
     // History
     historyTitle: "Attempt history", historyEmpty: "No attempts yet. Start an exam from the Library.",
@@ -377,7 +377,7 @@ export const UI_TEXT = {
     passPairedLine: "Paired P{a}→P{b} on {n} shared questions: {pa}% → {pb}% (fixed {f}, broke {r})",
     passNoneYet: "No questions answered yet",
     resultsPassLine: "Pass {n} of this quiz: {p}% ({c}/{a} questions) · covered {a}/{t}",
-    resultsChunkNoise: "This {n}-question session alone carries a ±{m} point margin of error — read the whole-pass number instead.",
+    resultsChunkNoise: "This {n}-question session alone is only certain within {lo}–{hi}% — read the whole-pass number instead.",
     historyPassHeader: "PROGRESS BY PASS",
     planHeader: "PROGRESS VS PLAN",
     planChartLabel: "Cumulative plan workload: actual vs plan",

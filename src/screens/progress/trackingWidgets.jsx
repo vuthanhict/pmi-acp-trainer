@@ -6,7 +6,7 @@ import { DOMAIN_WEIGHTS } from "../../lib/gapEngine.js";
 import { GOAL_PRESETS, DEFAULT_GOAL_VALUE, READINESS_READY_BAR, TREND_ACCURACY_BAR, MAX_CHUNK_SIZE } from "../../lib/trackingEngine.js";
 import { buildStudyPlan, computeCatchUp } from "../../lib/studyPlan.js";
 import { fmtDate, fmtDayKey, shiftDayKey, weekdayOfDayKey, diffDayKeys } from "../../lib/utils.js";
-import { marginOfError } from "../../lib/passStats.js";
+import { scoreInterval } from "../../lib/passStats.js";
 import { Card, Button, ProgressBar, Icon, TierChip, STATUS_RING_VAR } from "../../components/ui/primitives.jsx";
 
 /* ===================== Tracking: hook + components ===================== */
@@ -153,7 +153,7 @@ export function QuizPassSummary({ passes, comparison }) {
   return (
     <div className="mb-2.5 space-y-1.5">
       {passes.map((p) => {
-        const moe = marginOfError(p.correct, p.answered);
+        const ci = scoreInterval(p.correct, p.answered);
         return (
           <div key={p.pass}>
             <div className="flex items-baseline justify-between gap-2">
@@ -161,7 +161,7 @@ export function QuizPassSummary({ passes, comparison }) {
                 {t("passLabel", { n: p.pass })}
               </span>
               <span className="pmi-mono text-[10px]" style={{ color: colorFor(p.percent) }}>
-                {Math.round(p.percent)}%{moe != null && <span style={{ color: "var(--ink-soft)" }}> ±{moe}</span>}
+                {Math.round(p.percent)}%{ci && <span style={{ color: "var(--ink-soft)" }}> ({Math.round(ci.lo)}–{Math.round(ci.hi)}%)</span>}
               </span>
             </div>
             <div className="pmi-pass-track">

@@ -92,8 +92,14 @@ export function HistoryScreen({ progress, initialQuizFilter, onOpenEntry }) {
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="pmi-mono text-[11px]" style={{ color: "var(--ink-soft)" }}>{fmtDate(c.completedAt, lang)}</p>
+                  {/* Kèm cỡ mẫu: 98/131 phiên của một người học thật chỉ có <=10 câu, và % của 10
+                      câu gần như là nhiễu (xem đầu passStats.js — chính vấn đề mà khái niệm "lượt"
+                      sinh ra để giải quyết). Hiện trơ một con số 30% hay 100% mà không nói nó
+                      dựa trên mấy câu thì người học đọc nó như một thước đo trình độ. */}
                   <p className="pmi-mono text-sm font-semibold" style={{ color: shown.percent >= 70 ? "var(--sage)" : "var(--flag)" }}>
-                    {shown.percent}%{shown.fallback ? <span className="pmi-mono text-[10px] font-normal" style={{ color: "var(--ink-soft)" }}> ({t("rawFallbackBadge")})</span> : null}
+                    {Math.round(shown.percent)}%
+                    {shown.graded > 0 && <span className="pmi-mono text-[10px] font-normal" style={{ color: "var(--ink-soft)" }}> · {shown.correct}/{shown.graded} {t("questionsShort")}</span>}
+                    {shown.fallback ? <span className="pmi-mono text-[10px] font-normal" style={{ color: "var(--ink-soft)" }}> ({t("rawFallbackBadge")})</span> : null}
                   </p>
                 </div>
               </Card>

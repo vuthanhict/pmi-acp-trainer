@@ -4,7 +4,7 @@ import { QUESTION_INDEX, VI_ITEM_INDEX } from "../../lib/embeddedData.js";
 import { parseMatchingQuestion } from "../../lib/matching.js";
 import { normOpt } from "../../lib/utils.js";
 import { displayScore } from "../../lib/scoreDisplay.js";
-import { buildQuizPasses, comparePasses, currentPass, marginOfError } from "../../lib/passStats.js";
+import { buildQuizPasses, comparePasses, currentPass, scoreInterval } from "../../lib/passStats.js";
 import { DOMAIN_MINDSET, EXAM_MINDSET_TIPS } from "../../i18n/text.js";
 import { Card, Icon, Button, DeltaChip, QuestionImage } from "../../components/ui/primitives.jsx";
 import {
@@ -158,7 +158,7 @@ export function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel, o
     if (entry?.quizIndex == null) return null;
     return currentPass(buildQuizPasses(progress.attempts, entry.quizIndex));
   }, [entry?.quizIndex, progress.attempts]);
-  const chunkMoe = marginOfError(shownScore.correct, shownScore.graded);
+  const chunkCi = scoreInterval(shownScore.correct, shownScore.graded);
   const passComparison = useMemo(() => {
     if (entry?.quizIndex == null) return null;
     const passes = buildQuizPasses(progress.attempts, entry.quizIndex);
@@ -248,9 +248,9 @@ export function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel, o
             <p className="pmi-mono text-xs" style={{ color: "var(--ink)" }}>
               {t("resultsPassLine", { n: pass.pass, p: Math.round(pass.percent), c: pass.correct, a: pass.answered, t: pass.total })}
             </p>
-            {chunkMoe != null && shownScore.graded < pass.answered && (
+            {chunkCi && shownScore.graded < pass.answered && (
               <p className="pmi-mono text-[10px] mt-0.5" style={{ color: "var(--ink-soft)" }}>
-                {t("resultsChunkNoise", { n: shownScore.graded, m: chunkMoe })}
+                {t("resultsChunkNoise", { n: shownScore.graded, lo: Math.round(chunkCi.lo), hi: Math.round(chunkCi.hi) })}
               </p>
             )}
           </div>

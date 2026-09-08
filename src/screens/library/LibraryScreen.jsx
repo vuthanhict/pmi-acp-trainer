@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import { useAppCtx } from "../../context/AppContext.jsx";
 import { useIsDesktop, useIsWide } from "../../hooks/useViewport.js";
-import { QUIZ_CATALOG } from "../../lib/embeddedData.js";
+import { QUIZ_CATALOG, QUESTIONS_BY_QUIZ } from "../../lib/embeddedData.js";
 import { Card, Button, Icon, TierChip } from "../../components/ui/primitives.jsx";
 import { QuizPassSummary } from "../progress/trackingWidgets.jsx";
 import { buildAllQuizPasses, comparePasses } from "../../lib/passStats.js";
+import { examAnsweredQuestionIds } from "../../lib/studyPlan.js";
 
 /* ===================== Library Screen ===================== */
 export function LibraryScreen({ progress, onOpenQuiz, onOpenHistory, onOpenMistakes, onToggleReserved }) {
@@ -35,6 +36,14 @@ export function LibraryScreen({ progress, onOpenQuiz, onOpenHistory, onOpenMista
     return m;
   }, [progress.completedQuizzes]);
 
+  // Nút Exam mở TIẾP lượt Exam mode đang dở (startQuizSession chỉ nạp câu chưa đi ở chế độ
+  // exam), nên nhãn phải nói đúng số câu sẽ nạp. Không có nó thì thẻ ghi "120 câu" của cả đề
+  // trong khi bấm vào chỉ ra 30 câu còn lại — cùng loại lệch vừa sửa ở thẻ khuyến nghị màn Hôm nay.
+  const examAnswered = useMemo(
+    () => examAnsweredQuestionIds(progress.attempts, progress.completedQuizzes),
+    [progress.attempts, progress.completedQuizzes],
+  );
+
   const reserved = new Set(progress.settings?.reservedQuizIndexes || []);
 
   return (
@@ -52,12 +61,17 @@ export function LibraryScreen({ progress, onOpenQuiz, onOpenHistory, onOpenMista
               const passes = passesByQuiz.get(c.quizIndex) || [];
               // Chỉ so cặp khi đã có lượt 2 — và luôn so trên tập câu chung, xem comparePasses.
               const comparison = passes.length > 1 ? comparePasses(progress.attempts, c.quizIndex, passes.length - 1, passes.length) : null;
-              // Chỉ số "làm độc lập" (không dùng hỗ trợ tiếng Việt) của phiên gần nhất. Điểm
-              // "lần đầu gặp" của phiên đã bị bỏ khỏi đây: lượt 1 THEO ĐỊNH NGHĨA chính là lần
-              // đầu gặp, nên QuizPassSummary ở trên đã nói con số đó trên cả đề thay vì trên
-              // dăm câu của một phiên.
+              // Đề đã đi hết ở Exam mode thì startQuizSession mở lại TRỌN ĐỀ (một lượt làm lại
+              // thật sự), nên số hiển thị cũng phải là cả đề.
+              const allQuestions = QUESTIONS_BY_QUIZ.get(c.quizIndex) || [];
+              const examLeft = allQuestions.filter((q) => !q.manualReview && !examAnswered.has(q.id)).length;
+              const examLoads = examLeft || allQuestions.length;
+              // Chỉ số "làm độc lập" (không dùng hỗ trợ tiếng Việt) của phiên gần nhất, kèm cỡ
+              // mẫu — phiên gần nhất thường chỉ 10 câu. Điểm "lần đầu gặp" của phiên đã bị bỏ
+              // khỏi đây: lượt 1 THEO ĐỊNH NGHĨA chính là lần đầu gặp, nên QuizPassSummary ở trên
+              // đã nói con số đó trên cả đề thay vì trên dăm câu của một phiên.
               const truth = last?.independentScore
-                ? `${t("independentLabel")} ${Math.round(last.independentScore.percent)}%`
+                ? `${t("independentLabel")} ${Math.round(last.independentScore.percent)}% (${last.independentScore.correct}/${last.independentScore.graded})`
                 : "";
               return (
                 <Card key={c.quizIndex}>
@@ -74,7 +88,7 @@ export function LibraryScreen({ progress, onOpenQuiz, onOpenHistory, onOpenMista
                   {passes.length > 0 && <QuizPassSummary passes={passes} comparison={comparison} />}
                   {truth && <p className="pmi-mono text-[10px] mb-2" style={{ color: "var(--ink-soft)" }}>{truth}</p>}
                   <div className="flex gap-2">
-                    <Button onClick={() => onOpenQuiz(c.quizIndex, "exam")} className="flex-1">{t("examBtn")}</Button>
+                    <Button onClick={() => onOpenQuiz(c.quizIndex, "exam")} className="flex-1">{examLoads === allQuestions.length ? t("examBtn") : t("examContinueBtn", { n: examLoads })}</Button>
                     <Button onClick={() => onOpenQuiz(c.quizIndex, "practice")} variant="secondary" className="flex-1">{t("practiceBtn")}</Button>
                     {attempts > 0 && (
                       <Button onClick={() => onOpenHistory(c.quizIndex)} variant="ghost" className="shrink-0" title={t("historyOfQuizBtn")}>

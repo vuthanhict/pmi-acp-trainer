@@ -111,13 +111,34 @@ export function currentPass(passes) {
 }
 
 /**
- * Sai số lấy mẫu 95% (điểm %) của một tỉ lệ đúng — dùng để nói thẳng cho người học biết con số
- * họ đang nhìn đáng tin tới đâu. n=10 → ±31 điểm; n=106 → ±9,5 điểm.
+ * Khoảng tin cậy 95% (Wilson) của một tỉ lệ đúng, tính bằng ĐIỂM % — dùng để nói thẳng cho người
+ * học biết con số họ đang nhìn đáng tin tới đâu.
+ *
+ * Phải dùng Wilson chứ không phải công thức Wald `1.96·√(p(1−p)/n)`: Wald tiến về 0 khi p tiến
+ * về 0 hoặc 1, tức nó hẹp lại đúng lúc mẫu KHÔNG nói lên điều gì. Bản trước chặn sàn phương sai
+ * ở 0.01 để né chia-cho-0, nhưng cái sàn đó lại tạo ra một con số tự tin giả:
+ *
+ *   5/5  câu → Wald ±8,8   | Wilson [56,6% .. 100%]  (thực tế ±21,7)
+ *   10/10    → Wald ±6,2   | Wilson [72,2% .. 100%]  (thực tế ±13,9)
+ *   1/1      → Wald ±19,6  | Wilson [20,7% .. 100%]  (thực tế ±39,7)
+ *
+ * Trên dữ liệu thật, lượt 3 của một đề mới làm 5/117 câu được hiện là "100% ±8,8" — đúng ngược
+ * với mục đích của hàm này. Ở vùng giữa (n lớn, p quanh 0,5) hai công thức gần như trùng nhau.
+ *
+ * Trả về khoảng thay vì dấu ± vì khoảng Wilson không đối xứng quanh p: "100% ± 21,7" hàm ý tới
+ * 121,7%, còn "100% (57–100%)" thì đọc đúng như nó là.
  */
-export function marginOfError(correct, answered) {
+export function scoreInterval(correct, answered) {
   if (!answered) return null;
+  const z = 1.96;
   const p = correct / answered;
-  return Number((1.96 * Math.sqrt(Math.max(p * (1 - p), 0.01) / answered) * 100).toFixed(1));
+  const denom = 1 + (z * z) / answered;
+  const center = (p + (z * z) / (2 * answered)) / denom;
+  const half = (z * Math.sqrt((p * (1 - p)) / answered + (z * z) / (4 * answered * answered))) / denom;
+  return {
+    lo: Number((Math.max(0, center - half) * 100).toFixed(1)),
+    hi: Number((Math.min(1, center + half) * 100).toFixed(1)),
+  };
 }
 
 /** Thống kê lượt của TẤT CẢ các đề đã đụng tới — Map(quizIndex → passes[]). */
