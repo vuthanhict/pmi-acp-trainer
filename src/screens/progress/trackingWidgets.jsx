@@ -624,9 +624,11 @@ export function PlanProgressCard({ plan, studyPlan, onStartTodayPractice, onStar
           </div>
           <div className="space-y-1">
             {pending.map((q) => {
+              // Exam mode cũng đếm theo câu (làm chia nhỏ nhiều phiên vẫn cộng dồn), nên hiện
+              // đúng số câu còn thiếu thay vì một dòng chữ tĩnh "cần 1 lượt trọn đề".
               const stat = q.status === "first_pass"
                 ? t("planQuizRemaining", { n: q.unseenInQuiz, done: q.gradableCount - q.unseenInQuiz, total: q.gradableCount })
-                : t("planQuizNeedsExam");
+                : t("planQuizExamRemaining", { n: q.examUnseenInQuiz, done: q.gradableCount - q.examUnseenInQuiz, total: q.gradableCount });
               // Mobile: tên đề một dòng riêng rồi mới tới số liệu — nhét chung một dòng thì tên bị
               // cắt còn "PMI-ACP: S..." và không phân biệt được Phần 1 với Phần 2.
               // Nút làm nốt: bấm là vào thẳng những câu CHƯA GẶP của đúng đề đó (không mở lại cả
@@ -937,7 +939,7 @@ export function TodayFocusCard({ progress, tracking, gapProfile, onStart, onStar
                 <Icon name={TODAY_ACTION_ICON[action.type]} size={14} />
                 {action.type === "wait_cooldown"
                   ? t("todayAction_wait_cooldown", { quizName: action.quizName, date: fmtDayKey(action.availableDate, lang) })
-                  : t(`todayAction_${action.type}`, { quizName: action.quizName, n: action.criticalCount })}
+                  : t(`todayAction_${action.type}`, { quizName: action.quizName, n: action.criticalCount, examLeft: action.examUnseenInQuiz })}
               </p>
               {action.type === "first_pass" && (() => {
                 const n = Math.min(chunkSize, action.unseenInQuiz);

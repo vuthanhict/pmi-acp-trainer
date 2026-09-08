@@ -30,29 +30,48 @@ function gradableQuestions(quizIndex) {
 /**
  * Kế hoạch từng đề + tổng khối lượng câu còn phải hoàn tất trước ngày thi — tách riêng khỏi
  * buildStudyPlan để dùng lại được cho việc tính "mục tiêu hôm qua" (xem computeCatchUp bên
- * dưới), vốn cần chạy lại đúng phép tính này trên tập attempts/completedQuizzes ĐÃ LOẠI hoạt
- * động của hôm nay.
+ * dưới) và cho việc dựng lại khối lượng của TỪNG NGÀY trong quá khứ (buildPlanProgress), vốn
+ * cần chạy lại đúng phép tính này trên tập attempts/completedQuizzes đã cắt theo mốc thời gian.
  *
- * Mỗi đề chỉ có ĐÚNG 2 yêu cầu, không đếm theo "số lượt làm" nữa (số lượt không còn ý nghĩa khi
- * một đề có thể được học rải rác qua nhiều phiên luyện chia nhỏ nhiều ngày — xem
- * startTodayPracticeSession ở App.jsx):
+ * Mỗi đề có ĐÚNG 2 yêu cầu, cả hai đều đếm THEO CÂU (không theo "số lượt làm", cũng không theo
+ * cục cả đề):
  *   1) PHỦ HẾT NỘI DUNG — mọi câu (không tính manualReview) đã được trả lời ít nhất 1 lần, so
- *      khớp từng questionId với lịch sử attempts (đúng yêu cầu "xét các câu chưa làm thực sự").
- *      Có thể đạt được qua nhiều phiên luyện nhỏ rải rác nhiều ngày.
- *   2) (CHỈ required) MỘT LƯỢT EXAM MODE TRỌN VẸN — phòng thi thật không có gợi ý và tính giờ
- *      nghiêm ngặt, nên phải có ít nhất 1 lần làm hết đề trong một phiên duy nhất, dưới điều
- *      kiện giống thi thật. Lượt này KHÔNG được chia nhỏ (startTodayPracticeSession chỉ tạo
- *      phiên Practice) — luôn dùng toàn bộ câu của đề.
+ *      khớp từng questionId với lịch sử attempts. Có thể đạt qua nhiều phiên luyện nhỏ rải rác.
+ *   2) (CHỈ required) PHỦ HẾT ĐỀ Ở CHẾ ĐỘ EXAM — mọi câu đã được trả lời ít nhất 1 lần trong
+ *      một phiên mode "exam". Phòng thi thật không có gợi ý và tính giờ nghiêm ngặt, nên nội
+ *      dung phải được đi qua một lần nữa dưới điều kiện đó.
+ *
+ * VÌ SAO ĐẾM THEO CÂU, KHÔNG THEO CỤC ĐỀ: bản trước tính "đề này chưa có lượt exam nào → cộng
+ * TOÀN BỘ đề vào khối lượng", và coi cột mốc là xong ngay khi có MỘT entry mode "exam" bất kỳ.
+ * Cách đó sai ở hai đầu và tự mâu thuẫn với chính màn làm bài, vốn cho phép nộp sớm:
+ *
+ *   - Khối lượng KHÔNG đơn điệu giảm. Đúng lúc học viên trả lời nốt câu cuối của một đề,
+ *     unseenInQuiz về 0 nên đề chuyển sang "cần exam mode" và khối lượng CỘNG THÊM nguyên đề.
+ *     Ngày hoàn thành cột mốc bị vẽ thành ngày HỤT tiến độ (đo trên dữ liệu thật: 9/28 ngày,
+ *     trong đó có ngày làm 102 câu mà biểu đồ ghi "tiến 0").
+ *   - Công được trao theo cục. Một phiên exam nộp sớm sau 10 câu gỡ trọn 117 đơn vị khối lượng,
+ *     rồi 107 câu exam làm tiếp sau đó không được tính một đơn vị nào. Đường "đã đi" thành răng
+ *     cưa 133/0/107/0 trong khi nỗ lực thật là 84/49/70/30.
+ *
+ * Đếm theo câu làm khối lượng đơn điệu giảm và cùng đơn vị với số câu đã trả lời, nên biểu đồ
+ * tiến độ lẫn mục tiêu hằng ngày đều bám đúng việc học. Làm exam mode chia nhỏ nhiều phiên (làm
+ * 10 câu rồi nộp, lần sau làm tiếp từ câu 11) được cộng dồn đúng như cách người học thực sự làm.
  */
 function computeQuizWorkload(attempts, completedQuizzes, tz) {
-  const completedByQuiz = new Map();
+  // Phiên nào là phiên Exam mode — dùng để tách attempts "làm dưới điều kiện thi thật" ra khỏi
+  // attempts luyện tập. Chỉ nhận phiên ĐÃ NỘP: phiên đang làm dở chưa có entry, và mốc thời gian
+  // của nó (completedAt) cũng chính là thứ buildPlanProgress dùng để cắt lịch sử theo từng ngày.
+  const examSessionIds = new Set();
   for (const entry of completedQuizzes) {
-    if (entry.quizIndex == null) continue;
-    if (!completedByQuiz.has(entry.quizIndex)) completedByQuiz.set(entry.quizIndex, []);
-    completedByQuiz.get(entry.quizIndex).push(entry);
+    if (entry.mode === "exam" && entry.sessionId) examSessionIds.add(entry.sessionId);
   }
 
-  const answeredIds = new Set(attempts.map((a) => a.questionId));
+  const answeredIds = new Set();
+  const examAnsweredIds = new Set();
+  for (const a of attempts) {
+    answeredIds.add(a.questionId);
+    if (examSessionIds.has(a.sessionId)) examAnsweredIds.add(a.questionId);
+  }
   const core = coreQuizzes();
 
   let unseenCoreQuestions = 0;
@@ -63,15 +82,7 @@ function computeQuizWorkload(attempts, completedQuizzes, tz) {
   let requiredExamModeDone = 0;
 
   const quizPassPlan = core.map((c) => {
-    const entries = completedByQuiz.get(c.quizIndex) || [];
-    // Chunk luyện tập (startTodayPracticeSession) luôn mode "practice" với questionIds là tập
-    // con — chỉ có nút "làm lại Exam mode" (luôn full đề) mới có thể tạo entry mode "exam", nên
-    // examModeDone dưới đây luôn tương ứng một lượt TRỌN VẸN, không cần kiểm tra coverage riêng.
-    const examModeDone = entries.some((e) => e.mode === "exam");
-    if (c.tier === "required" && examModeDone) requiredExamModeDone += 1;
-
     const gradable = gradableQuestions(c.quizIndex);
-    const gradableIds = new Set(gradable.map((q) => q.id));
     totalCoreQuestions += gradable.length;
     if (c.tier === "required") totalRequiredQuestions += gradable.length;
     else totalRecommendedQuestions += gradable.length;
@@ -79,19 +90,31 @@ function computeQuizWorkload(attempts, completedQuizzes, tz) {
     const unseenInQuiz = gradable.filter((q) => !answeredIds.has(q.id)).length;
     unseenCoreQuestions += unseenInQuiz;
 
-    const needsExamMode = c.tier === "required" && !examModeDone;
-    workloadQuestions += unseenInQuiz + (needsExamMode ? gradable.length : 0);
+    // Câu của đề này chưa từng được trả lời trong một phiên Exam mode. Chỉ required mới có yêu
+    // cầu này; recommended chỉ cần phủ hết nội dung.
+    const examUnseenInQuiz = c.tier === "required"
+      ? gradable.filter((q) => !examAnsweredIds.has(q.id)).length
+      : 0;
+    const examModeDone = c.tier === "required" ? examUnseenInQuiz === 0 : null;
+    if (examModeDone) requiredExamModeDone += 1;
 
-    const status = unseenInQuiz > 0 ? "first_pass" : needsExamMode ? "needs_exam_mode" : "done";
+    // Một câu của đề required tính HAI đơn vị khối lượng (một lượt phủ nội dung + một lượt dưới
+    // điều kiện thi thật) — đúng như bản trước, chỉ khác là nay chúng được trừ dần từng câu thay
+    // vì trao một cục.
+    workloadQuestions += unseenInQuiz + examUnseenInQuiz;
 
-    // Mốc "được phép làm Exam mode": chỉ có ý nghĩa khi coverage vừa xong nhưng chưa có lượt exam
-    // — lấy ngày TRẢ LỜI GẦN NHẤT trong số các câu thuộc đề này (lúc chưa có lượt exam, mọi
-    // attempt của đề đều là luyện tập rải rác, nên đây chính là ngày hoàn tất phủ nội dung).
+    const status = unseenInQuiz > 0 ? "first_pass" : examUnseenInQuiz > 0 ? "needs_exam_mode" : "done";
+
+    // Mốc "được phép BẮT ĐẦU Exam mode": làm lượt exam ngay hôm sau khi vừa luyện xong chỉ đo trí
+    // nhớ ngắn hạn (còn nhớ mặt câu). Chỉ áp dụng khi đề CHƯA đi câu exam nào — một khi đã bắt
+    // đầu thì học viên đang ở giữa lượt exam của đề đó, chặn tiếp là chặn nhầm. Ngày neo là lần
+    // trả lời gần nhất trong các phiên KHÔNG PHẢI exam (tức ngày luyện tập cuối cùng của đề).
     let earliestExamModeDate = null;
-    if (status === "needs_exam_mode") {
+    if (status === "needs_exam_mode" && examUnseenInQuiz === gradable.length) {
+      const gradableIds = new Set(gradable.map((q) => q.id));
       let lastPracticeDay = null;
       for (const a of attempts) {
-        if (!a.answeredAt || !gradableIds.has(a.questionId)) continue;
+        if (!a.answeredAt || examSessionIds.has(a.sessionId) || !gradableIds.has(a.questionId)) continue;
         const d = dayKey(a.answeredAt, tz);
         if (d && (!lastPracticeDay || d > lastPracticeDay)) lastPracticeDay = d;
       }
@@ -101,7 +124,8 @@ function computeQuizWorkload(attempts, completedQuizzes, tz) {
     return {
       quizIndex: c.quizIndex, quizName: c.quizName, tier: c.tier,
       unseenInQuiz, gradableCount: gradable.length,
-      examModeDone: c.tier === "required" ? examModeDone : null,
+      examUnseenInQuiz: c.tier === "required" ? examUnseenInQuiz : null,
+      examModeDone,
       status, earliestExamModeDate,
     };
   });
@@ -231,7 +255,7 @@ export function buildStudyPlan({ progress, gapProfile, tracking }) {
     const candidates = quizPassPlan.filter((q) => q.status === "needs_exam_mode");
     const ready = candidates.filter((q) => !q.earliestExamModeDate || diffDayKeys(q.earliestExamModeDate, today) <= 0)[0];
     if (ready) {
-      todayAction = { type: "exam_mode", quizIndex: ready.quizIndex, quizName: ready.quizName, tier: ready.tier };
+      todayAction = { type: "exam_mode", quizIndex: ready.quizIndex, quizName: ready.quizName, tier: ready.tier, examUnseenInQuiz: ready.examUnseenInQuiz };
     } else {
       const waiting = candidates.sort((a, b) => diffDayKeys(a.earliestExamModeDate, b.earliestExamModeDate))[0];
       todayAction = waiting
@@ -324,6 +348,9 @@ export function buildPlanProgress({ progress, tracking }) {
     // Mục tiêu của ngày d dựa trên khối lượng còn lại TRƯỚC khi ngày d bắt đầu.
     const target = studyDaysLeft > 0 ? Math.ceil(prevWorkload / studyDaysLeft) : prevWorkload;
     const after = workloadAfter(d);
+    // Khối lượng đơn điệu giảm kể từ khi computeQuizWorkload đếm theo câu, nên hiệu này luôn ≥ 0;
+    // Math.max giữ lại chỉ như chốt an toàn cho dữ liệu lạ (attempt không có answeredAt…), KHÔNG
+    // còn là nơi nuốt phần âm do khối lượng tự tăng như bản trước.
     const progressed = Math.max(0, prevWorkload - after); // khối lượng lộ trình đi được trong ngày
     prevWorkload = after;
 
