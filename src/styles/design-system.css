@@ -115,6 +115,11 @@
 
 /* Bảng dữ liệu tương đương cho trình đọc màn hình (biểu đồ SVG không tự đọc được).
    Tự định nghĩa thay vì dựa vào .sr-only của Tailwind để chắc chắn luôn có mặt. */
+/* Chỉ đọc-bằng-trình-đọc-màn-hình. PHẢI đặt trên một phần tử block bao ngoài, không đặt thẳng lên
+   <table>: width/height/overflow không ràng buộc được display:table (height chỉ là mức tối thiểu,
+   overflow bị bỏ qua), nên bảng vẫn cao đúng kích thước thật. Vì phần tử được position:absolute,
+   phần cao vượt ấy vẫn tính vào chiều cao cuộn của tài liệu — hai bảng ẩn ở tab Tiến độ từng đẩy
+   scrollHeight từ 933px lên 1637px, tạo ra 760px trắng trơn dưới cuối trang. */
 .pmi-sr { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
 
 .pmi-tabs { display: flex; gap: 2px; padding: 3px; background: var(--line); border-radius: var(--radius-pill); }

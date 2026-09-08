@@ -107,6 +107,14 @@ function App() {
     document.documentElement.style.colorScheme = theme;
   }, [theme, loaded]);
 
+  // Đổi màn thì về đầu trang. Đây là app một trang, không có điều hướng của trình duyệt để tự
+  // reset scroll, nên vị trí cuộn của màn cũ được giữ nguyên sang màn mới: đang đọc cuối màn Hôm
+  // nay rồi bấm Tiến độ thì rơi thẳng vào giữa/cuối màn mới thay vì đọc từ đầu. `instant` chứ
+  // không `smooth` — đây là chuyển màn, không phải một cú nhảy trong cùng trang.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [view]);
+
   const saveTimerRef = useRef(null);
   const persist = useCallback((updater) => {
     setProgress((prev) => (typeof updater === "function" ? updater(prev) : updater));

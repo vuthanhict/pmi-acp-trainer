@@ -308,19 +308,21 @@ export function TrendChart({ points }) {
         <span className="shrink-0">ⓘ</span><span>{t("trendExplain")}</span>
       </p>
       {/* Bảng tương đương cho trình đọc màn hình — biểu đồ SVG không tự đọc được. */}
-      <table className="pmi-sr">
-        <caption>{t("trendHeader")}</caption>
-        <thead><tr><th>{lang === "en" ? "Date" : "Ngày"}</th><th>{t("trendFirstExposure")}</th><th>{t("trendRetake")}</th></tr></thead>
-        <tbody>
-          {points.filter((p) => p.firstExposure !== null || p.retake !== null).map((p) => (
-            <tr key={p.dayKey}>
-              <td>{fmtDayKey(p.dayKey, lang)}</td>
-              <td>{p.firstExposure === null ? "—" : `${Math.round(p.firstExposure * 100)}%`}</td>
-              <td>{p.retake === null ? "—" : `${Math.round(p.retake * 100)}%`}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="pmi-sr">
+        <table>
+          <caption>{t("trendHeader")}</caption>
+          <thead><tr><th>{lang === "en" ? "Date" : "Ngày"}</th><th>{t("trendFirstExposure")}</th><th>{t("trendRetake")}</th></tr></thead>
+          <tbody>
+            {points.filter((p) => p.firstExposure !== null || p.retake !== null).map((p) => (
+              <tr key={p.dayKey}>
+                <td>{fmtDayKey(p.dayKey, lang)}</td>
+                <td>{p.firstExposure === null ? "—" : `${Math.round(p.firstExposure * 100)}%`}</td>
+                <td>{p.retake === null ? "—" : `${Math.round(p.retake * 100)}%`}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -686,15 +688,17 @@ export function PlanProgressCard({ plan, studyPlan, onStartTodayPractice, onStar
         </div>
       )}
 
-      <table className="pmi-sr">
-        <caption>{t("planChartLabel")}</caption>
-        <thead><tr><th>{lang === "en" ? "Date" : "Ngày"}</th><th>{t("planDailyTarget")}</th><th>{t("planDailyDone")}</th></tr></thead>
-        <tbody>
-          {plan.rows.map((r) => (
-            <tr key={r.dayKey}><td>{fmtDayKey(r.dayKey, lang)}</td><td>{r.target}</td><td>{r.progressed}</td></tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="pmi-sr">
+        <table>
+          <caption>{t("planChartLabel")}</caption>
+          <thead><tr><th>{lang === "en" ? "Date" : "Ngày"}</th><th>{t("planDailyTarget")}</th><th>{t("planDailyDone")}</th></tr></thead>
+          <tbody>
+            {plan.rows.map((r) => (
+              <tr key={r.dayKey}><td>{fmtDayKey(r.dayKey, lang)}</td><td>{r.target}</td><td>{r.progressed}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -760,18 +764,20 @@ export function MasteryTrendCard({ masteryTrend }) {
         ))}
       </div>
       {/* Bảng tương đương cho trình đọc màn hình — biểu đồ SVG không tự đọc được. */}
-      <table className="pmi-sr">
-        <caption>{t("masteryTrendHeader")}</caption>
-        <thead><tr><th>{lang === "en" ? "Date" : "Ngày"}</th>{domains.map((d) => <th key={d}>{d}</th>)}</tr></thead>
-        <tbody>
-          {usable.map((p) => (
-            <tr key={p.dayKey}>
-              <td>{fmtDayKey(p.dayKey, lang)}</td>
-              {domains.map((d) => <td key={d}>{hasValue(p, d) ? `${Math.round(p.domains[d] * 100)}%` : "—"}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="pmi-sr">
+        <table>
+          <caption>{t("masteryTrendHeader")}</caption>
+          <thead><tr><th>{lang === "en" ? "Date" : "Ngày"}</th>{domains.map((d) => <th key={d}>{d}</th>)}</tr></thead>
+          <tbody>
+            {usable.map((p) => (
+              <tr key={p.dayKey}>
+                <td>{fmtDayKey(p.dayKey, lang)}</td>
+                {domains.map((d) => <td key={d}>{hasValue(p, d) ? `${Math.round(p.domains[d] * 100)}%` : "—"}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
