@@ -192,11 +192,24 @@ export function computeStreak(history, goal, tz = DEFAULT_TZ, now = Date.now()) 
 }
 
 /**
+ * Nối thêm các ngày CHƯA TỚI vào cuối chuỗi, giá trị rỗng.
+ *
+ * Không có dữ liệu ở đó, nên chúng không vẽ được gì — nhưng đó chính là điểm: biểu đồ dừng ở
+ * hôm nay khiến người học không thấy còn bao nhiêu thời gian để kéo đường lên. Kéo trục tới ngày
+ * thi thì "đường của tôi đang ở đâu" và "tôi còn mấy ngày" nằm trên cùng một hình.
+ */
+function appendFutureDays(points, today, futureDays, emptyShape) {
+  for (let i = 1; i <= futureDays; i++) {
+    points.push({ dayKey: shiftDayKey(today, i), future: true, ...emptyShape });
+  }
+}
+
+/**
  * Chuỗi thời gian 2 đường cho biểu đồ xu hướng: độ chính xác lần-đầu-gặp và làm-lại.
  * Dùng cửa sổ trượt `window` ngày để làm mượt — dữ liệu từng ngày quá thưa (10-20 câu)
  * nên đường thô sẽ nhảy 0%↔100% và không đọc được gì.
  */
-export function buildAccuracyTrend(history, { days = 30, window = 7, tz = DEFAULT_TZ, now = Date.now() } = {}) {
+export function buildAccuracyTrend(history, { days = 30, window = 7, futureDays = 0, tz = DEFAULT_TZ, now = Date.now() } = {}) {
   const today = todayKey(tz, now);
   const points = [];
   for (let i = days - 1; i >= 0; i--) {
@@ -216,6 +229,7 @@ export function buildAccuracyTrend(history, { days = 30, window = 7, tz = DEFAUL
       retakeN: rt,
     });
   }
+  appendFutureDays(points, today, futureDays, { firstExposure: null, retake: null, firstExposureN: 0, retakeN: 0 });
   return points;
 }
 
@@ -235,7 +249,7 @@ export function buildAccuracyTrend(history, { days = 30, window = 7, tz = DEFAUL
  * Mastery là một TRẠNG THÁI tích luỹ chứ không phải lượng làm trong ngày, nên ngày có nhiều
  * phiên lấy snapshot CUỐI CÙNG (trạng thái cuối ngày), không lấy trung bình.
  */
-export function buildMasteryTrend(gapSnapshots, { days = 30, tz = DEFAULT_TZ, now = Date.now() } = {}) {
+export function buildMasteryTrend(gapSnapshots, { days = 30, futureDays = 0, tz = DEFAULT_TZ, now = Date.now() } = {}) {
   const lastOfDay = new Map();
   for (const s of gapSnapshots || []) {
     if (!s?.generatedAt || !s?.profile?.domains) continue;
@@ -255,6 +269,7 @@ export function buildMasteryTrend(gapSnapshots, { days = 30, tz = DEFAULT_TZ, no
       domains: s ? Object.fromEntries(s.profile.domains.map((d) => [d.domain, d.mastery])) : {},
     });
   }
+  appendFutureDays(points, today, futureDays, { domains: {} });
   return points;
 }
 

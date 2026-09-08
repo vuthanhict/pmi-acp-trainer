@@ -241,7 +241,10 @@ export function ReadinessCard({ readiness, onAction }) {
 export function TrendChart({ points }) {
   const { t, lang } = useAppCtx();
   const isDesktop = useIsDesktop();
-  const days = points.length;
+  // Số ngày LỊCH SỬ, không tính phần tương lai vừa nối thêm — phải khớp với tiêu đề thẻ, vốn
+  // dùng tracking.trendDays. Lấy points.length thì nhãn cho trình đọc màn hình đọc thành "49
+  // ngày" trong khi tiêu đề ghi 29.
+  const days = points.filter((p) => !p.future).length;
   // viewBox rộng gấp đôi trên desktop: thẻ chiếm trọn chiều ngang nên có chỗ, và vì cỡ chữ tính
   // theo đơn vị viewBox nên nới W ra là nới khoảng cách giữa các ngày mà KHÔNG phóng to chữ.
   // Trên mobile vẫn giữ 320 — dùng chung 720 thì chữ 7px bị co còn ~3px, không đọc nổi.
@@ -279,6 +282,9 @@ export function TrendChart({ points }) {
 
   const gridLines = [0.25, 0.5, 0.75, 1];
   const labelEvery = Math.max(1, Math.ceil(points.length / (isDesktop ? 8 : 4)));
+  // Điểm cuối cùng CÓ THẬT; phần sau nó là các ngày chưa tới (xem appendFutureDays).
+  const todayIdx = points.findIndex((p) => p.future) - 1;
+  const hasFuture = todayIdx >= 0;
 
   return (
     <div>
@@ -293,6 +299,14 @@ export function TrendChart({ points }) {
           x1={padL} x2={W - padR} y1={y(TREND_ACCURACY_BAR / 100)} y2={y(TREND_ACCURACY_BAR / 100)}
           stroke="var(--ink-soft)" strokeWidth="0.8" strokeDasharray="3 3"
         />
+        {/* Vạch "hôm nay": phần bên phải là quãng thời gian còn lại tới ngày thi, cố ý để trống —
+            nó cho thấy còn bao nhiêu ngày để kéo hai đường này lên. */}
+        {hasFuture && (
+          <>
+            <rect x={x(todayIdx)} y={padT} width={W - padR - x(todayIdx)} height={H - padT - padB} fill="var(--line)" opacity="0.25" />
+            <line x1={x(todayIdx)} x2={x(todayIdx)} y1={padT} y2={H - padB} stroke="var(--ink-soft)" strokeWidth="0.8" strokeDasharray="2 2" />
+          </>
+        )}
         {segmentsOf("retake").map((seg, i) => (
           <path key={`r${i}`} d={toPath(seg)} fill="none" stroke="var(--ink-soft)" strokeWidth="1.6" strokeDasharray="4 3" strokeLinejoin="round" />
         ))}
@@ -300,8 +314,12 @@ export function TrendChart({ points }) {
           <path key={`f${i}`} d={toPath(seg)} fill="none" stroke="var(--sky)" strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" />
         ))}
         {points.map((p, i) => (
-          i % labelEvery === 0 || i === points.length - 1 ? (
-            <text key={p.dayKey} x={x(i)} y={H - 5} textAnchor="middle" fontSize="7" fill="var(--ink-soft)" fontFamily="var(--font-mono)">
+          i % labelEvery === 0 || i === points.length - 1 || i === todayIdx ? (
+            <text
+              key={p.dayKey} x={x(i)} y={H - 5}
+              textAnchor={i === points.length - 1 ? "end" : i === 0 ? "start" : "middle"}
+              fontSize="7" fill={i === todayIdx ? "var(--ink-mid)" : "var(--ink-soft)"} fontFamily="var(--font-mono)"
+            >
               {p.dayKey.slice(5).replace("-", "/")}
             </text>
           ) : null
@@ -312,6 +330,9 @@ export function TrendChart({ points }) {
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 2.5, background: "var(--sky)", display: "inline-block" }} />{t("trendFirstExposure")}</span>
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 0, borderTop: "2px dashed var(--ink-soft)", display: "inline-block" }} />{t("trendRetake")}</span>
         <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 0, borderTop: "1px dashed var(--ink-soft)", display: "inline-block" }} />{t("trendThreshold")}</span>
+        {hasFuture && (
+          <span className="flex items-center gap-1.5"><span style={{ width: 14, height: 8, background: "var(--line)", display: "inline-block" }} />{t("trendFutureLegend")}</span>
+        )}
       </div>
       <p className="pmi-mono text-[10px] mt-1" style={{ color: "var(--ink-soft)" }}>
         {t("trendSampleSize", { fe: lastPoint.firstExposureN, rt: lastPoint.retakeN })}
@@ -735,6 +756,8 @@ export function MasteryTrendCard({ masteryTrend }) {
   const x = (i) => padL + (i / Math.max(1, masteryTrend.length - 1)) * (W - padL - padR);
   const y = (v) => padT + (1 - v) * (H - padT - padB);
   const labelEvery = Math.max(1, Math.ceil(masteryTrend.length / (isDesktop ? 8 : 4)));
+  const todayIdx = masteryTrend.findIndex((p) => p.future) - 1;
+  const hasFuture = todayIdx >= 0;
 
   const segmentsOf = (d) => {
     const segs = [];
@@ -759,12 +782,22 @@ export function MasteryTrendCard({ masteryTrend }) {
             <text x={padL - 4} y={y(g) + 3} textAnchor="end" fontSize="7" fill="var(--ink-soft)" fontFamily="var(--font-mono)">{g * 100}</text>
           </g>
         ))}
+        {hasFuture && (
+          <>
+            <rect x={x(todayIdx)} y={padT} width={W - padR - x(todayIdx)} height={H - padT - padB} fill="var(--line)" opacity="0.25" />
+            <line x1={x(todayIdx)} x2={x(todayIdx)} y1={padT} y2={H - padB} stroke="var(--ink-soft)" strokeWidth="0.8" strokeDasharray="2 2" />
+          </>
+        )}
         {domains.map((d) => segmentsOf(d).map((seg, i) => (
           <path key={`${d}${i}`} d={toPath(seg)} fill="none" stroke={colorOf[d]} strokeWidth="1.8" strokeLinejoin="round" />
         )))}
         {masteryTrend.map((p, i) => (
-          i % labelEvery === 0 || i === masteryTrend.length - 1 ? (
-            <text key={p.dayKey} x={x(i)} y={H - 5} textAnchor="middle" fontSize="7" fill="var(--ink-soft)" fontFamily="var(--font-mono)">
+          i % labelEvery === 0 || i === masteryTrend.length - 1 || i === todayIdx ? (
+            <text
+              key={p.dayKey} x={x(i)} y={H - 5}
+              textAnchor={i === masteryTrend.length - 1 ? "end" : i === 0 ? "start" : "middle"}
+              fontSize="7" fill={i === todayIdx ? "var(--ink-mid)" : "var(--ink-soft)"} fontFamily="var(--font-mono)"
+            >
               {p.dayKey.slice(5).replace("-", "/")}
             </text>
           ) : null
@@ -776,6 +809,9 @@ export function MasteryTrendCard({ masteryTrend }) {
             <span style={{ width: 12, height: 2.5, background: colorOf[d], display: "inline-block" }} />{d}
           </span>
         ))}
+        {hasFuture && (
+          <span className="flex items-center gap-1.5"><span style={{ width: 12, height: 8, background: "var(--line)", display: "inline-block" }} />{t("trendFutureLegend")}</span>
+        )}
       </div>
       {/* Bảng tương đương cho trình đọc màn hình — biểu đồ SVG không tự đọc được. */}
       <div className="pmi-sr">

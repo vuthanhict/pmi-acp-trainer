@@ -30,6 +30,9 @@ export function useTracking(progress, gapProfile) {
     const trendDays = activeDays.length
       ? clamp(diffDayKeys(today, activeDays[0]) + 1, 14, 90)
       : 30;
+    // Phần tương lai kéo tới đúng NGÀY THI (trần 90 để trục không bị nén). Chưa đặt ngày thi thì
+    // không vẽ phần này — không có mốc nào để kéo tới.
+    const trendFutureDays = examDate ? clamp(diffDayKeys(examDate, today), 0, 90) : 0;
 
     return {
       tz, today, history, todayRow, streak, goal, target, examDate, currentPace,
@@ -38,8 +41,9 @@ export function useTracking(progress, gapProfile) {
       ratio: target ? clamp(done / target) : 0,
       goalMet: target ? done >= target : false,
       trendDays,
-      trend: buildAccuracyTrend(history, { tz, days: trendDays }),
-      masteryTrend: buildMasteryTrend(progress.gapSnapshots, { tz, days: trendDays }),
+      trendFutureDays,
+      trend: buildAccuracyTrend(history, { tz, days: trendDays, futureDays: trendFutureDays }),
+      masteryTrend: buildMasteryTrend(progress.gapSnapshots, { tz, days: trendDays, futureDays: trendFutureDays }),
       readiness: computeReadiness(gapProfile, progress.attempts),
     };
     // gapProfile đã được memo hoá ở App theo attempts nên không cần thêm dependency.

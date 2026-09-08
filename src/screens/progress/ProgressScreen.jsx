@@ -54,11 +54,14 @@ export function ProgressScreen({ progress, gapProfile, tracking, onFillGap, onGo
               bên cạnh là kết luận tổng.
               Hai biểu đồ xu hướng bên dưới thì ngược lại, phải chiếm TRỌN chiều ngang: trục hoành
               của chúng là thời gian, ở nửa bề ngang thì 30+ ngày bị nén tới mức không đọc được. */}
-          {/* flex-wrap: nửa hàng ở màn ~800px chỉ còn ~305px, vừa đúng bằng 4 vòng (68px + nhãn
-              tối đa 76px) nên vòng cuối bị cắt. Cho xuống dòng thì nó tự về 2×2 thay vì tràn. */}
-          <Card className="flex flex-wrap items-center justify-around gap-y-4 py-5">
+          {/* 2×2 chứ không phải 1 hàng 4 vòng: thẻ này nay chỉ chiếm nửa chiều ngang nhưng lại cao
+              bằng thẻ sẵn sàng thi bên cạnh (~350px), nên chiều dọc mới là thứ đang dư. Xếp 2×2 lấy
+              chỗ dư đó đổi lấy vòng tròn to hơn hẳn (68px → 100px) — mastery là con số cần liếc một
+              cái là thấy. Cũng hết luôn lỗi tràn ở màn hẹp: 1 hàng 4 vòng cần ~304px mà nửa hàng ở
+              viewport 800px chỉ còn ~249px. */}
+          <Card className="grid grid-cols-2 gap-y-5 place-items-center py-5">
             {gapProfile.domains.map((d) => (
-              <DomainRing key={d.domain} domain={d.domain} mastery={d.mastery} />
+              <DomainRing key={d.domain} domain={d.domain} mastery={d.mastery} size={100} />
             ))}
           </Card>
           <ReadinessCard readiness={tracking.readiness} onAction={onFillGap} />
