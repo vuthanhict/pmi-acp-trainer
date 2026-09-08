@@ -4,7 +4,7 @@ import { QUESTION_INDEX, VI_ITEM_INDEX } from "../../lib/embeddedData.js";
 import { parseMatchingQuestion } from "../../lib/matching.js";
 import { normOpt } from "../../lib/utils.js";
 import { displayScore } from "../../lib/scoreDisplay.js";
-import { buildQuizPasses, comparePasses, currentPass, scoreInterval } from "../../lib/passStats.js";
+import { comparePasses, passForSession, scoreInterval } from "../../lib/passStats.js";
 import { DOMAIN_MINDSET, EXAM_MINDSET_TIPS } from "../../i18n/text.js";
 import { Card, Icon, Button, DeltaChip, QuestionImage } from "../../components/ui/primitives.jsx";
 import {
@@ -154,17 +154,20 @@ export function ResultsScreen({ sessionId, progress, onDone, onGap, backLabel, o
   const shownScore = displayScore(entry);
   // Điểm của riêng phiên này gần như là nhiễu khi phiên chỉ vài chục câu — luôn kèm con số của
   // cả LƯỢT làm đề để người học có mốc đáng tin (xem passStats.js).
-  const pass = useMemo(() => {
-    if (entry?.quizIndex == null) return null;
-    return currentPass(buildQuizPasses(progress.attempts, entry.quizIndex));
-  }, [entry?.quizIndex, progress.attempts]);
+  // Lượt mà CHÍNH phiên này đóng góp vào — không phải lượt mới nhất của đề. Mở lại kết quả một
+  // phiên cũ mà hiện lượt mới nhất là kể một chuyện chưa xảy ra vào lúc đó (xem passForSession).
+  const pass = useMemo(
+    () => (entry?.quizIndex == null ? null : passForSession(progress.attempts, entry.quizIndex, sessionId)),
+    [entry?.quizIndex, progress.attempts, sessionId],
+  );
   const chunkCi = scoreInterval(shownScore.correct, shownScore.graded);
+  // So lượt của phiên này với lượt LIỀN TRƯỚC nó, không phải hai lượt mới nhất của đề: mở kết
+  // quả của lượt 1 thì đúng ra là chưa có gì để so, chứ không phải khoe tiến bộ giữa lượt 2 và 3
+  // xảy ra sau đó.
   const passComparison = useMemo(() => {
-    if (entry?.quizIndex == null) return null;
-    const passes = buildQuizPasses(progress.attempts, entry.quizIndex);
-    if (passes.length < 2) return null;
-    return comparePasses(progress.attempts, entry.quizIndex, passes.length - 1, passes.length);
-  }, [entry?.quizIndex, progress.attempts]);
+    if (entry?.quizIndex == null || !pass || pass.pass < 2) return null;
+    return comparePasses(progress.attempts, entry.quizIndex, pass.pass - 1, pass.pass);
+  }, [entry?.quizIndex, progress.attempts, pass]);
   const savedVocabIds = useMemo(() => new Set(Object.keys(progress.vocabSaved || {})), [progress.vocabSaved]);
   const sessAttempts = progress.attempts.filter((a) => a.sessionId === sessionId);
   const wrong = sessAttempts.filter((a) => a.gradeStatus === "graded" && !a.isCorrect);

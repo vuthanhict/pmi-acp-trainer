@@ -103,6 +103,29 @@ export function comparePasses(attempts, quizIndex, passA = 1, passB = 2) {
   };
 }
 
+/**
+ * Lượt mà một PHIÊN cụ thể đóng góp vào — thứ màn Kết quả cần khi mở lại một lần làm bài cũ.
+ *
+ * Không dùng currentPass() cho việc đó: currentPass trả về lượt MỚI NHẤT của đề, nên mở kết quả
+ * một phiên từ 11/08 lại hiện "Lượt 3: 100% (5/117)" — một lượt mãi 02/09 mới bắt đầu, ba tuần
+ * sau phiên đang xem. Trong khi 10 câu của chính phiên đó đều thuộc lượt 1.
+ *
+ * Một phiên hiếm khi trải qua nhiều lượt (chỉ xảy ra khi trong cùng phiên có câu được gặp lần 2);
+ * lấy lượt CHIẾM ĐA SỐ, hoà thì lấy lượt sớm hơn.
+ */
+export function passForSession(attempts, quizIndex, sessionId) {
+  const ids = new Set(gradableIdsOf(quizIndex));
+  if (!ids.size) return null;
+  const counts = new Map();
+  for (const { attempt, pass } of gradedAttemptsWithPass(attempts)) {
+    if (attempt.sessionId !== sessionId || !ids.has(attempt.questionId)) continue;
+    counts.set(pass, (counts.get(pass) || 0) + 1);
+  }
+  if (!counts.size) return null;
+  const [passNumber] = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0];
+  return buildQuizPasses(attempts, quizIndex).find((p) => p.pass === passNumber) || null;
+}
+
 /** Lượt đang làm dở gần nhất (hoặc lượt cuối đã xong) — thứ cần đưa lên đầu thẻ đề. */
 export function currentPass(passes) {
   if (!passes.length) return null;
