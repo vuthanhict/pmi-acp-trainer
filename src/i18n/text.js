@@ -185,6 +185,10 @@ export const UI_TEXT = {
     mindsetGuideSubtitle: "Tổng hợp từ PMI-ACP Examination Content Outline chính thức, kỹ thuật \"từ khóa → hành động đúng\" và kinh nghiệm thi thật từ cộng đồng — đọc để nắm tư duy, không phải để học thuộc.",
     mindsetSearchPlaceholder: "Tìm theo từ khóa (vd: xung đột, backlog, MVP...)",
     mindsetNoResults: "Không tìm thấy nội dung phù hợp.",
+    mindsetExplainBtn: "Giải thích", mindsetHideBtn: "Thu gọn",
+    mindsetDense: "Gọn", mindsetFull: "Đầy đủ",
+    mindsetCollapseAll: "Thu gọn tất cả", mindsetExpandAll: "Mở tất cả",
+    mindsetSectionMeta: "{n} mục",
 
     // Tracking — mục tiêu hằng ngày
     goalHeaderToday: "MỤC TIÊU HÔM NAY",
@@ -471,6 +475,10 @@ export const UI_TEXT = {
     mindsetGuideSubtitle: "Summarized from the official PMI-ACP Examination Content Outline, the \"trigger word → best action\" technique, and real exam lessons learned from the community. Content is written in Vietnamese.",
     mindsetSearchPlaceholder: "Search by keyword (e.g. conflict, backlog, MVP...)",
     mindsetNoResults: "No matching content found.",
+    mindsetExplainBtn: "Explain", mindsetHideBtn: "Hide",
+    mindsetDense: "Compact", mindsetFull: "Full",
+    mindsetCollapseAll: "Collapse all", mindsetExpandAll: "Expand all",
+    mindsetSectionMeta: "{n} items",
 
     goalHeaderToday: "TODAY'S GOAL",
     goalSetupTitle: "Set a daily practice goal",
