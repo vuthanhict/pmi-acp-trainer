@@ -214,6 +214,10 @@ export function calculateGapProfile({ attempts, now = Date.now(), halfLifeDays =
   return {
     generatedAt: new Date(now).toISOString(),
     eligibleAttempts: eligible.length,
+    // Số CÂU KHÁC NHAU đã có bằng chứng — khác với số lượt. Làm đi làm lại 10 câu 6 lần cho ra 60
+    // lượt nhưng vẫn chỉ là 10 câu; cổng "đã đủ dữ liệu để đánh giá chưa" của readiness phải dựa
+    // vào con số này, nếu không nó bị qua mặt bằng cách lặp lại (xem computeReadiness).
+    eligibleQuestions: new Set(eligible.map((r) => r.questionId)).size,
     excludedAttempts: attempts.length - eligible.length,
     domains,
     tasks,

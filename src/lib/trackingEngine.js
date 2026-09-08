@@ -28,7 +28,10 @@ export const READINESS_READY_BAR = 75;   // ngưỡng thận trọng do app đ�
 export const TREND_ACCURACY_BAR = 75;
 const STREAK_FREEZES_PER_MONTH = 2;
 const MAX_MINUTES_PER_ATTEMPT = 10;       // chặn outlier: mở tab rồi bỏ đi cả tiếng
-const READINESS_MIN_ATTEMPTS = 60;        // dưới mức này chỉ hiện "chưa đủ dữ liệu"
+// Dưới mức này readiness chỉ hiện "chưa đủ dữ liệu". Đếm theo CÂU KHÁC NHAU, không theo lượt:
+// làm đi làm lại 10 câu 6 lần vẫn chỉ là bằng chứng về 10 câu, mà bản trước lại tính thành 60
+// lượt và mở khoá đánh giá.
+const READINESS_MIN_QUESTIONS = 60;
 
 /** Câu hỏi được tính vào tiến độ hằng ngày: đã chấm được (loại matching/manual review). */
 export function isCountableAttempt(a) {
@@ -310,17 +313,19 @@ export function computeReadiness(gapProfile, attempts, { now = Date.now(), lang 
 
   const rawScore = 100 * base * coverageFactor * recency * independence;
   const score = Math.round(clamp(rawScore, 0, 100));
-  const enoughData = gapProfile.eligibleAttempts >= READINESS_MIN_ATTEMPTS;
+  const enoughData = (gapProfile.eligibleQuestions ?? 0) >= READINESS_MIN_QUESTIONS;
   const level = enoughData ? readinessLevelFor(score) : { key: "insufficient", ring: "insufficient_data" };
 
   // "Còn thiếu gì" — cụ thể, xếp theo mức ảnh hưởng, mỗi mục gắn được với một hành động.
   const reasons = [];
   if (!enoughData) {
-    reasons.push({ key: "reasonVolume", vars: { n: gapProfile.eligibleAttempts } });
+    reasons.push({ key: "reasonVolume", vars: { n: gapProfile.eligibleQuestions ?? 0, min: READINESS_MIN_QUESTIONS } });
   }
   if (critical.length) {
-    const worstDomain = [...critical].sort((a, b) => b.gapPriority - a.gapPriority)[0].domain;
-    reasons.push({ key: "reasonCritical", vars: { n: critical.length, domain: worstDomain } });
+    // Domain của TASK critical nặng nhất — không phải "domain yếu nhất" (đó là reasonDomainLow
+    // ngay bên dưới, và hai cái thường ra hai domain khác nhau).
+    const topCriticalDomain = [...critical].sort((a, b) => b.gapPriority - a.gapPriority)[0].domain;
+    reasons.push({ key: "reasonCritical", vars: { n: critical.length, domain: topCriticalDomain } });
   }
   if (coverage < 0.9 && untouched > 0) {
     reasons.push({ key: "reasonCoverage", vars: { p: Math.round(coverage * 100), n: untouched } });
@@ -342,7 +347,7 @@ export function computeReadiness(gapProfile, attempts, { now = Date.now(), lang 
   return {
     score, level: level.key, ring: level.ring, enoughData,
     factors: { base, coverage, coverageFactor, recency, independence, idleDays, assistedRatio },
-    stats: { totalTasks, tasksWithEvidence, untouched, criticalCount: critical.length, eligibleAttempts: gapProfile.eligibleAttempts },
+    stats: { totalTasks, tasksWithEvidence, untouched, criticalCount: critical.length, eligibleAttempts: gapProfile.eligibleAttempts, eligibleQuestions: gapProfile.eligibleQuestions ?? 0 },
     reasons,
   };
 }

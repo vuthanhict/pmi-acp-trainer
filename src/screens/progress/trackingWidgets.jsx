@@ -201,12 +201,18 @@ export function ReadinessCard({ readiness, onAction }) {
         <span className={`pmi-chip pmi-status-${readiness.ring}`}>{t(`readinessLevel_${readiness.level}`)}</span>
       </div>
 
-      <p className="pmi-display font-bold text-5xl mb-3" style={{ color }}>{readiness.score}</p>
+      {/* Chưa đủ dữ liệu thì KHÔNG in con số. Trước đây điểm vẫn được vẽ ở cỡ chữ 5xl kể cả khi
+          chính app đang gắn nhãn "chưa đủ dữ liệu" — người mới làm 10 câu thấy một số 6 to đùng,
+          và đó là thứ nổi bật nhất trên thẻ. Một con số được tính từ gần như không có bằng chứng
+          thì không nên là thứ đập vào mắt đầu tiên. */}
+      <p className="pmi-display font-bold text-5xl mb-3" style={{ color }}>
+        {readiness.enoughData ? readiness.score : "—"}
+      </p>
 
       <div className="pmi-meter mb-1.5">
-        <div className="pmi-meter-fill" style={{ width: `${readiness.score}%`, background: color }} />
+        <div className="pmi-meter-fill" style={{ width: `${readiness.enoughData ? readiness.score : 0}%`, background: color }} />
         <div className="pmi-meter-bar" style={{ left: `${READINESS_READY_BAR}%` }} />
-        <div className="pmi-meter-dot" style={{ left: `${readiness.score}%`, background: color }} />
+        {readiness.enoughData && <div className="pmi-meter-dot" style={{ left: `${readiness.score}%`, background: color }} />}
       </div>
       <div className="pmi-mono flex justify-between text-[10px] mb-4" style={{ color: "var(--ink-soft)" }}>
         <span>0</span><span>{READINESS_READY_BAR}</span><span>100</span>
