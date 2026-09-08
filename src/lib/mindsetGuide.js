@@ -175,7 +175,10 @@ export const MINDSET_SECTIONS = [
       { n: 9, en: "Continuous attention to technical excellence and good design enhances agility.",
         vi: "Liên tục quan tâm tới sự vượt trội về kỹ thuật và thiết kế tốt sẽ nâng cao tính linh hoạt.",
         maps: "Delivery · chất lượng kỹ thuật", pmi: "Là chỗ dựa cho các câu về nợ kỹ thuật (technical debt): xử lý liên tục trong từng increment, không dồn vào một \"sprint dọn dẹp\" ở cuối." },
-      { n: 10, en: "Simplicity — the art of maximizing the amount of work not done — is essential.",
+      // `--` (hai dấu gạch ngang) là ĐÚNG NGUYÊN VĂN của bản 2001, không phải lỗi gõ — đừng đổi
+      // thành em dash cho "đẹp", vì cả khối này tồn tại để người học đối chiếu từng ký tự với
+      // agilemanifesto.org. Bản dịch tiếng Việt bên dưới thì dùng em dash cho dễ đọc.
+      { n: 10, en: "Simplicity--the art of maximizing the amount of work not done--is essential.",
         vi: "Sự đơn giản — nghệ thuật tối đa hóa khối lượng công việc KHÔNG phải làm — là điều thiết yếu.",
         maps: "Delivery · Nhận diện & loại bỏ lãng phí", pmi: "Nguyên tắc bị hiểu sai nhiều nhất: nó không nói \"làm cẩu thả\", nó nói ĐỪNG LÀM thứ chưa cần. Nền tảng của MVP và của việc cắt phạm vi." },
       { n: 11, en: "The best architectures, requirements, and designs emerge from self-organizing teams.",
@@ -185,7 +188,7 @@ export const MINDSET_SECTIONS = [
         vi: "Theo những khoảng thời gian đều đặn, nhóm nhìn lại xem làm thế nào để hiệu quả hơn, rồi điều chỉnh hành vi của mình cho phù hợp.",
         maps: "Mindset · Retrospective · Delivery · Cải tiến liên tục", pmi: "Vế \"rồi điều chỉnh\" mới là chỗ chấm điểm: họp retrospective mà không có hành động theo sau vẫn là đáp án sai." },
     ],
-    source: "Principles behind the Agile Manifesto — © 2001, the above authors. This declaration may be freely copied in any form, but only in its entirety through this notice. agilemanifesto.org/principles.html",
+    source: "Principles behind the Agile Manifesto — agilemanifesto.org/principles.html. Bản thân trang này không in thông báo bản quyền, nó chỉ liên kết ngược về Tuyên ngôn; thông báo nằm ở trang Tuyên ngôn: © 2001, the above authors. This declaration may be freely copied in any form, but only in its entirety through this notice.",
   },
   {
     id: "kw-team",
