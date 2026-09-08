@@ -27,6 +27,32 @@ function gradableQuestions(quizIndex) {
   return (QUESTIONS_BY_QUIZ.get(quizIndex) || []).filter((q) => !q.manualReview);
 }
 
+/* Phiên nào là phiên Exam mode. Chỉ nhận phiên ĐÃ NỘP: phiên đang làm dở chưa có entry, và mốc
+   thời gian của entry (completedAt) cũng chính là thứ buildPlanProgress dùng để cắt lịch sử theo
+   từng ngày. */
+function examModeSessionIds(completedQuizzes) {
+  const ids = new Set();
+  for (const entry of completedQuizzes || []) {
+    if (entry?.mode === "exam" && entry.sessionId) ids.add(entry.sessionId);
+  }
+  return ids;
+}
+
+/**
+ * Những câu đã được trả lời ít nhất một lần DƯỚI ĐIỀU KIỆN THI THẬT (trong một phiên mode
+ * "exam"), hợp qua mọi phiên. Đây là định nghĩa duy nhất của "đã đi câu này ở Exam mode" —
+ * computeQuizWorkload dùng nó để đếm khối lượng còn lại, và App.startQuizSession dùng nó để nạp
+ * đúng phần còn thiếu khi vào tiếp một lượt exam đang làm dở.
+ */
+export function examAnsweredQuestionIds(attempts, completedQuizzes) {
+  const examSessionIds = examModeSessionIds(completedQuizzes);
+  const ids = new Set();
+  for (const a of attempts || []) {
+    if (examSessionIds.has(a.sessionId)) ids.add(a.questionId);
+  }
+  return ids;
+}
+
 /**
  * Kế hoạch từng đề + tổng khối lượng câu còn phải hoàn tất trước ngày thi — tách riêng khỏi
  * buildStudyPlan để dùng lại được cho việc tính "mục tiêu hôm qua" (xem computeCatchUp bên
@@ -58,20 +84,9 @@ function gradableQuestions(quizIndex) {
  * 10 câu rồi nộp, lần sau làm tiếp từ câu 11) được cộng dồn đúng như cách người học thực sự làm.
  */
 function computeQuizWorkload(attempts, completedQuizzes, tz) {
-  // Phiên nào là phiên Exam mode — dùng để tách attempts "làm dưới điều kiện thi thật" ra khỏi
-  // attempts luyện tập. Chỉ nhận phiên ĐÃ NỘP: phiên đang làm dở chưa có entry, và mốc thời gian
-  // của nó (completedAt) cũng chính là thứ buildPlanProgress dùng để cắt lịch sử theo từng ngày.
-  const examSessionIds = new Set();
-  for (const entry of completedQuizzes) {
-    if (entry.mode === "exam" && entry.sessionId) examSessionIds.add(entry.sessionId);
-  }
-
-  const answeredIds = new Set();
-  const examAnsweredIds = new Set();
-  for (const a of attempts) {
-    answeredIds.add(a.questionId);
-    if (examSessionIds.has(a.sessionId)) examAnsweredIds.add(a.questionId);
-  }
+  const examSessionIds = examModeSessionIds(completedQuizzes);
+  const examAnsweredIds = examAnsweredQuestionIds(attempts, completedQuizzes);
+  const answeredIds = new Set(attempts.map((a) => a.questionId));
   const core = coreQuizzes();
 
   let unseenCoreQuestions = 0;

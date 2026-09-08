@@ -124,7 +124,7 @@ export const UI_TEXT = {
     planQuizRemaining: "còn {n} câu (đã làm {done}/{total})",
     planQuizExamRemaining: "Exam mode: còn {n} câu (đã làm {done}/{total})",
     planQuizContinueBtn: "Làm nốt {n} câu",
-    planQuizExamBtn: "Vào Exam mode",
+    planQuizExamBtn: "Vào Exam mode ({n} câu)",
     planQuizExamCooldown: "Exam mode mở từ {d}",
 
     reservedChip: "Để dành",
@@ -263,6 +263,7 @@ export const UI_TEXT = {
     todayFocusHeader: "TRỌNG TÂM HÔM NAY", viewFullPlanBtn: "Xem lộ trình đầy đủ",
     startPracticeBtn: "Luyện tập ngay ({n} câu)", startPracticeExtraBtn: "Làm thêm {n} câu (đã đạt mục tiêu)",
     todayChunkExplain: "Chỉ trích đúng số câu chưa làm cần cho hôm nay, không mở nguyên cả đề — nếu mục tiêu còn nhiều hơn một phiên, bấm lại sau khi nộp bài để làm tiếp.",
+    startExamContinueBtn: "Vào Exam mode ({n} câu)",
     todayExamModeExplain: "Exam mode tính giờ như thi thật. Câu đã làm được cộng dồn qua nhiều phiên — làm một đoạn rồi nộp, lần sau làm tiếp phần còn lại.",
     todayCatchUp: "Hôm qua làm {done}/{target} câu theo lộ trình — thiếu {shortfall} câu đã được cộng dồn vào hôm nay.",
     todayCatchUpSurplus: "Hôm qua làm vượt mục tiêu {n} câu — mục tiêu hôm nay đã giảm tương ứng.",
@@ -410,7 +411,7 @@ export const UI_TEXT = {
     planQuizRemaining: "{n} left (done {done}/{total})",
     planQuizExamRemaining: "Exam mode: {n} left (done {done}/{total})",
     planQuizContinueBtn: "Finish {n} more",
-    planQuizExamBtn: "Start Exam mode",
+    planQuizExamBtn: "Start Exam mode ({n} left)",
     planQuizExamCooldown: "Exam mode opens {d}",
 
     reservedChip: "Reserved",
@@ -545,6 +546,7 @@ export const UI_TEXT = {
     todayFocusHeader: "TODAY'S FOCUS", viewFullPlanBtn: "View full plan",
     startPracticeBtn: "Start practice ({n} questions)", startPracticeExtraBtn: "Do {n} more (goal already met)",
     todayChunkExplain: "Only pulls the exact unseen questions needed for today, not the whole exam — if today's goal needs more than one session, click again after submitting to continue.",
+    startExamContinueBtn: "Start Exam mode ({n} left)",
     todayExamModeExplain: "Exam mode is timed like the real thing. Questions carry over across sessions — do a stretch, submit, pick up the rest next time.",
     todayCatchUp: "Yesterday you did {done}/{target} questions per plan — the {shortfall}-question shortfall has been rolled into today.",
     todayCatchUpSurplus: "Yesterday you did {n} more than the plan target — today's target has been lowered accordingly.",

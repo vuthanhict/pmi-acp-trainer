@@ -23,7 +23,7 @@ import { QUIZ_CATALOG, QUESTION_INDEX, QUESTIONS_BY_QUIZ, initEmbeddedData } fro
 import { computeSessionScores } from "./lib/sessionScore.js";
 import { calculateGapProfile, gradeAttempt } from "./lib/gapEngine.js";
 import { buildGapPracticeQuestionIds, compactGapSnapshots } from "./lib/trackingEngine.js";
-import { buildStudyPlan } from "./lib/studyPlan.js";
+import { buildStudyPlan, examAnsweredQuestionIds } from "./lib/studyPlan.js";
 import {
   defaultProgress, ensureSupportUsage, migrateProgress, mergeProgressData, loadProgressFromStorage, saveProgressToStorage,
 } from "./lib/storage.js";
@@ -295,9 +295,25 @@ function App() {
     persist((prev) => ({ ...prev, tracking: { ...prev.tracking, dailyGoal: desired } }));
   }, [loaded, tracking, gapProfile, progress, persist]);
 
+  /** Vào một đề. Với mode "exam", nạp đúng những câu CHƯA đi ở Exam mode thay vì mở lại cả đề:
+      một lượt exam được làm rải qua nhiều phiên (làm một đoạn rồi nộp, lần sau làm tiếp), và
+      cột mốc Exam mode cũng cộng dồn theo câu chứ không theo phiên (xem computeQuizWorkload).
+      Không lọc thì mỗi lần vào tiếp lại mở ở câu 1 và người học phải tự nhảy tới chỗ dừng.
+      Đề đã đi hết ở Exam mode thì mở lại TRỌN ĐỀ — lúc đó đây là một lượt làm lại thật sự
+      (vào từ Thư viện), không phải làm tiếp. */
   function startQuizSession(quizIndex, mode) {
     const cat = QUIZ_CATALOG.find((c) => c.quizIndex === quizIndex);
-    const questions = QUESTIONS_BY_QUIZ.get(quizIndex) || [];
+    const all = QUESTIONS_BY_QUIZ.get(quizIndex) || [];
+    let questions = all;
+    if (mode === "exam") {
+      const examAnswered = examAnsweredQuestionIds(progress.attempts, progress.completedQuizzes);
+      // Bỏ câu manualReview khỏi phần còn thiếu: chúng không chấm tự động được nên không bao giờ
+      // tính vào cột mốc (examUnseenInQuiz chỉ đếm câu chấm được). Không loại thì một đề đã đi
+      // hết phần chấm được vẫn mở ra một phiên chỉ gồm mấy câu đó, lệch hẳn với con số "còn N
+      // câu" trên nút. Chúng vẫn gặp được ở phiên luyện tập mở từ Thư viện.
+      const remaining = all.filter((q) => !q.manualReview && !examAnswered.has(q.id));
+      if (remaining.length) questions = remaining;
+    }
     const session = {
       sessionId: uid(`session-${quizIndex}`),
       quizIndex,

@@ -667,7 +667,7 @@ export function PlanProgressCard({ plan, studyPlan, onStartTodayPractice, onStar
                         className="pmi-focusable pmi-mono text-[10px] px-2 py-1 rounded-md"
                         style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
                       >
-                        {t("planQuizExamBtn")}
+                        {t("planQuizExamBtn", { n: q.examUnseenInQuiz })}
                       </button>
                     )}
                   </div>
@@ -954,7 +954,7 @@ export function TodayFocusCard({ progress, tracking, gapProfile, onStart, onStar
               })()}
               {action.type === "exam_mode" && (
                 <>
-                  <Button onClick={() => onStart(action.quizIndex, "exam")} className="w-full">{t("startExamBtn")}</Button>
+                  <Button onClick={() => onStart(action.quizIndex, "exam")} className="w-full">{t("startExamContinueBtn", { n: action.examUnseenInQuiz })}</Button>
                   <p className="text-[11px] mt-1.5" style={{ color: "var(--ink-soft)" }}>{t("todayExamModeExplain")}</p>
                 </>
               )}
