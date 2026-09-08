@@ -20,6 +20,21 @@ const CRITICAL_TOLERANCE_MIN = 2;
 // luyện), không đo được mastery thật. 5 ngày đủ để quên mặt câu nhưng chưa quên kiến thức nền.
 export const MIN_REDO_GAP_DAYS = 5;
 
+/**
+ * Số NGÀY HỌC còn lại kể từ ngày `from`, ĐẾM CẢ chính ngày đó và cả ngày học cuối cùng
+ * (deadlineDay = examDate − FINAL_REST_DAYS).
+ *
+ * Tồn tại vì bốn nơi trước đây đều tự viết `diffDayKeys(...) − FINAL_REST_DAYS` và cùng thiếu
+ * một ngày: diffDayKeys là KHOẢNG CÁCH giữa hai ngày, không phải số ngày trong khoảng. Với ngày
+ * thi 28/09 và hôm nay 08/09, học viên còn 19 ngày học (08/09 … 26/09) chứ không phải 18 — chia
+ * cho 18 làm mục tiêu hằng ngày bị đội lên ~5% suốt lộ trình (1056 câu: 59/ngày thay vì 56), và
+ * làm đường kế hoạch trong biểu đồ chạm trần sớm hơn hạn chót đúng một ngày, tức mỗi ngày đều bị
+ * vẽ là chậm hơn thực tế.
+ */
+function studyDaysFrom(from, examDate) {
+  return Math.max(0, diffDayKeys(examDate, from) + 1 - FINAL_REST_DAYS);
+}
+
 function coreQuizzes() {
   return QUIZ_CATALOG.filter((c) => CORE_TIERS.includes(c.tier));
 }
@@ -174,7 +189,7 @@ export function buildStudyPlan({ progress, gapProfile, tracking }) {
   } = computeQuizWorkload(progress.attempts, progress.completedQuizzes, tz);
   const requiredQuizzes = core.filter((c) => c.tier === "required");
 
-  const studyDaysLeft = Math.max(0, effectiveDaysLeft - FINAL_REST_DAYS);
+  const studyDaysLeft = studyDaysFrom(today, examDate);
   const dailyQuestionTarget = studyDaysLeft > 0
     ? Math.ceil(workloadQuestions / studyDaysLeft)
     : workloadQuestions; // không còn ngày để dàn trải — toàn bộ dồn vào những gì còn lại
@@ -353,13 +368,12 @@ export function buildPlanProgress({ progress, tracking }) {
   for (let d = startDay; diffDayKeys(today, d) >= 0; d = shiftDayKey(d, 1)) dayList.push(d);
 
   const scope = workloadAfter(shiftDayKey(startDay, -1)); // tổng khối lượng tại thời điểm bắt đầu
-  const planDays = Math.max(1, diffDayKeys(deadlineDay, startDay));
+  const planDays = Math.max(1, studyDaysFrom(startDay, examDate));
   const planPerDay = scope / planDays;
 
   let prevWorkload = scope;
   const rows = dayList.map((d, i) => {
-    const daysLeftThatDay = diffDayKeys(examDate, d);
-    const studyDaysLeft = Math.max(0, daysLeftThatDay - FINAL_REST_DAYS);
+    const studyDaysLeft = studyDaysFrom(d, examDate);
     // Mục tiêu của ngày d dựa trên khối lượng còn lại TRƯỚC khi ngày d bắt đầu.
     const target = studyDaysLeft > 0 ? Math.ceil(prevWorkload / studyDaysLeft) : prevWorkload;
     const after = workloadAfter(d);
@@ -386,7 +400,13 @@ export function buildPlanProgress({ progress, tracking }) {
   });
 
   const last = rows[rows.length - 1] || null;
-  const aheadBy = last ? last.cumDone - last.cumPlan : 0;
+  // So tại ngày cuối cùng ĐÃ được phán xét, không phải tại hôm nay: hạn mức của hôm nay chưa tới
+  // hạn (cùng nguyên tắc với cờ `pending` ở trên và `judgedDays` bên dưới — không phạt người học
+  // vì một ngày chưa kết thúc). Tính cả hôm nay thì con số tụt thêm nguyên một ngày chỉ tiêu vào
+  // lúc 00:01 rồi bò lên dần trong ngày, và "chậm 124 câu" thực chất chỉ là chậm 78.
+  const judged = rows.filter((r) => !r.pending);
+  const lastJudged = judged[judged.length - 1] || null;
+  const aheadBy = lastJudged ? lastJudged.cumDone - lastJudged.cumPlan : 0;
   const cumDoneToday = last ? last.cumDone : 0;
   // Nhịp thực tế 7 ngày gần nhất, tính theo khối lượng lộ trình (không phải tổng câu đã làm).
   const recent = rows.slice(-7);
@@ -430,7 +450,7 @@ export function buildPlanProgress({ progress, tracking }) {
     remaining,
     // Ngày dự kiến xong khối lượng NẾU giữ nhịp hiện tại — null khi nhịp bằng 0 (không bao giờ xong).
     projectedFinishDay: pace > 0 ? shiftDayKey(today, Math.ceil(remaining / pace)) : null,
-    daysToDeadline: diffDayKeys(deadlineDay, today),
+    studyDaysLeft: studyDaysFrom(today, examDate),
   };
 }
 
@@ -454,7 +474,7 @@ export function computeCatchUp({ progress, tracking }) {
   const completedUpToYesterday = progress.completedQuizzes.filter((c) => !c.completedAt || dayKey(c.completedAt, tz) <= yesterday);
   const { workloadQuestions } = computeQuizWorkload(attemptsUpToYesterday, completedUpToYesterday, tz);
 
-  const studyDaysLeftYesterday = Math.max(0, daysLeftYesterday - FINAL_REST_DAYS);
+  const studyDaysLeftYesterday = studyDaysFrom(yesterday, examDate);
   const yesterdayTarget = studyDaysLeftYesterday > 0 ? Math.ceil(workloadQuestions / studyDaysLeftYesterday) : workloadQuestions;
   const yesterdayDone = history.get(yesterday)?.answered || 0;
   const shortfall = Math.max(0, yesterdayTarget - yesterdayDone);

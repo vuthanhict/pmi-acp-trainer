@@ -598,7 +598,7 @@ export function PlanProgressCard({ plan, studyPlan, onStartTodayPractice, onStar
 
       <div className={`pmi-mono grid ${isDesktop ? "grid-cols-2" : "grid-cols-1"} gap-x-3 gap-y-1 text-[10px] mt-3`} style={{ color: "var(--ink-mid)" }}>
         <span>{t("planPace", { n: plan.pace })}</span>
-        <span>{t("planNeeded", { n: Math.ceil(plan.remaining / Math.max(1, plan.daysToDeadline)) })}</span>
+        <span>{t("planNeeded", { n: Math.ceil(plan.remaining / Math.max(1, plan.studyDaysLeft)) })}</span>
         <span>{t("planRemaining", { n: plan.remaining })}</span>
         <span style={lateFinish ? { color: "var(--flag)" } : undefined}>
           {plan.projectedFinishDay
